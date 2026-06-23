@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // User profile: owner-only read/write.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Course content is readable by any signed-in learner. Client writes are
+    // disallowed; content is populated by the admin seed script (which bypasses
+    // these rules via the Admin SDK).
+    match /courses/{courseId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /lessons/{lessonId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+    match /slides/{slideId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // Per-user progress: owner-only. Documents carry a `uid` field and the
+    // owner must match the authenticated user on every operation.
+    match /userCourseProgress/{docId} {
+      allow read, update, delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+    match /userLessonProgress/{docId} {
+      allow read, update, delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+    match /userSlideProgress/{docId} {
+      allow read, update, delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+    }
+  }
+}

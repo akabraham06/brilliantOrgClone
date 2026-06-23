@@ -1,28 +1,49 @@
 import { Link, useParams } from 'react-router-dom';
-import styles from './Placeholder.module.css';
+import {
+  course,
+  lessons,
+  getCoursePercent,
+  getLessonStatus,
+  getNextLesson,
+} from '../data/staticContent.js';
+import CourseHeroCard from '../components/CourseHeroCard.jsx';
+import LessonCard from '../components/LessonCard.jsx';
+import styles from './CourseOverview.module.css';
 
 export default function CourseOverview() {
   const { courseId } = useParams();
+  const percent = getCoursePercent();
+  const nextLesson = getNextLesson();
+  const base = `/app/courses/${courseId}`;
 
   return (
-    <div className={styles.wrap}>
-      <p className={styles.eyebrow}>Course</p>
-      <h1 className={styles.heading}>Introduction to Chemistry</h1>
-      <p className={styles.note}>
-        Course overview with the lesson list and start/resume button arrives in
-        Phase 3 (course id: <code>{courseId}</code>).
-      </p>
-      <div className={styles.card}>
-        <Link
-          to={`/app/courses/${courseId}/lessons/lesson-1`}
-          className={styles.link}
-        >
-          Open Lesson 1 &rarr;
-        </Link>
-      </div>
-      <Link to="/app/courses" className={styles.link}>
+    <div className={styles.page}>
+      <Link to="/app/courses" className={styles.back}>
         &larr; Back to Courses
       </Link>
+
+      <CourseHeroCard
+        course={course}
+        percent={percent}
+        lessonCount={lessons.length}
+        to={`${base}/lessons/${nextLesson.lessonId}`}
+      />
+
+      <section className={styles.lessons}>
+        <h2 className={styles.sectionTitle}>
+          {lessons.length} lessons in this course
+        </h2>
+        <div className={styles.lessonList}>
+          {lessons.map((lesson) => (
+            <LessonCard
+              key={lesson.lessonId}
+              lesson={lesson}
+              status={getLessonStatus(lesson.lessonId)}
+              to={`${base}/lessons/${lesson.lessonId}`}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

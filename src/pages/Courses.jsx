@@ -1,17 +1,22 @@
-import {
-  course,
-  lessons,
-  getCoursePercent,
-  getLessonStatus,
-  getNextLesson,
-} from '../data/staticContent.js';
+import { useContent } from '../context/ContentContext.jsx';
+import { getCoursePercent, getLessonStatus, getNextLesson } from '../data/progress.js';
+import ContentGate from '../components/ContentGate.jsx';
 import CourseHeroCard from '../components/CourseHeroCard.jsx';
 import LessonCard from '../components/LessonCard.jsx';
 import styles from './Courses.module.css';
 
 export default function Courses() {
-  const percent = getCoursePercent();
-  const nextLesson = getNextLesson();
+  return (
+    <ContentGate>
+      <CoursesContent />
+    </ContentGate>
+  );
+}
+
+function CoursesContent() {
+  const { course, lessons } = useContent();
+  const percent = getCoursePercent(lessons);
+  const nextLesson = getNextLesson(lessons);
   const courseLink = `/app/courses/${course.courseId}`;
 
   return (

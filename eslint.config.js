@@ -38,4 +38,14 @@ export default [
       ],
     },
   },
+  {
+    // Node scripts (seed, tooling) run outside the browser.
+    files: ['scripts/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+      },
+    },
+  },
 ];

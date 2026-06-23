@@ -1,19 +1,24 @@
 import { Link, useParams } from 'react-router-dom';
-import {
-  course,
-  lessons,
-  getCoursePercent,
-  getLessonStatus,
-  getNextLesson,
-} from '../data/staticContent.js';
+import { useContent } from '../context/ContentContext.jsx';
+import { getCoursePercent, getLessonStatus, getNextLesson } from '../data/progress.js';
+import ContentGate from '../components/ContentGate.jsx';
 import CourseHeroCard from '../components/CourseHeroCard.jsx';
 import LessonCard from '../components/LessonCard.jsx';
 import styles from './CourseOverview.module.css';
 
 export default function CourseOverview() {
+  return (
+    <ContentGate>
+      <CourseOverviewContent />
+    </ContentGate>
+  );
+}
+
+function CourseOverviewContent() {
   const { courseId } = useParams();
-  const percent = getCoursePercent();
-  const nextLesson = getNextLesson();
+  const { course, lessons } = useContent();
+  const percent = getCoursePercent(lessons);
+  const nextLesson = getNextLesson(lessons);
   const base = `/app/courses/${courseId}`;
 
   return (

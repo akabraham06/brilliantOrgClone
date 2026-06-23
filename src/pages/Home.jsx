@@ -1,25 +1,30 @@
 import { useAuth } from '../context/AuthContext.jsx';
-import {
-  course,
-  lessons,
-  mockProgress,
-  getCoursePercent,
-  getNextLesson,
-} from '../data/staticContent.js';
+import { useContent } from '../context/ContentContext.jsx';
+import { mockProgress, getCoursePercent, getNextLesson } from '../data/progress.js';
+import ContentGate from '../components/ContentGate.jsx';
 import ContinueLearningCard from '../components/ContinueLearningCard.jsx';
 import StreakWidget from '../components/StreakWidget.jsx';
 import CourseHeroCard from '../components/CourseHeroCard.jsx';
 import styles from './Home.module.css';
 
 export default function Home() {
+  return (
+    <ContentGate>
+      <HomeContent />
+    </ContentGate>
+  );
+}
+
+function HomeContent() {
   const { user } = useAuth();
+  const { course, lessons } = useContent();
   const name = user?.displayName || user?.email?.split('@')[0] || 'Learner';
 
-  const percent = getCoursePercent();
-  const nextLesson = getNextLesson();
+  const percent = getCoursePercent(lessons);
+  const nextLesson = getNextLesson(lessons);
   const started = mockProgress.completedLessonIds.length > 0;
   const slidePercent = Math.round(
-    (mockProgress.currentSlideIndex / (nextLesson.slideCount || 8)) * 100,
+    (mockProgress.currentSlideIndex / (nextLesson?.slideCount || 8)) * 100,
   );
 
   const lessonLink = `/app/courses/${course.courseId}/lessons/${nextLesson.lessonId}`;
@@ -65,18 +70,12 @@ export default function Home() {
             <p className={styles.goalText}>
               Finish one lesson to keep your streak alive.
             </p>
-            <ProgressNote percent={percent} />
+            <p className={styles.goalProgress}>
+              You&rsquo;re <strong>{percent}%</strong> through {course.title}.
+            </p>
           </div>
         </aside>
       </div>
     </div>
-  );
-}
-
-function ProgressNote({ percent }) {
-  return (
-    <p className={styles.goalProgress}>
-      You&rsquo;re <strong>{percent}%</strong> through Introduction to Chemistry.
-    </p>
   );
 }

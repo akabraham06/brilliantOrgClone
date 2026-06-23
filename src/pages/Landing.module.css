@@ -1,0 +1,226 @@
+/* Light, Brilliant-inspired landing page (overrides the app's dark theme). */
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  padding: 16px;
+  color: #1b1b1b;
+}
+
+.header {
+  max-width: 1180px;
+  margin: 0 auto 16px;
+  padding: 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #ececec;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.signIn {
+  padding: 9px 20px;
+  border-radius: 999px;
+  border: 1px solid #d7d7d4;
+  background: #ffffff;
+  color: #1b1b1b;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 120ms ease;
+}
+
+.signIn:hover {
+  background: #f3f2ee;
+}
+
+.heroPanel {
+  max-width: 1180px;
+  margin: 0 auto;
+  background: #f4f3ef;
+  border-radius: 28px;
+  padding: 64px 56px;
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.copy {
+  max-width: 460px;
+}
+
+.title {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 3.4rem;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  color: #161616;
+  margin-bottom: 22px;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: #5f5f5a;
+  margin-bottom: 32px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 340px;
+}
+
+.primaryCta,
+.secondaryCta {
+  display: block;
+  text-align: center;
+  padding: 15px 24px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1.02rem;
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.primaryCta {
+  background: #00cc66;
+  color: #ffffff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.primaryCta:hover {
+  background: #00b85c;
+  transform: translateY(-1px);
+}
+
+.secondaryCta {
+  background: #ffffff;
+  color: #1b1b1b;
+  border: 1px solid #e2e1dc;
+}
+
+.secondaryCta:hover {
+  background: #fbfbf9;
+  transform: translateY(-1px);
+}
+
+/* Right-side interactive-style visual card */
+.visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.visualCard {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  aspect-ratio: 4 / 3;
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visualFormula {
+  position: absolute;
+  top: 22px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1b1b1b;
+  margin: 0;
+}
+
+.visualSvg {
+  width: 78%;
+  height: auto;
+}
+
+.bond {
+  stroke: #c9cad1;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.atomO {
+  fill: #60a5fa;
+}
+
+.atomH {
+  fill: #f4f5f7;
+  stroke: #d7d9e0;
+  stroke-width: 2;
+}
+
+.atomLabel {
+  fill: #ffffff;
+  font-weight: 800;
+  font-size: 1.6rem;
+  text-anchor: middle;
+}
+
+.atomLabelSm {
+  fill: #5f6473;
+  font-weight: 800;
+  font-size: 1.1rem;
+  text-anchor: middle;
+}
+
+.cursor {
+  position: absolute;
+  right: 30%;
+  bottom: 24%;
+  font-size: 1.4rem;
+  color: #111;
+  transform: rotate(-20deg);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+.visualCaption {
+  font-size: 1rem;
+  color: #5f5f5a;
+  margin: 0;
+}
+
+@media (max-width: 880px) {
+  .heroPanel {
+    padding: 40px 28px;
+  }
+  .heroGrid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .title {
+    font-size: 2.6rem;
+  }
+  .copy,
+  .actions {
+    max-width: none;
+  }
+  .visual {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.15rem;
+  }
+  .heroPanel {
+    padding: 28px 18px;
+    border-radius: 22px;
+  }
+}

@@ -1,45 +1,41 @@
-import { firebaseEnabled } from './firebase/config.js';
-import styles from './App.module.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import AppLayout from './layouts/AppLayout.jsx';
+import Landing from './pages/Landing.jsx';
+import Login from './pages/Login.jsx';
+import Home from './pages/Home.jsx';
+import Courses from './pages/Courses.jsx';
+import CourseOverview from './pages/CourseOverview.jsx';
+import LessonPlayer from './pages/LessonPlayer.jsx';
 
-/**
- * Phase 0 shell: a styled, dark-themed placeholder that verifies the Vite +
- * React + theme-token setup boots correctly. Routing, auth, and the portal
- * are layered on in later phases.
- */
 export default function App() {
   return (
-    <div className={styles.shell}>
-      <main className={styles.hero}>
-        <span className={styles.badge}>Introduction to Chemistry</span>
-        <h1 className={styles.title}>
-          Learn chemistry visually,
-          <br />
-          <span className={styles.accent}>one idea at a time.</span>
-        </h1>
-        <p className={styles.subtitle}>
-          A Brilliant-inspired, interactive learning portal. The project
-          scaffold is ready &mdash; routing, authentication, and the lesson
-          player arrive in the next phases.
-        </p>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
 
-        <div className={styles.swatches} aria-hidden="true">
-          <span style={{ background: 'var(--accent-yellow)' }} />
-          <span style={{ background: 'var(--accent-green)' }} />
-          <span style={{ background: 'var(--accent-purple)' }} />
-          <span style={{ background: 'var(--accent-blue)' }} />
-          <span style={{ background: 'var(--accent-orange)' }} />
-        </div>
-
-        <p
-          className={`${styles.status} ${
-            firebaseEnabled ? styles.statusOk : styles.statusWarn
-          }`}
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
         >
-          {firebaseEnabled
-            ? 'Firebase configured'
-            : 'Firebase not configured \u2014 add credentials to .env'}
-        </p>
-      </main>
-    </div>
+          <Route index element={<Navigate to="home" replace />} />
+          <Route path="home" element={<Home />} />
+          <Route path="courses" element={<Courses />} />
+          <Route path="courses/:courseId" element={<CourseOverview />} />
+          <Route
+            path="courses/:courseId/lessons/:lessonId"
+            element={<LessonPlayer />}
+          />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }

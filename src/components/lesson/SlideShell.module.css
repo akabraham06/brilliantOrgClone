@@ -1,0 +1,54 @@
+.slide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.concept {
+  font-size: var(--text-2xl);
+}
+
+.body {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+  max-width: 70ch;
+  line-height: var(--leading-normal);
+}
+
+.stage {
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.instructions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.instructionsIcon {
+  color: var(--accent-yellow);
+}
+
+@media (max-width: 600px) {
+  .concept {
+    font-size: var(--text-xl);
+  }
+  .body {
+    font-size: var(--text-base);
+  }
+}

@@ -1,6 +1,15 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
+    <script>
+      // Apply the stored theme before paint to prevent a flash (defaults to light).
+      (function () {
+        try {
+          var t = localStorage.getItem('chem-theme');
+          document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+        } catch (e) {}
+      })();
+    </script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +17,13 @@
       name="description"
       content="Learn chemistry visually, one idea at a time."
     />
-    <title>Introduction to Chemistry</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Brilliant | Learn by doing</title>
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,54 @@
+.mover {
+  transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.set {
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.arrowBtn {
+  cursor: pointer;
+}
+
+.arrowBtn:focus {
+  outline: none;
+}
+
+.hit {
+  fill: transparent;
+}
+
+.arrowBtn:hover .hit,
+.arrowBtn:focus-visible .hit {
+  fill: rgba(96, 165, 250, 0.14);
+}
+
+/* Gentle pulse inviting the first tap. */
+.invite {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: invite 1.8s ease-in-out infinite;
+}
+
+@keyframes invite {
+  0%, 100% { opacity: 0.25; transform: scale(0.9); }
+  50% { opacity: 0.7; transform: scale(1.12); }
+}
+
+.arrowFlip {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mover,
+  .set,
+  .arrowFlip {
+    transition: none;
+  }
+  .invite {
+    animation: none;
+    opacity: 0.5;
+  }
+}

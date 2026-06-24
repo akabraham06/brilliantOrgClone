@@ -1,0 +1,54 @@
+.lattice {
+  position: relative;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+/* Seamless crossfade between the two-atom view and the crystal lattice. */
+.viewFade {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  animation: viewFade 420ms ease both;
+}
+
+@keyframes viewFade {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewFade {
+    animation: none;
+  }
+}
+
+.ion3d {
+  position: absolute;
+  left: -16px;
+  top: -16px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  color: #0e0f13;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.ionNa {
+  background: radial-gradient(circle at 32% 30%, #fff, var(--accent-purple) 42%, rgba(0, 0, 0, 0.55));
+}
+
+.ionCl {
+  background: radial-gradient(circle at 32% 30%, #fff, var(--accent-green) 42%, rgba(0, 0, 0, 0.55));
+}

@@ -1,0 +1,61 @@
+.bond {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bondIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.atom {
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+}
+
+@keyframes bondIn {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Rotatable 3D geometry view */
+.geo {
+  position: relative;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.geoAtom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 800;
+  color: #0e0f13;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.45);
+}
+
+.stick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 3px;
+  background: linear-gradient(var(--color-text-subtle), var(--color-border-strong));
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bond {
+    animation: none;
+  }
+  .atom {
+    transition: none;
+  }
+}

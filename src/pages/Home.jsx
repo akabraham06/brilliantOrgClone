@@ -1,6 +1,7 @@
 import { useAuth } from '../context/AuthContext.jsx';
 import { useContent } from '../context/ContentContext.jsx';
-import { mockProgress, getCoursePercent, getNextLesson } from '../data/progress.js';
+import { useProgress } from '../context/ProgressContext.jsx';
+import { getCoursePercent, getNextLesson, getLessonPercent, hasStarted, getCourseAccuracy } from '../data/progress.js';
 import ContentGate from '../components/ContentGate.jsx';
 import ContinueLearningCard from '../components/ContinueLearningCard.jsx';
 import StreakWidget from '../components/StreakWidget.jsx';
@@ -18,14 +19,14 @@ export default function Home() {
 function HomeContent() {
   const { user } = useAuth();
   const { course, lessons } = useContent();
+  const { progress } = useProgress();
   const name = user?.displayName || user?.email?.split('@')[0] || 'Learner';
 
-  const percent = getCoursePercent(lessons);
-  const nextLesson = getNextLesson(lessons);
-  const started = mockProgress.completedLessonIds.length > 0;
-  const slidePercent = Math.round(
-    (mockProgress.currentSlideIndex / (nextLesson?.slideCount || 8)) * 100,
-  );
+  const percent = getCoursePercent(lessons, progress);
+  const nextLesson = getNextLesson(lessons, progress);
+  const started = hasStarted(progress);
+  const slidePercent = getLessonPercent(nextLesson?.lessonId, progress);
+  const accuracy = getCourseAccuracy(lessons, progress);
 
   const lessonLink = `/app/courses/${course.courseId}/lessons/${nextLesson.lessonId}`;
   const courseLink = `/app/courses/${course.courseId}`;
@@ -62,8 +63,8 @@ function HomeContent() {
 
         <aside className={styles.side}>
           <StreakWidget
-            streakCount={mockProgress.streakCount}
-            completedLessons={mockProgress.completedLessonIds.length}
+            streakCount={progress.streakCount || 0}
+            completedLessons={progress.completedLessonIds?.length || 0}
           />
           <div className={styles.goalCard}>
             <span className={styles.goalEyebrow}>Today&rsquo;s goal</span>
@@ -73,6 +74,11 @@ function HomeContent() {
             <p className={styles.goalProgress}>
               You&rsquo;re <strong>{percent}%</strong> through {course.title}.
             </p>
+            {accuracy && (
+              <p className={styles.goalProgress}>
+                Skill-check accuracy: <strong>{accuracy.percent}%</strong> ({accuracy.correct}/{accuracy.total} right)
+              </p>
+            )}
           </div>
         </aside>
       </div>

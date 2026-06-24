@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import BrilliantLogo from '../components/BrilliantLogo.jsx';
+import LandingMolecule from '../components/LandingMolecule.jsx';
 import styles from './Landing.module.css';
 
 export default function Landing() {
@@ -49,33 +50,13 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className={styles.visual} aria-hidden="true">
+          <div className={styles.visual}>
             <div className={styles.visualCard}>
-              <p className={styles.visualFormula}>H&#8322;O</p>
-              <svg viewBox="0 0 240 200" className={styles.visualSvg}>
-                {/* bonds */}
-                <line x1="120" y1="110" x2="64" y2="150" className={styles.bond} />
-                <line x1="120" y1="110" x2="176" y2="150" className={styles.bond} />
-                {/* oxygen */}
-                <circle cx="120" cy="110" r="34" className={styles.atomO} />
-                <text x="120" y="118" className={styles.atomLabel}>
-                  O
-                </text>
-                {/* hydrogens */}
-                <circle cx="64" cy="150" r="22" className={styles.atomH} />
-                <text x="64" y="156" className={styles.atomLabelSm}>
-                  H
-                </text>
-                <circle cx="176" cy="150" r="22" className={styles.atomH} />
-                <text x="176" y="156" className={styles.atomLabelSm}>
-                  H
-                </text>
-              </svg>
-              <span className={styles.cursor} aria-hidden="true">
-                &#9650;
-              </span>
+              <LandingMolecule />
             </div>
-            <p className={styles.visualCaption}>Try interacting with it.</p>
+            <p className={styles.visualCaption}>
+              Drag the hydrogens or use the sliders to reshape the molecule.
+            </p>
           </div>
         </div>
       </main>

@@ -9,12 +9,19 @@ import { getInteractionComponent, getCheckComponent } from './interactionRegistr
  * `onReady` marks a content slide satisfied; `onResult(correct)` reports a
  * check outcome. Keyed by slideId upstream so state resets between slides.
  */
-export default function SlideRenderer({ slide, onReady, onResult }) {
+export default function SlideRenderer({
+  slide,
+  onReady,
+  onResult,
+  registerNextIntercept,
+  savedState,
+  onSaveState,
+}) {
   if (slide.isCheck) {
     const Check = getCheckComponent(slide.checkConfig?.validationMode);
     return (
       <SlideShell slide={slide}>
-        <Check slide={slide} onResult={onResult} />
+        <Check slide={slide} onResult={onResult} savedState={savedState} onSaveState={onSaveState} />
       </SlideShell>
     );
   }
@@ -22,7 +29,13 @@ export default function SlideRenderer({ slide, onReady, onResult }) {
   const Interaction = getInteractionComponent(slide.interactionComponentKey);
   return (
     <SlideShell slide={slide}>
-      <Interaction slide={slide} onReady={onReady} />
+      <Interaction
+        slide={slide}
+        onReady={onReady}
+        registerNextIntercept={registerNextIntercept}
+        savedState={savedState}
+        onSaveState={onSaveState}
+      />
     </SlideShell>
   );
 }

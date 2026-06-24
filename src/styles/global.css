@@ -29,6 +29,7 @@ body {
   background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 h1,
@@ -82,6 +83,32 @@ button {
   outline: none;
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-sm);
+}
+
+/* Respect reduced-motion across animations and (inline) transitions */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Chemical formula sub/superscripts (see Formula.jsx) */
+.chem-sub,
+.chem-sup {
+  font-size: 0.72em;
+  line-height: 0;
+  font-weight: inherit;
+}
+.chem-sub {
+  vertical-align: -0.25em;
+}
+.chem-sup {
+  vertical-align: 0.42em;
 }
 
 /* Utility: visually hidden but accessible to screen readers */

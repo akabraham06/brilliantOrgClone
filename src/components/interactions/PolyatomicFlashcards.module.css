@@ -1,0 +1,84 @@
+.scene {
+  perspective: 1000px;
+  width: 260px;
+  height: 160px;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.flipped {
+  transform: rotateY(180deg);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-lg);
+  backface-visibility: hidden;
+  border: 1px solid var(--color-border-strong);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.front {
+  background: linear-gradient(150deg, var(--color-bg-elevated), var(--color-surface));
+}
+
+.back {
+  background: linear-gradient(150deg, rgba(167, 139, 250, 0.18), var(--color-surface));
+  transform: rotateY(180deg);
+}
+
+.big {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-surface-active);
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.dotSeen {
+  background: var(--accent-green);
+}
+
+.dotActive {
+  transform: scale(1.4);
+  background: var(--accent-purple);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .dot {
+    transition: none;
+  }
+}

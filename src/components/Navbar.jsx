@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useTheme } from '../context/ThemeContext.jsx';
 import { logOut } from '../firebase/auth.js';
+import BrilliantLogo from './BrilliantLogo.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 import styles from './Navbar.module.css';
 
 const TABS = [
@@ -11,6 +14,7 @@ const TABS = [
 
 export default function Navbar() {
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -30,11 +34,8 @@ export default function Navbar() {
   return (
     <header className={styles.navbar}>
       <div className={styles.inner}>
-        <NavLink to="/app/home" className={styles.brand}>
-          <span className={styles.logoMark} aria-hidden="true">
-            Ch
-          </span>
-          <span className={styles.brandName}>Chemistry</span>
+        <NavLink to="/app/home" className={styles.brand} aria-label="Brilliant home">
+          <BrilliantLogo size={28} wordmarkColor="var(--color-text)" />
         </NavLink>
 
         <nav className={styles.tabs} aria-label="Primary">
@@ -51,7 +52,9 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className={styles.account}>
+        <div className={styles.right}>
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+          <div className={styles.account}>
           <button
             type="button"
             className={styles.avatarButton}
@@ -76,6 +79,7 @@ export default function Navbar() {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </header>

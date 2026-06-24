@@ -1,0 +1,256 @@
+.wrap {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* ---------- generic motion ---------- */
+.float {
+  animation: floatY 3.2s ease-in-out infinite;
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.09); }
+}
+
+/* ---------- blocks: scatter -> assemble loop ---------- */
+.block {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: assemble 4s ease-in-out infinite;
+}
+@keyframes assemble {
+  0% { transform: translate(var(--tx), var(--ty)) rotate(var(--tr)); opacity: 0; }
+  22% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  78% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) rotate(var(--tr)); opacity: 0; }
+}
+
+/* ---------- grid: cells fill in sequence ---------- */
+.cell {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cellIn 3.2s ease-in-out infinite;
+}
+@keyframes cellIn {
+  0%, 10% { opacity: 0.12; transform: scale(0.7); }
+  40%, 90% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.12; transform: scale(0.7); }
+}
+
+/* ---------- jars: dots settle ---------- */
+.dropDot {
+  transform-box: fill-box;
+  animation: dropDot 2.8s ease-in-out infinite;
+}
+@keyframes dropDot {
+  0% { transform: translateY(-46px); opacity: 0; }
+  35% { opacity: 1; }
+  60%, 100% { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------- transfer: electron crosses + charge appears ---------- */
+.mover {
+  transform-box: fill-box;
+  animation: cross 3.4s ease-in-out infinite;
+}
+@keyframes cross {
+  0%, 12% { transform: translateX(0); }
+  48%, 100% { transform: translateX(74px); }
+}
+.fadeLate {
+  animation: fadeLate 3.4s ease-in-out infinite;
+}
+@keyframes fadeLate {
+  0%, 45% { opacity: 0; }
+  60%, 100% { opacity: 1; }
+}
+
+/* ---------- crossfade pair (gift vs share, patterns, label) ---------- */
+.xfadeA { animation: xfadeA 4.2s ease-in-out infinite; }
+.xfadeB { animation: xfadeB 4.2s ease-in-out infinite; }
+@keyframes xfadeA {
+  0%, 38% { opacity: 1; }
+  50%, 88% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes xfadeB {
+  0%, 38% { opacity: 0; }
+  50%, 88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ---------- sea: electrons drift ---------- */
+.drift { animation: drift 4.5s ease-in-out infinite; }
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(14px, -8px); }
+  50% { transform: translate(28px, 4px); }
+  75% { transform: translate(10px, 10px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ---------- deal-in (cards) ---------- */
+.deal {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: deal 3.6s ease-in-out infinite;
+}
+@keyframes deal {
+  0% { transform: translateY(24px) rotate(-12deg); opacity: 0; }
+  30%, 90% { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(24px) rotate(-12deg); opacity: 0; }
+}
+
+/* ---------- seesaw: tilt then level ---------- */
+.beam {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: beam 4s ease-in-out infinite;
+}
+@keyframes beam {
+  0% { transform: rotate(-11deg); }
+  35% { transform: rotate(8deg); }
+  70%, 100% { transform: rotate(0deg); }
+}
+
+/* ---------- states: particles spread ---------- */
+.spread {
+  transform-box: fill-box;
+  animation: spread 5s ease-in-out infinite;
+}
+@keyframes spread {
+  0%, 14% { transform: translate(0, 0); }
+  50% { transform: translate(var(--sx), var(--sy)) scale(1.05); }
+  86%, 100% { transform: translate(var(--lx), var(--ly)); }
+}
+
+/* ---------- dissolve: crystal disperses ---------- */
+.disperse {
+  transform-box: fill-box;
+  animation: disperse 4.4s ease-in-out infinite;
+}
+@keyframes disperse {
+  0%, 16% { transform: translate(0, 0); opacity: 1; }
+  70%, 100% { transform: translate(var(--dx), var(--dy)); opacity: 0.85; }
+}
+
+/* ---------- dial: needle sweep ---------- */
+.needle {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: sweep 4.5s ease-in-out infinite;
+}
+@keyframes sweep {
+  0%, 100% { transform: rotate(-72deg); }
+  50% { transform: rotate(72deg); }
+}
+
+/* ---------- plates: extra plates appear ---------- */
+.appear {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: appear 3.4s ease-in-out infinite;
+}
+@keyframes appear {
+  0%, 20% { opacity: 0; transform: scale(0.4); }
+  45%, 88% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.4); }
+}
+
+/* ---------- flask: bubbles rise + sparks twinkle ---------- */
+.rise {
+  transform-box: fill-box;
+  animation: rise 2.4s ease-in infinite;
+}
+@keyframes rise {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 0.85; }
+  100% { transform: translateY(-44px); opacity: 0; }
+}
+.twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle 2.6s ease-in-out infinite;
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* ---------- badge: atomic number scales for emphasis ---------- */
+.scaleNum {
+  transform-box: fill-box;
+  animation: scaleNum 2.4s ease-in-out infinite;
+}
+@keyframes scaleNum {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.28); }
+  60% { transform: scale(1.18); }
+}
+
+/* ---------- electrons orbiting in the inside-atom graphic ---------- */
+.orbit1 {
+  transform-box: view-box;
+  transform-origin: 110px 75px;
+  animation: orbit1 5s linear infinite;
+}
+.orbit2 {
+  transform-box: view-box;
+  transform-origin: 110px 75px;
+  animation: orbit2 6.5s linear infinite;
+}
+@keyframes orbit1 { to { transform: rotate(360deg); } }
+@keyframes orbit2 { to { transform: rotate(-360deg); } }
+
+/* ---------- staggered pop-in (shells, lattice) ---------- */
+.popLate {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: popLate 3.2s ease-in-out infinite;
+}
+@keyframes popLate {
+  0%, 18% { opacity: 0; transform: scale(0.2); }
+  42%, 90% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.2); }
+}
+
+.caption {
+  max-width: 46ch;
+  text-align: center;
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float, .pulse, .block, .cell, .dropDot, .mover, .fadeLate, .xfadeA, .xfadeB,
+  .drift, .deal, .beam, .spread, .disperse, .needle, .appear, .rise, .twinkle,
+  .scaleNum, .orbit1, .orbit2, .popLate {
+    animation: none;
+  }
+  .popLate { opacity: 1; }
+  .rise { opacity: 0.85; }
+  .twinkle { opacity: 1; }
+  .xfadeB { opacity: 0; }
+  .fadeLate { opacity: 1; }
+  .block { opacity: 1; transform: none; }
+  .mover { transform: translateX(74px); }
+  .spread { transform: translate(var(--lx), var(--ly)); }
+  .disperse { transform: translate(var(--dx), var(--dy)); }
+}

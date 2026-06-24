@@ -1,0 +1,105 @@
+.board {
+  width: 100%;
+  max-width: 260px;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--color-bg-elevated) 0%, var(--color-surface) 100%);
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.28);
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.snap {
+  transform-box: fill-box;
+  animation: snap 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes snap {
+  0% { opacity: 0; transform: translateY(-14px) scale(0.8); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.palette {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.paletteItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.brickBtn {
+  width: 64px;
+  padding: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.brickBtn svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.brickBtn:hover:not(:disabled) {
+  border-color: var(--accent-purple);
+  transform: translateY(-2px);
+}
+
+.brickBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.counter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.countBtn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+.countBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.countVal {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .snap,
+  .brickBtn {
+    animation: none;
+    transition: none;
+  }
+}

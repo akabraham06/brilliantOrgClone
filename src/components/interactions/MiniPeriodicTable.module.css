@@ -1,0 +1,137 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  gap: 4px;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* Two descriptions occupy the same grid cell so the box stays as tall as the
+ * larger one - then we cross-fade between them with no layout jump. */
+.descBox {
+  display: grid;
+  width: 100%;
+  max-width: 560px;
+}
+
+.desc {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  text-align: center;
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.descShow {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pager {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.dotActive {
+  background: var(--accent-purple);
+  transform: scale(1.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desc {
+    transition: none;
+  }
+}
+
+.cell {
+  aspect-ratio: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  padding: 0;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.cell:hover {
+  transform: translateY(-1px);
+}
+
+.cellRelated {
+  border-color: var(--accent-purple);
+  background: rgba(167, 139, 250, 0.12);
+}
+
+.cellActive {
+  border-color: var(--accent-green);
+  background: var(--color-correct-bg);
+}
+
+.num {
+  font-size: 0.5rem;
+  color: var(--color-text-subtle);
+  line-height: 1;
+}
+
+.sym {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.detail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 460px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.detailSymbol {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .sym {
+    font-size: 0.6rem;
+  }
+  .num {
+    font-size: 0.4rem;
+  }
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,52 @@
+/* The group glides between state arrangements; the inner circle jitters. */
+.mover {
+  transition: transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.particle {
+  animation-name: jitter;
+  animation-duration: 1.6s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ampLow {
+  animation-duration: 2.6s;
+  --amp: 1px;
+}
+
+.ampMed {
+  animation-duration: 1.6s;
+  --amp: 4px;
+}
+
+.ampHigh {
+  animation-duration: 0.9s;
+  --amp: 9px;
+}
+
+@keyframes jitter {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(var(--amp, 3px), calc(var(--amp, 3px) * -1));
+  }
+  50% {
+    transform: translate(calc(var(--amp, 3px) * -1), var(--amp, 3px));
+  }
+  75% {
+    transform: translate(var(--amp, 3px), var(--amp, 3px));
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+  }
+}

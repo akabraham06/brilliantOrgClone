@@ -1,0 +1,46 @@
+.box {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border-strong);
+  background: var(--color-bg-elevated);
+}
+
+.viewport {
+  perspective: 520px;
+  display: grid;
+  place-items: center;
+  height: 64px;
+}
+
+.cluster {
+  position: relative;
+  height: 0;
+  transform-style: preserve-3d;
+}
+
+.atom {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  color: #0e0f13;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.stick {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 3px;
+  background: var(--color-text-subtle);
+  transform-origin: center;
+}

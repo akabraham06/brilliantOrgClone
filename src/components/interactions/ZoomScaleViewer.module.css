@@ -1,0 +1,62 @@
+/* Magnify crossfade between zoom stages. */
+.zoomIn,
+.zoomOut,
+.zoomInBack,
+.zoomBack {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Zooming deeper (slider right): incoming grows in, outgoing pushes past. */
+.zoomIn {
+  animation: zoomIn 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.42); }
+  to { opacity: 1; transform: scale(1); }
+}
+.zoomOut {
+  animation: zoomOut 0.52s ease-in both;
+}
+@keyframes zoomOut {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.9); }
+}
+
+/* Zooming back out (slider left): reverse the motion. */
+.zoomInBack {
+  animation: zoomInBack 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes zoomInBack {
+  from { opacity: 0; transform: scale(1.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+.zoomBack {
+  animation: zoomBack 0.52s ease-in both;
+}
+@keyframes zoomBack {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.45); }
+}
+
+.readoutFade {
+  animation: readoutFade 0.45s ease;
+}
+@keyframes readoutFade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zoomIn,
+  .zoomOut,
+  .zoomInBack,
+  .zoomBack,
+  .readoutFade {
+    animation: none;
+  }
+  .zoomOut,
+  .zoomBack {
+    opacity: 0;
+  }
+}

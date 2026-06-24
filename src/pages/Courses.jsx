@@ -1,8 +1,9 @@
+import { Link } from 'react-router-dom';
 import { useContent } from '../context/ContentContext.jsx';
-import { getCoursePercent, getLessonStatus, getNextLesson } from '../data/progress.js';
+import { useProgress } from '../context/ProgressContext.jsx';
+import { getCoursePercent } from '../data/progress.js';
 import ContentGate from '../components/ContentGate.jsx';
-import CourseHeroCard from '../components/CourseHeroCard.jsx';
-import LessonCard from '../components/LessonCard.jsx';
+import LessonIcon from '../components/LessonIcon.jsx';
 import styles from './Courses.module.css';
 
 export default function Courses() {
@@ -15,35 +16,43 @@ export default function Courses() {
 
 function CoursesContent() {
   const { course, lessons } = useContent();
-  const percent = getCoursePercent(lessons);
-  const nextLesson = getNextLesson(lessons);
+  const { progress } = useProgress();
+  const percent = getCoursePercent(lessons, progress);
   const courseLink = `/app/courses/${course.courseId}`;
+  const isNew = percent === 0;
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <p className={styles.eyebrow}>Learning path</p>
-        <h1 className={styles.heading}>One path to get you started</h1>
+      <header className={styles.subjectHeader}>
+        <span className={styles.subjectIcon} aria-hidden="true">
+          <LessonIcon icon="beaker" size={64} />
+        </span>
+        <div>
+          <p className={styles.eyebrow}>Grades 9-11</p>
+          <h1 className={styles.subjectTitle}>Science</h1>
+          <p className={styles.subjectTagline}>
+            Build chemistry intuition for high school and beyond.
+          </p>
+        </div>
       </header>
 
-      <CourseHeroCard
-        course={course}
-        percent={percent}
-        lessonCount={lessons.length}
-        to={`${courseLink}/lessons/${nextLesson.lessonId}`}
-      />
-
-      <section className={styles.lessons}>
-        <h2 className={styles.sectionTitle}>Lessons</h2>
-        <div className={styles.lessonList}>
-          {lessons.map((lesson) => (
-            <LessonCard
-              key={lesson.lessonId}
-              lesson={lesson}
-              status={getLessonStatus(lesson.lessonId)}
-              to={`${courseLink}/lessons/${lesson.lessonId}`}
-            />
-          ))}
+      <section className={styles.panel}>
+        <div className={styles.courseGrid}>
+          <div className={styles.courseItem}>
+            <Link to={courseLink} className={styles.courseCard}>
+              <span className={styles.gradeTag}>GR 9-11</span>
+              {isNew && <span className={styles.newBadge}>NEW</span>}
+              <span className={styles.courseArt} aria-hidden="true">
+                <LessonIcon icon={course.coverIcon} size={84} />
+              </span>
+              {percent > 0 && (
+                <span className={styles.cardProgress} aria-hidden="true">
+                  <span className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
+                </span>
+              )}
+            </Link>
+            <span className={styles.courseLabel}>{course.title}</span>
+          </div>
         </div>
       </section>
     </div>

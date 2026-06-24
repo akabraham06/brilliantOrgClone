@@ -1,0 +1,28 @@
+/*
+ * Each molecule pops in when the substance changes, then keeps a gentle idle
+ * float so the particles feel alive. The two animation delays are supplied
+ * inline (one per animation) so molecules stagger their entrance.
+ */
+.mol {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    molPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    molFloat 3.6s ease-in-out 0.5s infinite;
+}
+
+@keyframes molPop {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes molFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mol {
+    animation: none;
+  }
+}

@@ -1,0 +1,14 @@
+.dot {
+  transition: transform 380ms cubic-bezier(0.2, 1.3, 0.4, 1), opacity 320ms ease, fill 380ms ease;
+}
+
+.core {
+  transition: fill 380ms ease, stroke 380ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot,
+  .core {
+    transition: none;
+  }
+}

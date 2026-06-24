@@ -1,0 +1,46 @@
+.card {
+  width: 100%;
+  max-width: 320px;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.card:hover {
+  border-color: var(--accent-purple);
+  transform: translateY(-2px);
+}
+
+.card:active {
+  transform: translateY(0);
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.particle {
+  transform-box: view-box;
+  transition: transform 0.55s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.dot {
+  transition: fill 0.55s ease;
+}
+
+.hint {
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .particle,
+  .dot {
+    transition: none;
+  }
+}

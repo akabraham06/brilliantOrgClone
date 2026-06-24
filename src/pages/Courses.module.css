@@ -4,36 +4,138 @@
   gap: var(--space-6);
 }
 
-.header {
+/* Subject header (e.g. "Science", grades 9-11) */
+.subjectHeader {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.eyebrow {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent-purple);
-}
-
-.heading {
-  font-size: var(--text-3xl);
-}
-
-.lessons {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-4);
 }
 
-.sectionTitle {
-  font-size: var(--text-xl);
+.subjectIcon {
+  flex-shrink: 0;
 }
 
-.lessonList {
+.eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-subtle);
+}
+
+.subjectTitle {
+  font-size: var(--text-3xl);
+  margin: 2px 0 4px;
+}
+
+.subjectTagline {
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+}
+
+/* Panel holding the course squares */
+.panel {
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-5);
+}
+
+.courseItem {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-3);
+}
+
+.courseCard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 168px;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform var(--transition-base), border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.courseCard:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-md);
+}
+
+.courseArt {
+  transform: scale(1.4);
+}
+
+.gradeTag {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+}
+
+.newBadge {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #06210f;
+  background: var(--accent-green);
+  border-radius: var(--radius-pill);
+  padding: 2px 9px;
+}
+
+.cardProgress {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: var(--space-3);
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-active);
+  overflow: hidden;
+}
+
+.cardProgressFill {
+  display: block;
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: var(--radius-pill);
+}
+
+.courseLabel {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .panel {
+    padding: var(--space-4);
+  }
+  .courseGrid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
 }

@@ -1,0 +1,19 @@
+.fade {
+  transition: opacity 420ms ease;
+}
+
+.charge {
+  transition: opacity 420ms ease 120ms;
+}
+
+.arrow {
+  transition: opacity 320ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade,
+  .charge,
+  .arrow {
+    transition: none;
+  }
+}

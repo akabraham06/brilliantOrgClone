@@ -1,0 +1,54 @@
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(167, 139, 250, 0.18);
+  color: var(--accent-purple);
+  font-weight: 800;
+  font-size: var(--text-sm);
+}
+
+.pattern {
+  font-family: monospace;
+  font-size: var(--text-lg);
+  color: var(--color-text);
+}
+
+.set {
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.arrow {
+  transition: opacity 0.5s ease;
+}
+
+.flame {
+  transition: opacity 0.5s ease;
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: flicker 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes flicker {
+  from {
+    transform: scaleY(0.92) scaleX(1.02);
+  }
+  to {
+    transform: scaleY(1.06) scaleX(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .set,
+  .arrow {
+    transition: none;
+  }
+  .flame {
+    animation: none;
+  }
+}

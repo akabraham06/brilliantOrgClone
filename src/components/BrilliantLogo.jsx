@@ -41,10 +41,10 @@ export default function BrilliantLogo({
         <span
           style={{
             fontFamily:
-              "'Georgia', 'Times New Roman', serif",
-            fontWeight: 700,
-            fontSize: size * 0.74,
-            letterSpacing: '-0.01em',
+              "'Fredoka', 'Baloo 2', 'Quicksand', system-ui, sans-serif",
+            fontWeight: 600,
+            fontSize: size * 0.82,
+            letterSpacing: '-0.005em',
             color: wordmarkColor,
           }}
         >

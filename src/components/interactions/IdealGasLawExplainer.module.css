@@ -1,0 +1,201 @@
+.svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+
+/* Tighter vertical rhythm so the whole explainer fits with little scrolling. */
+.compact {
+  gap: var(--space-3);
+}
+
+/* Two-column layout: the gas-box visual beside the sliders, so the slide stays
+   short. Collapses to a single column on phones. */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: var(--space-3) var(--space-5);
+  align-items: center;
+  width: 100%;
+  max-width: 760px;
+}
+
+.colVisual,
+.colControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.colControls {
+  justify-content: center;
+}
+
+/* In the grid each column owns its width, so let the sliders fill it. */
+.panelFill {
+  max-width: 100%;
+}
+
+.colControls .controls {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+/* Per-variable colors, reused across the living equation. */
+.varP { color: var(--accent-red); }
+.varV { color: var(--accent-blue); }
+.varN { color: var(--accent-purple); }
+.varR { color: var(--color-text-muted); }
+.varT { color: var(--accent-orange); }
+
+/* Living equation: P . V = n . R . T, where each variable also shows its live
+   value and unit. Replaces the static formula, the legend, and the separate
+   substitution/gauge - one element carries the structure, meaning, and math. */
+.liveEq {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-2) var(--space-3);
+  width: 100%;
+  max-width: 560px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.cell {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  min-width: 2.4rem;
+}
+
+.sym {
+  font-weight: 800;
+  font-size: clamp(1.5rem, 7vw, 2.1rem);
+}
+
+.val {
+  margin-top: 2px;
+  font-weight: 700;
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.op {
+  align-self: flex-start;
+  margin-top: 0.18em;
+  font-size: clamp(1.2rem, 5vw, 1.7rem);
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+/* Visually hidden status line for screen readers (the equation is aria-hidden). */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 360px;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.controlLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Highlight the slider the current thought experiment is exercising. */
+.controlFocus {
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  margin: calc(-1 * var(--space-2));
+  background: color-mix(in srgb, var(--accent-orange) 12%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-orange) 45%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .controlFocus {
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+}
+
+/* Stage pager (one dot per thought experiment). */
+.pager {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-1);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong);
+  opacity: 0.5;
+}
+
+.dotActive {
+  opacity: 1;
+  background: var(--accent-orange);
+  transform: scale(1.15);
+}
+
+/* Subtle particle vibration; faster (shorter duration) at higher temperature. */
+.particle {
+  animation-name: igl-vibrate;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes igl-vibrate {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1.2px, -1.4px); }
+  50% { transform: translate(-1.3px, 1.1px); }
+  75% { transform: translate(1px, 1.3px); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+  }
+}

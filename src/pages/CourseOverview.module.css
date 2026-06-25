@@ -208,14 +208,105 @@
   color: var(--color-text-muted);
 }
 
+/* ---- Terminal "Course Review" capstone node ---- */
+.reviewNode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--accent-purple, #a78bfa);
+  background: linear-gradient(
+    135deg,
+    var(--color-surface),
+    color-mix(in srgb, var(--accent-purple, #a78bfa) 14%, var(--color-surface))
+  );
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.reviewNode:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.reviewNode:focus-visible {
+  outline: 2px solid var(--accent-purple, #a78bfa);
+  outline-offset: 2px;
+}
+
+.reviewMarker {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+  border-radius: 50%;
+  background: var(--color-surface-active);
+  border: 2px solid var(--accent-purple, #a78bfa);
+  box-shadow: 0 0 0 6px var(--color-bg);
+}
+
+.reviewNodeDone .reviewMarker {
+  background: var(--accent-purple, #a78bfa);
+  color: var(--color-primary-text);
+}
+
+.reviewBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.reviewEyebrow {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-purple, #a78bfa);
+}
+
+.reviewTitle {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.reviewMeta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.reviewArrow {
+  flex-shrink: 0;
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--accent-purple, #a78bfa);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviewNode:hover {
+    transform: none;
+  }
+}
+
 /* ---- Bottom CTA card ---- */
 .ctaCard {
   position: sticky;
   bottom: var(--space-4);
+  /* Sit above the path markers, which are positioned with z-index:1 and would
+     otherwise poke through this opaque card as it scrolls past them. */
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-3) var(--space-4);
+  flex-wrap: wrap;
   padding: var(--space-4) var(--space-5);
   background: var(--color-surface);
   border: 1px solid var(--color-border-strong);
@@ -226,6 +317,10 @@
 .ctaInfo {
   display: flex;
   flex-direction: column;
+  /* Let the long lesson title shrink/wrap instead of overflowing (and being
+     clipped on the left) on the narrowest phones. */
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .ctaEyebrow {
@@ -240,6 +335,7 @@
   font-size: var(--text-lg);
   font-weight: 800;
   color: var(--color-text);
+  overflow-wrap: anywhere;
 }
 
 .ctaBtn {
@@ -281,5 +377,16 @@
   .ctaBtn {
     min-width: 120px;
     padding: var(--space-3) var(--space-4);
+  }
+}
+
+/* On the narrowest phones, stack the CTA so the title never clips and the
+   button spans the full width. */
+@media (max-width: 400px) {
+  .ctaCard {
+    align-items: stretch;
+  }
+  .ctaBtn {
+    width: 100%;
   }
 }

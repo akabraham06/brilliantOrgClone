@@ -206,30 +206,38 @@ function Shells() {
 
 /* 7c. Ways to draw an atom/molecule: shell model, Lewis dots, line structure */
 function Diagrams() {
-  const dots = [
-    [40, 40], [60, 40], [40, 88], [60, 88], [30, 64], [70, 64],
+  // Three evenly spaced columns (centers) across the 220-wide frame, each in
+  // its own gutter so the diagrams never crowd one another.
+  const cols = [40, 110, 180];
+  // Lewis dots arranged symmetrically around the central "O", radius ~21.
+  const lewis = [
+    [-9, -19], [9, -19], [21, 4], [9, 21], [-9, 21], [-21, 4],
   ];
   return (
     <Frame label="Three common ways to draw atoms: shell model, Lewis dots, and line structures">
+      {/* faint dividers between the three panels */}
+      <line x1="75" y1="24" x2="75" y2="112" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 5" />
+      <line x1="145" y1="24" x2="145" y2="112" stroke="var(--color-border)" strokeWidth="1" strokeDasharray="3 5" />
+
       {/* panel 1: shell model */}
-      <circle cx="50" cy="64" r="30" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
-      {Ball({ cx: 50, cy: 64, r: 11, color: ORANGE })}
-      {Ball({ cx: 50, cy: 34, r: 5, color: BLUE })}
-      {Ball({ cx: 80, cy: 64, r: 5, color: BLUE })}
-      <text x="50" y="116" textAnchor="middle" fontSize="10" fill={SUB}>shell model</text>
+      <circle cx={cols[0]} cy="60" r="23" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      {Ball({ cx: cols[0], cy: 60, r: 10, color: ORANGE })}
+      {Ball({ cx: cols[0], cy: 37, r: 4.5, color: BLUE })}
+      {Ball({ cx: cols[0] + 23, cy: 60, r: 4.5, color: BLUE })}
+      <text x={cols[0]} y="108" textAnchor="middle" fontSize="10.5" fontWeight="700" fill={SUB}>shell model</text>
 
       {/* panel 2: Lewis dots */}
-      <text x="110" y="72" textAnchor="middle" fontSize="22" fontWeight="800" fill={TEXT}>O</text>
-      {dots.map(([x, y], i) => (
-        <circle key={i} cx={x + 70} cy={y} r="3" fill={YELLOW} />
+      <text x={cols[1]} y="68" textAnchor="middle" fontSize="22" fontWeight="800" fill={TEXT}>O</text>
+      {lewis.map(([dx, dy], i) => (
+        <circle key={i} cx={cols[1] + dx} cy={58 + dy} r="3" fill={YELLOW} />
       ))}
-      <text x="110" y="116" textAnchor="middle" fontSize="10" fill={SUB}>Lewis dots</text>
+      <text x={cols[1]} y="108" textAnchor="middle" fontSize="10.5" fontWeight="700" fill={SUB}>Lewis dots</text>
 
       {/* panel 3: line / structural */}
-      {Ball({ cx: 158, cy: 64, r: 9, color: GREEN })}
-      {Ball({ cx: 196, cy: 64, r: 9, color: BLUE })}
-      <line x1="167" y1="64" x2="187" y2="64" stroke="var(--color-text)" strokeWidth="2.5" />
-      <text x="178" y="116" textAnchor="middle" fontSize="10" fill={SUB}>line structure</text>
+      {Ball({ cx: cols[2] - 17, cy: 60, r: 9, color: GREEN })}
+      {Ball({ cx: cols[2] + 17, cy: 60, r: 9, color: BLUE })}
+      <line x1={cols[2] - 8} y1="60" x2={cols[2] + 8} y2="60" stroke="var(--color-text)" strokeWidth="2.5" />
+      <text x={cols[2]} y="108" textAnchor="middle" fontSize="10.5" fontWeight="700" fill={SUB}>line structure</text>
     </Frame>
   );
 }
@@ -339,14 +347,16 @@ function Share() {
 
 /* 9. Metallic sea of electrons */
 function Sea() {
-  const ions = [[60, 60], [110, 60], [160, 60], [60, 100], [110, 100], [160, 100]];
-  const es = [[80, 70], [130, 64], [150, 96], [90, 104], [120, 84]];
+  const ions = [[58, 58], [110, 58], [162, 58], [58, 100], [110, 100], [162, 100]];
+  const es = [[84, 68], [134, 62], [150, 96], [88, 104], [120, 84], [100, 74]];
   return (
-    <Frame label="Metal ions sit in a flowing sea of shared electrons">
+    <Frame label="Fixed positive metal ions sit in a flowing sea of shared electrons">
+      <rect x="34" y="34" width="152" height="90" rx="16" fill="rgba(96,165,250,0.10)" stroke="var(--color-border-strong)" strokeWidth="1.5" />
       {ions.map(([x, y], i) => <g key={`i${i}`}>{Ball({ cx: x, cy: y, r: 14, color: ORANGE, label: '+', labelSize: 14 })}</g>)}
       {es.map(([x, y], i) => (
-        <circle key={i} className={s.drift} cx={x} cy={y} r="5" fill={BLUE} style={{ animationDelay: `${i * 0.5}s` }} />
+        <circle key={i} className={s.drift} cx={x} cy={y} r="5" fill={BLUE} style={{ animationDelay: `${i * 0.4}s` }} />
       ))}
+      <text x="110" y="142" textAnchor="middle" fontSize="9.5" fill={SUB} fontWeight="700">mobile electrons flow around fixed + ions</text>
     </Frame>
   );
 }
@@ -357,12 +367,12 @@ function Recipe() {
     <Frame label="A formula is a recipe listing how many of each atom">
       <rect x="46" y="28" width="128" height="96" rx="10" fill="var(--color-surface)" stroke="var(--color-border-strong)" strokeWidth="2" />
       <text x="110" y="48" textAnchor="middle" fontSize="13" fontWeight="800" fill={TEXT}>Recipe: H&#8322;O</text>
-      <g className={s.appear} style={{ animationDelay: '0.1s' }}>
+      <g className={s.appearOnce} style={{ animationDelay: '0.1s' }}>
         {Ball({ cx: 70, cy: 74, r: 8, color: '#e9edf7' })}
         {Ball({ cx: 90, cy: 74, r: 8, color: '#e9edf7' })}
         <text x="120" y="79" fontSize="12" fill={SUB} fontWeight="700">2 H</text>
       </g>
-      <g className={s.appear} style={{ animationDelay: '0.5s' }}>
+      <g className={s.appearOnce} style={{ animationDelay: '0.5s' }}>
         {Ball({ cx: 70, cy: 102, r: 9, color: PINK })}
         <text x="120" y="107" fontSize="12" fill={SUB} fontWeight="700">1 O</text>
       </g>
@@ -403,7 +413,7 @@ function Affixes() {
     <Frame label="Covalent prefixes count atoms: mono 1, di 2, tri 3, tetra 4; -ide ends a simple compound">
       <text x="64" y="26" textAnchor="middle" fontSize="11" fontWeight="800" fill={BLUE}>prefix = how many</text>
       {rows.map(([p, n], i) => (
-        <g key={p} className={s.appear} style={{ animationDelay: `${i * 0.12}s` }}>
+        <g key={p} className={s.appearOnce} style={{ animationDelay: `${i * 0.12}s` }}>
           <text x="40" y={48 + i * 19} fontSize="12" fontWeight="700" fill={TEXT}>{p}</text>
           <text x="92" y={48 + i * 19} fontSize="12" fill={SUB}>{n}</text>
         </g>
@@ -449,18 +459,54 @@ function Seesaw() {
 
 /* 14. Synthesis pattern A + B -> AB */
 function Patterns() {
+  const rows = [
+    { y: 30, name: 'synthesis', eq: 'A + B \u2192 AB', c: BLUE },
+    { y: 54, name: 'decomposition', eq: 'AB \u2192 A + B', c: PINK },
+    { y: 78, name: 'single replace', eq: 'A + BC \u2192 AC + B', c: GREEN },
+    { y: 102, name: 'double replace', eq: 'AB + CD \u2192 AD + CB', c: PURPLE },
+    { y: 126, name: 'combustion', eq: 'CH\u2084 + O\u2082 \u2192 CO\u2082 + H\u2082O', c: ORANGE },
+  ];
   return (
-    <Frame label="Reactions follow repeatable patterns, like A plus B becomes AB">
-      <g className={s.xfadeA}>
-        {Ball({ cx: 78, cy: 70, r: 20, color: BLUE, label: 'A' })}
-        <text x="110" y="76" textAnchor="middle" fontSize="20" fontWeight="800" fill={SUB}>+</text>
-        {Ball({ cx: 142, cy: 70, r: 20, color: PINK, label: 'B' })}
+    <Frame label="The five common reaction patterns: synthesis, decomposition, single and double replacement, and combustion">
+      {rows.map((r, i) => (
+        <g key={r.name} className={s.appearOnce} style={{ animationDelay: `${i * 0.12}s` }}>
+          <circle cx="14" cy={r.y - 4} r="5" fill={r.c} />
+          <text x="24" y={r.y} fontSize="9" fontWeight="800" fill={r.c}>{r.name}</text>
+          <text x="104" y={r.y} fontSize="9.5" fontWeight="700" fill={TEXT}>{r.eq}</text>
+        </g>
+      ))}
+    </Frame>
+  );
+}
+
+/* L6. Conservation of mass: the same atoms appear before and after */
+function Conservation() {
+  const before = [
+    { cx: 24, cy: 46, c: '#e9edf7' }, { cx: 44, cy: 46, c: '#e9edf7' },
+    { cx: 24, cy: 70, c: '#e9edf7' }, { cx: 44, cy: 70, c: '#e9edf7' },
+    { cx: 68, cy: 46, c: PINK }, { cx: 68, cy: 70, c: PINK },
+  ];
+  return (
+    <Frame label="The same atoms appear before and after a reaction, so mass is conserved">
+      {before.map((b, i) => <g key={i}>{Ball({ cx: b.cx, cy: b.cy, r: 8, color: b.c })}</g>)}
+      <text x="46" y="104" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>before: 4 H + 2 O</text>
+      <text x="110" y="62" textAnchor="middle" fontSize="22" fontWeight="800" fill={GREEN}>=</text>
+      {/* after: two water molecules from the same atoms */}
+      <g>
+        <line x1="150" y1="48" x2="138" y2="62" stroke="var(--color-text)" strokeWidth="2" />
+        <line x1="150" y1="48" x2="162" y2="62" stroke="var(--color-text)" strokeWidth="2" />
+        {Ball({ cx: 150, cy: 48, r: 8, color: PINK })}
+        {Ball({ cx: 138, cy: 62, r: 6, color: '#e9edf7' })}
+        {Ball({ cx: 162, cy: 62, r: 6, color: '#e9edf7' })}
       </g>
-      <g className={s.xfadeB}>
-        {Ball({ cx: 98, cy: 70, r: 20, color: BLUE, label: 'A' })}
-        {Ball({ cx: 122, cy: 70, r: 20, color: PINK, label: 'B' })}
+      <g>
+        <line x1="186" y1="70" x2="174" y2="84" stroke="var(--color-text)" strokeWidth="2" />
+        <line x1="186" y1="70" x2="198" y2="84" stroke="var(--color-text)" strokeWidth="2" />
+        {Ball({ cx: 186, cy: 70, r: 8, color: PINK })}
+        {Ball({ cx: 174, cy: 84, r: 6, color: '#e9edf7' })}
+        {Ball({ cx: 198, cy: 84, r: 6, color: '#e9edf7' })}
       </g>
-      <text x="110" y="116" textAnchor="middle" fontSize="12" fill={SUB} fontWeight="700">synthesis: A + B &#8594; AB</text>
+      <text x="174" y="104" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>after: 2 H&#8322;O</text>
     </Frame>
   );
 }
@@ -507,7 +553,9 @@ function States() {
   // Solid: packed 2x3, only swaying. Liquid: mingling. Gas: sprinting apart.
   const solid = [[28, 50], [50, 50], [28, 76], [50, 76], [28, 102], [50, 102]];
   const liquid = [[95, 52], [122, 48], [105, 76], [92, 100], [126, 96]];
-  const gas = [[162, 48], [192, 70], [166, 100]];
+  // Kept well inside the gas room (x 150-212) so the bounded jitter never
+  // pushes a particle past the container wall.
+  const gas = [[170, 50], [190, 74], [168, 100]];
   const room = (x, label) => (
     <>
       <rect x={x} y="26" width="62" height="92" rx="8" fill="rgba(96,165,250,0.08)" stroke="var(--color-border-strong)" strokeWidth="1.5" />
@@ -521,7 +569,7 @@ function States() {
       {room(150, 'gas')}
       {solid.map(([x, y], i) => <Person key={`s${i}`} x={x} y={y} color={BLUE} cls={s.float} delay={i * 0.5} />)}
       {liquid.map(([x, y], i) => <Person key={`l${i}`} x={x} y={y} color={GREEN} cls={s.float} delay={i * 0.25} />)}
-      {gas.map(([x, y], i) => <Person key={`g${i}`} x={x} y={y} color={ORANGE} cls={s.drift} delay={i * 0.3} />)}
+      {gas.map(([x, y], i) => <Person key={`g${i}`} x={x} y={y} color={ORANGE} cls={s.statesGas} delay={i * 0.3} />)}
     </Frame>
   );
 }
@@ -565,6 +613,203 @@ function Dial() {
   );
 }
 
+/* 2a. Ruler - measuring an object's length with tick marks */
+function Ruler() {
+  const ticks = [];
+  for (let i = 0; i <= 10; i += 1) ticks.push(i);
+  return (
+    <Frame label="A ruler measures length with evenly spaced tick marks">
+      <rect x="22" y="66" width="176" height="32" rx="6" fill="var(--color-surface)" stroke="var(--color-border-strong)" strokeWidth="2" />
+      {ticks.map((i) => {
+        const x = 30 + i * 16;
+        const major = i % 5 === 0;
+        return (
+          <g key={i}>
+            <line x1={x} y1="66" x2={x} y2={major ? 84 : 77} stroke={SUB} strokeWidth={major ? 2 : 1.2} />
+            {major && <text x={x} y="95" textAnchor="middle" fontSize="8" fill={SUB} fontWeight="700">{i}</text>}
+          </g>
+        );
+      })}
+      <rect x="30" y="46" width="96" height="14" rx="4" fill={BLUE} opacity="0.85" stroke="rgba(0,0,0,0.2)" />
+      <g className={s.pulse}>
+        <line x1="30" y1="40" x2="126" y2="40" stroke={GREEN} strokeWidth="2.5" />
+        <line x1="30" y1="35" x2="30" y2="45" stroke={GREEN} strokeWidth="2.5" />
+        <line x1="126" y1="35" x2="126" y2="45" stroke={GREEN} strokeWidth="2.5" />
+        <text x="78" y="30" textAnchor="middle" fontSize="11" fontWeight="800" fill={GREEN}>6.0 cm</text>
+      </g>
+    </Frame>
+  );
+}
+
+/* 2b. Balance scale - weighing a sample for its mass */
+function BalanceScale() {
+  return (
+    <Frame label="A balance weighs a sample to read its mass in grams">
+      <rect x="106" y="58" width="8" height="62" rx="3" fill={SUB} />
+      <path d="M 84 120 H 136 L 128 130 H 92 Z" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
+      <g className={s.beam}>
+        <rect x="46" y="55" width="128" height="7" rx="3.5" fill={SUB} />
+        <line x1="56" y1="60" x2="56" y2="80" stroke={SUB} strokeWidth="1.5" />
+        <path d="M 40 80 H 72 L 64 94 H 48 Z" fill={BLUE} opacity="0.65" stroke="rgba(0,0,0,0.25)" />
+        <line x1="164" y1="60" x2="164" y2="78" stroke={SUB} strokeWidth="1.5" />
+        <path d="M 148 80 H 180 L 172 94 H 156 Z" fill="var(--color-surface)" stroke="var(--color-border-strong)" />
+        {Ball({ cx: 164, cy: 73, r: 8, color: GREEN })}
+      </g>
+      <text x="110" y="144" textAnchor="middle" fontSize="11" fontWeight="800" fill={GREEN}>reads mass in grams</text>
+    </Frame>
+  );
+}
+
+/* 2c. Powers of ten - a big number written compactly as 1 x 10^n */
+function PowersOfTen() {
+  const zeros = [0, 1, 2, 3, 4, 5];
+  return (
+    <Frame label="Scientific notation packs a big number into a power of ten">
+      <text x="28" y="74" fontSize="28" fontWeight="800" fill={TEXT}>1</text>
+      {zeros.map((i) => (
+        <text
+          key={i}
+          className={s.appearOnce}
+          style={{ animationDelay: `${i * 0.12}s`, transformOrigin: `${48 + i * 22}px 64px` }}
+          x={48 + i * 22}
+          y="74"
+          fontSize="28"
+          fontWeight="800"
+          fill={BLUE}
+        >
+          0
+        </text>
+      ))}
+      <text x="110" y="116" textAnchor="middle" fontSize="16" fontWeight="800" fill={GREEN}>= 1 &#215; 10&#8310;</text>
+    </Frame>
+  );
+}
+
+/* 6c. Energy hill - activation energy with heat released (exothermic) */
+function EnergyHill() {
+  return (
+    <Frame label="A reaction climbs an activation-energy hill, then releases energy as heat">
+      <line x1="30" y1="122" x2="30" y2="26" stroke={SUB} strokeWidth="1.5" />
+      <line x1="30" y1="122" x2="202" y2="122" stroke={SUB} strokeWidth="1.5" />
+      <text x="22" y="30" fontSize="9" fill={SUB} fontWeight="700">E</text>
+      <path d="M 40 76 C 70 76 78 40 100 40 C 122 40 128 100 184 100" fill="none" stroke={ORANGE} strokeWidth="3" strokeLinecap="round" />
+      <text x="42" y="68" fontSize="9" fill={SUB} fontWeight="700">reactants</text>
+      <text x="138" y="114" fontSize="9" fill={SUB} fontWeight="700">products</text>
+      <g className={s.pulse}>
+        <line x1="100" y1="42" x2="100" y2="76" stroke={GREEN} strokeWidth="1.5" strokeDasharray="3 3" />
+        <text x="100" y="36" textAnchor="middle" fontSize="10" fontWeight="800" fill={GREEN}>E&#8336;</text>
+      </g>
+      <g className={s.float}>
+        <line x1="192" y1="64" x2="192" y2="92" stroke={BLUE} strokeWidth="2.5" />
+        <path d="M 192 98 L 187 88 L 197 88 Z" fill={BLUE} />
+      </g>
+      <text x="182" y="58" textAnchor="middle" fontSize="9" fontWeight="700" fill={BLUE}>heat out</text>
+    </Frame>
+  );
+}
+
+/* L1 17. Periodic size trend - atoms grow larger going down a group */
+function PeriodicTrend() {
+  const atoms = [
+    { cy: 28, r: 8 },
+    { cy: 56, r: 12 },
+    { cy: 88, r: 17 },
+    { cy: 126, r: 23 },
+  ];
+  return (
+    <Frame label="Going down a group, atoms get larger because each row adds an electron shell">
+      <line x1="36" y1="20" x2="36" y2="130" stroke={SUB} strokeWidth="2.5" />
+      <path d="M 36 140 l -6 -12 h 12 Z" fill={SUB} />
+      <text x="20" y="78" fontSize="10" fontWeight="700" fill={SUB} transform="rotate(-90 20 78)" textAnchor="middle">down a group</text>
+      {atoms.map((a, i) => (
+        <g key={i} className={s.appearOnce} style={{ animationDelay: `${i * 0.18}s` }}>
+          {Ball({ cx: 112, cy: a.cy, r: a.r, color: BLUE })}
+        </g>
+      ))}
+      <text x="186" y="34" textAnchor="middle" fontSize="11" fontWeight="700" fill={SUB}>smaller</text>
+      <text x="186" y="124" textAnchor="middle" fontSize="11" fontWeight="800" fill={PURPLE}>larger</text>
+    </Frame>
+  );
+}
+
+/* L2 11. Accuracy vs. precision - two dartboards of measurement "hits" */
+function PrecisionTargets() {
+  const rings = (cx) => [22, 15, 8].map((r, i) => (
+    <circle key={i} cx={cx} cy={66} r={r} fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+  ));
+  const accurate = [[64, 66], [67, 62], [61, 64], [65, 69]];
+  const offset = [[152, 80], [155, 76], [149, 78], [153, 83]];
+  return (
+    <Frame label="Accuracy means hitting the true value; precision means the hits cluster tightly">
+      {rings(64)}
+      <circle cx="64" cy="66" r="2" fill={SUB} />
+      {accurate.map(([x, y], i) => <circle key={i} className={s.popLate} style={{ animationDelay: `${i * 0.12}s` }} cx={x} cy={y} r="3.5" fill={GREEN} />)}
+      <text x="64" y="108" textAnchor="middle" fontSize="10" fontWeight="800" fill={GREEN}>accurate</text>
+      <text x="64" y="122" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>+ precise</text>
+      {rings(152)}
+      <circle cx="152" cy="66" r="2" fill={SUB} />
+      {offset.map(([x, y], i) => <circle key={i} className={s.popLate} style={{ animationDelay: `${i * 0.12}s` }} cx={x} cy={y} r="3.5" fill={PINK} />)}
+      <text x="152" y="108" textAnchor="middle" fontSize="10" fontWeight="800" fill={PINK}>precise</text>
+      <text x="152" y="122" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>not accurate</text>
+    </Frame>
+  );
+}
+
+/* L3 13. Valence electrons set the stage for bonding */
+function ValenceBridge() {
+  const valence = [[58, 41], [92, 75], [58, 109], [24, 75]];
+  return (
+    <Frame label="Valence electrons in the outer shell are the ones that go on to form bonds">
+      <circle cx="58" cy="75" r="34" fill="none" stroke="var(--color-border-strong)" strokeWidth="1.5" />
+      {Ball({ cx: 58, cy: 75, r: 12, color: ORANGE, label: '+', labelSize: 12 })}
+      {valence.map(([x, y], i) => (
+        <g key={i} className={s.pulse}>{Ball({ cx: x, cy: y, r: 6, color: YELLOW })}</g>
+      ))}
+      <text x="58" y="142" textAnchor="middle" fontSize="9.5" fill={SUB} fontWeight="700">valence electrons</text>
+      <line x1="104" y1="75" x2="132" y2="75" stroke={SUB} strokeWidth="2.5" />
+      <path d="M 140 75 l -10 -5 v 10 Z" fill={SUB} />
+      {Ball({ cx: 168, cy: 75, r: 13, color: BLUE })}
+      {Ball({ cx: 200, cy: 75, r: 13, color: GREEN })}
+      <g className={s.pulse}>{Ball({ cx: 184, cy: 75, r: 5, color: YELLOW })}</g>
+      <text x="184" y="142" textAnchor="middle" fontSize="9.5" fill={SUB} fontWeight="700">form a bond</text>
+    </Frame>
+  );
+}
+
+/* L4 21. Molecule shapes preview - linear, bent, tetrahedral */
+function MoleculeShapes() {
+  return (
+    <Frame label="Electron-pair repulsion gives molecules their shapes: linear, bent, and tetrahedral">
+      {/* linear: O=C=O */}
+      <line x1="22" y1="52" x2="58" y2="52" stroke="var(--color-text)" strokeWidth="2.5" />
+      {Ball({ cx: 22, cy: 52, r: 8, color: PINK })}
+      {Ball({ cx: 40, cy: 52, r: 9, color: SUB })}
+      {Ball({ cx: 58, cy: 52, r: 8, color: PINK })}
+      <text x="40" y="92" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>linear</text>
+
+      {/* bent: water */}
+      <line x1="110" y1="44" x2="92" y2="66" stroke="var(--color-text)" strokeWidth="2.5" />
+      <line x1="110" y1="44" x2="128" y2="66" stroke="var(--color-text)" strokeWidth="2.5" />
+      {Ball({ cx: 110, cy: 44, r: 9, color: PINK })}
+      {Ball({ cx: 92, cy: 66, r: 7, color: BLUE })}
+      {Ball({ cx: 128, cy: 66, r: 7, color: BLUE })}
+      <text x="110" y="92" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>bent</text>
+
+      {/* tetrahedral: methane */}
+      <line x1="184" y1="52" x2="184" y2="30" stroke="var(--color-text)" strokeWidth="2.5" />
+      <line x1="184" y1="52" x2="164" y2="64" stroke="var(--color-text)" strokeWidth="2.5" />
+      <line x1="184" y1="52" x2="204" y2="64" stroke="var(--color-text)" strokeWidth="2.5" />
+      <line x1="184" y1="52" x2="184" y2="74" stroke="var(--color-text)" strokeWidth="2.5" />
+      {Ball({ cx: 184, cy: 52, r: 9, color: SUB })}
+      {Ball({ cx: 184, cy: 30, r: 6, color: BLUE })}
+      {Ball({ cx: 164, cy: 64, r: 6, color: BLUE })}
+      {Ball({ cx: 204, cy: 64, r: 6, color: BLUE })}
+      {Ball({ cx: 184, cy: 74, r: 6, color: BLUE })}
+      <text x="184" y="92" textAnchor="middle" fontSize="9.5" fontWeight="700" fill={SUB}>tetrahedral</text>
+    </Frame>
+  );
+}
+
 const GRAPHICS = {
   flask: Flask,
   matter: Matter,
@@ -593,6 +838,15 @@ const GRAPHICS = {
   states: States,
   dissolve: Dissolve,
   dial: Dial,
+  ruler: Ruler,
+  balanceScale: BalanceScale,
+  powersOfTen: PowersOfTen,
+  energyHill: EnergyHill,
+  periodicTrend: PeriodicTrend,
+  precisionTargets: PrecisionTargets,
+  valenceBridge: ValenceBridge,
+  moleculeShapes: MoleculeShapes,
+  conservation: Conservation,
 };
 
 /**

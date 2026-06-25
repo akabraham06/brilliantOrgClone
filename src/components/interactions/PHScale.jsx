@@ -3,8 +3,23 @@ import v from './viz.module.css';
 import styles from './PHScale.module.css';
 import DragChip from './DragChip.jsx';
 import { useSpring } from './lib/motion.js';
+import {
+  motion,
+  AnimatePresence,
+  LayoutGroup,
+  ReducedMotionConfig,
+  placeSpring,
+  revealVariants,
+} from './lib/Motion.jsx';
 
 const ZONES = ['acidic', 'neutral', 'basic'];
+
+// Graded reveal: each placed chip fades up in a short stagger (opacity only, so
+// it never fights the layout transform that drops it into / out of a zone).
+const placedChipVariants = {
+  placed: { opacity: 1 },
+  graded: (idx) => ({ opacity: [0.5, 1], transition: { delay: idx * 0.06, duration: 0.35 } }),
+};
 const REASON = {
   acidic: 'pH below 7',
   neutral: 'pH of exactly 7',
@@ -30,7 +45,7 @@ function Beaker({ ph, label }) {
   // liquid height grows slightly with pH just for visual life; mostly fixed
   const top = 30;
   return (
-    <svg width="64" height="92" viewBox="0 0 64 92" role="img" aria-label={`${label || 'beaker'} indicator color`}>
+    <svg width="64" height="92" viewBox="0 0 64 92" role="img" aria-label={`${label || 'beaker'} indicator color`} className={v.sceneShadow}>
       <path d="M14 6 H50 V58 Q50 84 32 84 Q14 84 14 58 Z" fill="var(--color-bg-elevated)" stroke="var(--color-border-strong)" strokeWidth="2" />
       <clipPath id="beaker-clip">
         <path d="M14 6 H50 V58 Q50 84 32 84 Q14 84 14 58 Z" />
@@ -40,7 +55,7 @@ function Beaker({ ph, label }) {
         <ellipse cx="32" cy={top} rx="20" ry="3.5" fill="#ffffff" opacity="0.18" />
       </g>
       <line x1="14" y1="6" x2="50" y2="6" stroke="var(--color-border-strong)" strokeWidth="2" />
-      <text x="32" y="50" textAnchor="middle" fontSize="13" fontWeight="800" fill="#06210f">{Math.round(fill)}</text>
+      <text x="32" y="50" textAnchor="middle" fontSize="13" fontWeight="800" fill="#ffffff" stroke="rgba(0,0,0,0.65)" strokeWidth="0.7" paintOrder="stroke">{Math.round(fill)}</text>
     </svg>
   );
 }
@@ -49,16 +64,22 @@ function Beaker({ ph, label }) {
  * pH scale placement engine: assign each item to acidic / neutral / basic.
  * Used for the content slide (ungraded) and the pH check (graded).
  */
-export default function PHScale({ items = [], graded = false, config = {}, onReady, onResult }) {
-  const [assign, setAssign] = useState({});
+export default function PHScale({ items = [], graded = false, config = {}, onReady, onResult, savedState, onSaveState }) {
+  const [assign, setAssign] = useState(() => savedState?.assign || {});
   const [selected, setSelected] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(() => savedState?.submitted || false);
   const [activeId, setActiveId] = useState(null);
 
   useEffect(() => {
     if (!graded) onReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persist board state so navigating away / refreshing doesn't wipe a
+  // progress-gating check (matches the other graded checks' contract).
+  useEffect(() => {
+    onSaveState?.({ assign, submitted });
+  }, [assign, submitted, onSaveState]);
 
   const unassigned = items.filter((i) => assign[i.id] == null);
   const allAssigned = items.length > 0 && unassigned.length === 0;
@@ -99,27 +120,39 @@ export default function PHScale({ items = [], graded = false, config = {}, onRea
 
   function reset() {
     setSubmitted(false);
-    setAssign({});
+    // Keep the placements that were correct; only the wrong ones return to the
+    // tray to be re-tried (non-destructive retry).
+    setAssign((p) => {
+      const kept = {};
+      items.forEach((i) => {
+        if (p[i.id] === i.answer) kept[i.id] = p[i.id];
+      });
+      return kept;
+    });
     setSelected(null);
     onResult?.(false);
   }
 
   return (
+    <ReducedMotionConfig>
+    <LayoutGroup>
     <div className={v.stage} style={{ width: '100%' }}>
-      <div className={styles.scaleRow}>
-        <Beaker ph={indicatorPh} label={activeItem?.label} />
-        <div className={styles.scaleCol}>
-          <div className={styles.bar} aria-hidden="true">
-            <div className={styles.indicator} style={{ left: `${(indicatorPh / 14) * 100}%`, borderTopColor: indicatorColor(indicatorPh) }} />
+      <div className={`${v.panel} ${v.panelWide}`}>
+        <div className={styles.scaleRow}>
+          <Beaker ph={indicatorPh} label={activeItem?.label} />
+          <div className={styles.scaleCol}>
+            <div className={styles.bar} aria-hidden="true">
+              <div className={styles.indicator} style={{ left: `${(indicatorPh / 14) * 100}%`, borderTopColor: indicatorColor(indicatorPh) }} />
+            </div>
+            <div className={styles.ticks} aria-hidden="true">
+              <span>0</span>
+              <span>7</span>
+              <span>14</span>
+            </div>
+            <p className={v.muted} style={{ margin: '4px 0 0' }}>
+              {activeItem ? `${activeItem.label}: pH ${activePh}` : 'Tap or place an item to read its pH'}
+            </p>
           </div>
-          <div className={styles.ticks} aria-hidden="true">
-            <span>0</span>
-            <span>7</span>
-            <span>14</span>
-          </div>
-          <p className={v.muted} style={{ margin: '4px 0 0' }}>
-            {activeItem ? `${activeItem.label}: pH ${activePh}` : 'Tap or place an item to read its pH'}
-          </p>
         </div>
       </div>
 
@@ -132,11 +165,26 @@ export default function PHScale({ items = [], graded = false, config = {}, onRea
             <div className={v.binItems}>
               {items
                 .filter((i) => assign[i.id] === zone)
-                .map((i) => {
+                .map((i, idx) => {
+                  const correct = assign[i.id] === i.answer;
                   let cls = v.chip;
-                  if (submitted) cls += assign[i.id] === i.answer ? ` ${v.chipSelected}` : '';
+                  if (submitted) cls += correct ? ` ${styles.chipCorrect}` : ` ${styles.chipWrong}`;
+                  const label = submitted ? `${i.label} ${correct ? '\u2713' : '\u2717'}` : i.label;
                   return (
-                    <DragChip key={i.id} id={i.id} label={i.label} image={i.image} className={cls} disabled={submitted} onTap={tapItem} onDrop={assignTo} />
+                    // layoutId shared with the tray chip: framer slides the chip
+                    // into the zone (and back to the tray on a non-destructive
+                    // retry) instead of teleporting. Additive wrapper around DragChip.
+                    <motion.div
+                      key={i.id}
+                      layout
+                      layoutId={`ph-${i.id}`}
+                      custom={idx}
+                      variants={placedChipVariants}
+                      animate={submitted ? 'graded' : 'placed'}
+                      transition={placeSpring}
+                    >
+                      <DragChip id={i.id} label={label} image={i.image} className={cls} disabled={submitted} onTap={tapItem} onDrop={assignTo} />
+                    </motion.div>
                   );
                 })}
             </div>
@@ -144,38 +192,58 @@ export default function PHScale({ items = [], graded = false, config = {}, onRea
         ))}
       </div>
 
-      {unassigned.length > 0 && (
-        <div className={v.row} data-dropzone="__tray__">
-          {unassigned.map((i) => (
-            <DragChip
-              key={i.id}
-              id={i.id}
-              label={i.label}
-              image={i.image}
-              className={selected === i.id ? `${v.chip} ${v.chipSelected}` : v.chip}
-              disabled={submitted}
-              onTap={tapItem}
-              onDrop={assignTo}
-            />
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {unassigned.length > 0 && (
+          <motion.div
+            className={v.row}
+            data-dropzone="__tray__"
+            layout
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {unassigned.map((i) => (
+              <motion.div key={i.id} layout layoutId={`ph-${i.id}`} transition={placeSpring}>
+                <DragChip
+                  id={i.id}
+                  label={i.label}
+                  image={i.image}
+                  className={selected === i.id ? `${v.chip} ${v.chipSelected}` : v.chip}
+                  disabled={submitted}
+                  selected={selected === i.id}
+                  onTap={tapItem}
+                  onDrop={assignTo}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {selected != null && <p className={v.muted}>Drag it to a zone, or tap acidic, neutral, or basic.</p>}
 
-      {((graded && submitted) || (!graded && allAssigned)) && (
-        <ul className={styles.explainList}>
-          {items.map((i) => (
-            <li key={i.id}>
-              <strong>{i.label}</strong> is {i.answer} - it has a {REASON[i.answer]}.
-            </li>
-          ))}
-        </ul>
-      )}
+      <AnimatePresence>
+        {((graded && submitted) || (!graded && allAssigned)) && (
+          <motion.ul
+            className={styles.explainList}
+            variants={revealVariants}
+            initial="hidden"
+            animate="shown"
+            exit="exit"
+            transition={placeSpring}
+          >
+            {items.map((i) => (
+              <li key={i.id}>
+                <strong>{i.label}</strong> is {i.answer} - it has a {REASON[i.answer]}.
+              </li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
 
       {graded &&
         (submitted ? (
-          <div className={allCorrect ? v.feedbackOk : v.feedbackBad}>
+          <div className={allCorrect ? v.feedbackOk : v.feedbackBad} role="status" aria-live="polite">
             <p>{allCorrect ? config.feedbackCorrect : config.feedbackIncorrect}</p>
             {!allCorrect && config.hint && <p>Hint: {config.hint}</p>}
             {!allCorrect && (
@@ -188,5 +256,7 @@ export default function PHScale({ items = [], graded = false, config = {}, onRea
           </button>
         ))}
     </div>
+    </LayoutGroup>
+    </ReducedMotionConfig>
   );
 }

@@ -1,0 +1,122 @@
+/* Co-located styles for the redesigned PHPowersOfTen interactive. */
+
+.dialWrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 52px;
+  margin-top: 6px;
+}
+
+.dialBar {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  right: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    90deg,
+    #ef4444 0%,
+    #f97316 28%,
+    #4ade80 50%,
+    #60a5fa 72%,
+    #a78bfa 100%
+  );
+}
+
+/* Neutral (pH 7) reference tick sits exactly at the midpoint of the bar. */
+.neutralTick {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 24px;
+  background: var(--color-text-subtle);
+  opacity: 0.7;
+}
+
+/* Value labels are pinned to the same baseline below the bar so the moving
+   marker label and the fixed neutral label stay vertically centered together. */
+.neutralLabel {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+}
+
+.marker {
+  position: absolute;
+  top: 1px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: left 0.2s ease;
+  z-index: 2;
+}
+
+.markerDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  margin-top: 6px;
+}
+
+.markerLabel {
+  position: absolute;
+  top: 31px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+/* Horizontal row of x10 jump chips - wraps cleanly, no fixed height hacks. */
+.jumps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.jumpChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 48px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--color-border-strong);
+  background: var(--color-bg-elevated);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  justify-content: center;
+}
+
+.jumpArrow {
+  color: var(--color-text-subtle);
+  font-weight: 700;
+}
+
+.neutralNote {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-style: italic;
+  text-align: center;
+}

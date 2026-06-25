@@ -1,0 +1,70 @@
+.scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.scene svg {
+  display: block;
+}
+
+/* density = mass / volume = value */
+.formula {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.formulaLabel {
+  color: var(--color-text-muted);
+}
+
+.frac {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.num {
+  padding: 0 var(--space-2);
+}
+
+.den {
+  padding: 2px var(--space-2) 0;
+  border-top: 2px solid var(--color-text-subtle);
+}
+
+.equals {
+  color: var(--color-text-muted);
+}
+
+.result {
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 360px;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.controlLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

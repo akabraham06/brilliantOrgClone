@@ -1,0 +1,17 @@
+.viewport {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    var(--color-surface-2, rgba(255, 255, 255, 0.05)),
+    var(--color-surface, rgba(255, 255, 255, 0.02))
+  );
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  touch-action: none;
+  cursor: grab;
+}
+
+.viewport:active {
+  cursor: grabbing;
+}

@@ -29,6 +29,43 @@ const db = getFirestore();
 
 async function seed() {
   const now = new Date();
+
+  // Purge stale lessons/slides for this course first. Slide and lesson doc IDs
+  // are positional (lesson-N, lesson-N-sM), so when a lesson shrinks or is
+  // reordered, set()-only seeding leaves orphan docs that the client still
+  // reads (and appends out of order). Delete anything for this course that is
+  // not in the freshly built set, then write the new content.
+  const keepLessonIds = new Set(lessons.map((l) => l.lessonId));
+  const keepSlideIds = new Set(slides.map((s) => s.slideId));
+
+  const purge = db.batch();
+  let staleLessons = 0;
+  let staleSlides = 0;
+
+  const existingLessons = await db
+    .collection('lessons')
+    .where('courseId', '==', course.courseId)
+    .get();
+  existingLessons.forEach((d) => {
+    if (!keepLessonIds.has(d.id)) {
+      purge.delete(d.ref);
+      staleLessons += 1;
+    }
+  });
+
+  const existingSlides = await db
+    .collection('slides')
+    .where('courseId', '==', course.courseId)
+    .get();
+  existingSlides.forEach((d) => {
+    if (!keepSlideIds.has(d.id)) {
+      purge.delete(d.ref);
+      staleSlides += 1;
+    }
+  });
+
+  if (staleLessons || staleSlides) await purge.commit();
+
   const batch = db.batch();
 
   batch.set(db.collection('courses').doc(course.courseId), {
@@ -48,7 +85,8 @@ async function seed() {
   await batch.commit();
   console.log(
     `Seeded: 1 course, ${lessons.length} lessons, ${slides.length} slides ` +
-      `into project ${serviceAccount.project_id}.`,
+      `into project ${serviceAccount.project_id}. ` +
+      `Purged ${staleLessons} stale lessons, ${staleSlides} stale slides.`,
   );
 }
 

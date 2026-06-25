@@ -183,11 +183,17 @@ function BondingTendency({ element }) {
   let msg;
   if (valence === outerCapacity) {
     msg = `${element.name} already has a full outer shell, so it is stable and rarely bonds.`;
-  } else if (valence <= outerCapacity / 2) {
+  } else if (outerCapacity === 8 && valence === 4) {
+    // Half-filled octet (carbon, silicon): losing or gaining 4 is too costly,
+    // so these atoms share electrons instead of forming ions.
+    msg = `${element.name} has 4 valence electrons - exactly half a full shell. Rather than lose or gain 4 electrons, it usually shares them (covalent bonding).`;
+  } else if (outerCapacity === 2 && valence === 1) {
+    msg = `${element.name} has 1 valence electron - it tends to lose it, forming a +1 ion.`;
+  } else if (valence < outerCapacity / 2) {
     msg = `${element.name} has ${valence} valence electron${valence === 1 ? '' : 's'} - it tends to lose ${valence} to empty its outer shell, forming a +${valence} ion.`;
   } else {
     const need = outerCapacity - valence;
-    msg = `${element.name} has ${valence} valence electrons - it wants ${need} more to fill its outer shell, forming a ${-need} ion.`;
+    msg = `${element.name} has ${valence} valence electrons - it tends to gain ${need} more to fill its outer shell, forming a -${need} ion.`;
   }
   return <p className={v.feedbackOk}>{msg}</p>;
 }

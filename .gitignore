@@ -22,6 +22,11 @@ dist-ssr
 firebase-debug.log
 .firebaserc.local
 
+# Agent tooling / skills (local, not part of the app)
+.agents
+.impeccable
+skills-lock.json
+
 # Editor / OS
 .DS_Store
 .Rhistory

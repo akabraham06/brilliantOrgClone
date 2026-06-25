@@ -37,7 +37,7 @@ const courseMeta = {
     'A visual, interactive starter path. Build intuition for atoms, bonding, reactions, and everyday chemistry, one idea at a time.',
   audience: 'Beginner high school chemistry student (ages 14-16)',
   level: 'Beginner',
-  estimatedMinutes: 130,
+  estimatedMinutes: 166,
   coverIcon: 'beaker',
   isPublished: true,
 };
@@ -116,29 +116,10 @@ const LESSON_DEFS = [
         },
       },
       {
-        type: 'classify',
-        component: 'MultipleChoiceCheck',
-        title: 'Check: spot the matter',
-        body: 'Quick comprehension check before we zoom in.',
-        instructions: 'Answer each question.',
-        isCheck: true,
-        check: {
-          validationMode: 'multipleChoice',
-          questions: [
-            { id: 'air', prompt: 'Is air matter?', options: ['Yes', 'No'], answer: 'Yes' },
-            { id: 'sound', prompt: 'Is sound matter?', options: ['Yes', 'No'], answer: 'No' },
-            { id: 'steam', prompt: 'Is steam matter?', options: ['Yes', 'No'], answer: 'Yes' },
-          ],
-          hint: 'If it has mass and takes up space, it is matter.',
-          feedbackCorrect: 'Exactly - mass and volume are the test for matter.',
-          feedbackIncorrect: 'Remember: energy (light, sound, heat) is not matter.',
-        },
-      },
-      {
         type: 'clickableDiagram',
         component: 'ParticleModelViewer',
         title: 'Elements, compounds, and mixtures',
-        body: 'All matter can be sorted by how its particles are arranged. An element is made of just one kind of atom. A compound is two or more kinds of atoms chemically bonded in a fixed ratio. A mixture is substances physically combined but not bonded, so they can be separated again.',
+        body: 'You can now tell matter from energy - so let us sort the matter itself. All matter can be grouped by how its particles are arranged. An element is made of just one kind of atom. A compound is two or more kinds of atoms chemically bonded in a fixed ratio. A mixture is substances physically combined but not bonded, so they can be separated again.',
         instructions: 'Toggle between oxygen, water, saltwater, and trail mix to see the particles change.',
       },
       {
@@ -183,7 +164,7 @@ const LESSON_DEFS = [
         type: 'clickableDiagram',
         component: 'ZoomScaleViewer',
         title: 'Atoms are the building blocks',
-        body: 'Zoom in on any object far enough and you reach molecules, then single atoms - the building blocks of all matter. Atoms are astonishingly small: a single drop of water holds more atoms than there are stars in the observable universe.',
+        body: 'Elements, compounds, and mixtures are all made of the same thing underneath: atoms. Zoom in on any object far enough and you reach molecules, then single atoms - the building blocks of all matter. Atoms are astonishingly small: a single drop of water holds more atoms than there are stars in the observable universe.',
         instructions: 'Drag the slider to zoom from an everyday object down to a single atom.',
       },
       {
@@ -247,25 +228,171 @@ const LESSON_DEFS = [
     ],
   },
   {
-    title: 'Atomic Structure and Ions',
+    title: 'Measurement, Units, and Scientific Notation',
     shortDescription:
-      'Discover what makes each element unique and how atoms become ions.',
-    estimatedMinutes: 26,
+      'Measure the world, switch between units, and tame very big and very small numbers.',
+    estimatedMinutes: 16,
+    icon: 'ruler',
+    learningObjectives: [
+      'Name what we measure and the units we use',
+      'Switch between metric prefixes (kilo, base, centi, milli)',
+      'Read and write numbers in scientific notation',
+      'Convert units by cancelling them (dimensional analysis)',
+    ],
+    recap: [
+      'Chemistry measures mass, length, volume, and temperature',
+      'Metric prefixes scale a base unit by powers of ten',
+      'Scientific notation writes huge or tiny numbers as a digit times a power of ten',
+      'Dimensional analysis converts units by cancelling the ones you do not want',
+      'Density is how much mass is packed into a volume',
+    ],
+    slides: [
+      {
+        type: 'explainer',
+        component: 'ExplainerGraphic',
+        title: 'Why we measure',
+        body: 'Chemistry is an experimental science, so almost everything starts with a measurement. The big four are mass (how much matter), length (how long), volume (how much space), and temperature (how hot or cold). A measurement is only useful when it carries a unit - "5" means nothing, but "5 grams" does.',
+        instructions: 'A number without a unit is only half an answer.',
+        interactionConfig: { graphic: 'balanceScale', caption: 'Mass, length, volume, temperature - always paired with a unit.' },
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'UnitScaleSlider',
+        title: 'Units and metric prefixes',
+        body: 'The metric system uses one base unit (like the meter) and adds prefixes to make it bigger or smaller by powers of ten. Kilo- means 1000 times bigger; centi- means 100 times smaller; milli- means 1000 times smaller. The thing you are measuring does not change - only the unit you report it in.',
+        instructions: 'Tap each prefix to see the same 1 meter written a different way.',
+      },
+      {
+        type: 'predict',
+        component: 'PredictRevealCard',
+        title: 'Predict: which is longest?',
+        body: 'Use what you just saw about prefixes to compare three lengths.',
+        instructions: 'Predict, then reveal.',
+        interactionConfig: {
+          prompt: 'Which of these is the longest distance?',
+          options: [
+            { id: 'a', label: '1 kilometer', correct: true },
+            { id: 'b', label: '500 meters', correct: false },
+            { id: 'c', label: '90000 centimeters', correct: false },
+          ],
+          reveal:
+            '1 kilometer = 1000 m, which beats 500 m and 90000 cm (= 900 m). Converting everything to the same unit (meters) makes the comparison easy - that is exactly why units and prefixes matter.',
+        },
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'SciNotationSlider',
+        title: 'Scientific notation',
+        body: 'Some numbers in chemistry are absurdly big (the particles in a spoonful) or tiny (the size of an atom). Scientific notation is the shorthand: write a number as a power of ten. The exponent just counts how many places the decimal point moves. Slide it and watch the zeros march out.',
+        instructions: 'Drag the exponent and watch 10^n expand into the full number.',
+      },
+      {
+        type: 'predict',
+        component: 'PredictRevealCard',
+        title: 'Predict: reading scientific notation',
+        body: 'Scientific notation will show up again with the mole and with pH, so get a feel for it now.',
+        instructions: 'Predict, then reveal.',
+        interactionConfig: {
+          prompt: 'The number 6.022 x 10^23 is...',
+          options: [
+            { id: 'a', label: 'A 1 followed by 23 zeros, times about 6 - an enormous number', correct: true },
+            { id: 'b', label: 'A tiny fraction near zero', correct: false },
+            { id: 'c', label: 'About 23', correct: false },
+          ],
+          reveal:
+            'A positive exponent means a big number: 10^23 is a 1 with 23 zeros, and 6.022 x 10^23 is about six of those. This exact number is Avogadro\u2019s number - you will meet it again in the mole lesson.',
+        },
+      },
+      {
+        type: 'explainer',
+        component: 'WorkedExample',
+        title: 'Worked example: cancel the units',
+        body: 'Dimensional analysis is a trick for converting units: write the conversion as a fraction so the unwanted unit cancels, just like cancelling numbers. Watch one, then you will try it.',
+        goal: 'Convert units by cancelling them',
+        instructions: 'Reveal each step, then try the next slide.',
+        interactionConfig: {
+          problem: 'Convert 5 kilometers into meters.',
+          steps: [
+            { label: 'Start with what you have', detail: '5 km' },
+            { label: 'Multiply by a conversion factor', detail: '5 km x (1000 m / 1 km)' },
+            { label: 'Cancel the matching unit', detail: 'The km on top and bottom cancel, leaving meters' },
+            { label: 'Multiply the numbers', detail: '5 x 1000 = 5000 m' },
+          ],
+          takeaway: 'Arrange the conversion factor so the unit you do not want cancels out.',
+        },
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'UnitCancelDrag',
+        title: 'Now you cancel the units',
+        body: 'Your turn. Pick the conversion factor whose bottom unit cancels what you started with. If the units do not cancel, the factor is upside down or unrelated.',
+        goal: 'Choose the factor that cancels the starting unit',
+        instructions: 'Tap the factor that cancels your starting unit.',
+        interactionConfig: {
+          prompt: 'Convert 3 km into meters by cancelling units.',
+          start: { value: 3, unit: 'km' },
+          tiles: [
+            { id: 't1', num: '1000 m', den: '1 km', correct: true, result: '3000 m' },
+            { id: 't2', num: '1 km', den: '1000 m', correct: false, why: 'Here km sits on top, so it cannot cancel the km you started with - flip it over.' },
+            { id: 't3', num: '100 cm', den: '1 m', correct: false, why: 'This tile has no km in it, so nothing cancels your starting km.' },
+          ],
+        },
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'DensityCompare',
+        title: 'Density: how packed is it?',
+        body: 'Density combines two measurements - mass and volume - into one: density = mass / volume. It tells you how tightly matter is packed. A small lump of lead can outweigh a big bag of feathers because lead is far denser. Density also decides what floats.',
+        instructions: 'Compare two equal volumes and predict which is denser.',
+      },
+      {
+        type: 'explainer',
+        component: 'ExplainerGraphic',
+        title: 'How precise is your ruler?',
+        body: 'Every measuring tool has a limit. A ruler marked in centimeters can only be trusted to the nearest millimeter or so - reporting "5.4827 cm" would be pretending to a precision you do not have. Scientists call the digits you can actually trust "significant figures." For now, just remember: report only as precisely as your tool allows.',
+        instructions: 'Match your reported precision to your instrument.',
+        interactionConfig: { graphic: 'ruler', caption: 'Trust only the digits your instrument can actually measure.' },
+      },
+      {
+        type: 'classify',
+        component: 'MultipleChoiceCheck',
+        title: 'Check: measure and convert',
+        body: 'Put units, prefixes, scientific notation, and cancelling together.',
+        instructions: 'Answer each question, then check.',
+        isCheck: true,
+        check: {
+          validationMode: 'multipleChoice',
+          questions: [
+            { id: 'm1', prompt: 'How many meters are in 2 kilometers?', options: ['200', '2000', '20'], answer: '2000' },
+            { id: 'm2', prompt: '10^4 written out is...', options: ['400', '10000', '40'], answer: '10000' },
+            { id: 'm3', prompt: 'To convert km to m, you multiply by a factor with km on the...', options: ['top', 'bottom', 'either side'], answer: 'bottom' },
+            { id: 'm4', prompt: 'Density is...', options: ['mass / volume', 'volume / mass', 'mass x volume'], answer: 'mass / volume' },
+          ],
+          hint: 'Bigger prefix = fewer units; put the unwanted unit on the bottom so it cancels.',
+          feedbackCorrect: 'You can measure, convert, and read scientific notation!',
+          feedbackIncorrect: 'Re-check the prefix sizes and how units cancel.',
+        },
+      },
+    ],
+  },
+  {
+    title: 'Atomic Structure',
+    shortDescription:
+      'Discover what makes each element unique - protons, neutrons, isotopes, and electron shells.',
+    estimatedMinutes: 16,
     icon: 'shells',
     learningObjectives: [
       'Relate protons and neutrons to atomic and mass number',
       'Explain how protons define an element',
-      'Describe isotopes and valence electrons',
-      'Predict simple ion charges',
-      'Recognize that unequal electron sharing makes a bond polar',
+      'Describe isotopes',
+      'Track how electrons fill energy shells and identify valence electrons',
     ],
     recap: [
       'Atomic number = number of protons; mass number = protons + neutrons',
       'The number of protons decides which element an atom is',
       'Isotopes are the same element with different numbers of neutrons',
-      'Valence (outer-shell) electrons drive chemical behavior',
-      'Losing electrons makes a positive cation; gaining electrons makes a negative anion',
-      'When atoms share electrons unequally the bond is polar - one end slightly +, the other slightly -',
+      'Electrons fill energy shells from the inside out',
+      'Valence (outer-shell) electrons drive chemical behavior and bonding',
     ],
     slides: [
       {
@@ -382,6 +509,72 @@ const LESSON_DEFS = [
         interactionConfig: { element: 17, challenge: { type: 'valence' } },
       },
       {
+        type: 'classify',
+        component: 'MultipleChoiceCheck',
+        title: 'Check: shells, valence & isotopes',
+        body: 'Pull together energy shells, valence electrons, and isotopes.',
+        instructions: 'Answer each question.',
+        isCheck: true,
+        check: {
+          validationMode: 'multipleChoice',
+          questions: [
+            { id: 'fill', prompt: 'Which shell fills first?', options: ['The outer shell', 'The inner (lowest-energy) shell', 'They fill at random'], answer: 'The inner (lowest-energy) shell' },
+            { id: 'val', prompt: 'Valence electrons are found in the...', options: ['nucleus', 'innermost shell', 'outermost shell'], answer: 'outermost shell' },
+            { id: 'iso', prompt: 'Two atoms have 6 protons but different neutrons. They are...', options: ['Different elements', 'Isotopes of carbon', 'Ions'], answer: 'Isotopes of carbon' },
+          ],
+          hint: 'Inner shells fill first; valence = outer shell; same protons + different neutrons = isotopes.',
+          feedbackCorrect: 'You have atomic structure down cold.',
+          feedbackIncorrect: 'Revisit how shells fill and what an isotope is.',
+        },
+      },
+      {
+        type: 'explainer',
+        component: 'ExplainerGraphic',
+        title: 'Valence electrons set the stage for bonding',
+        body: 'An atom with an unfilled outer shell is restless - it behaves as if it "wants" a full set of valence electrons. That single drive powers every chemical bond. In the next lesson you will watch those valence electrons get traded away or shared to make ions, ionic bonds, and molecules.',
+        interactionConfig: { graphic: 'valenceBridge', caption: 'Unfilled outer shells drive the bonding you will explore next.' },
+      },
+    ],
+  },
+  {
+    title: 'Chemical Bonding',
+    shortDescription:
+      'See how atoms become ions and how ionic, covalent, and metallic bonds form.',
+    estimatedMinutes: 33,
+    icon: 'bond',
+    learningObjectives: [
+      'Explain why atoms bond',
+      'Describe how atoms gain or lose electrons to form ions',
+      'Predict simple ion charges and name cations and anions',
+      'Distinguish ionic, covalent, and metallic bonds',
+      'Recognize that unequal electron sharing makes a bond polar',
+      'Read simple Lewis dot structures and predict shapes with VSEPR',
+    ],
+    recap: [
+      'Atoms bond to reach a stable, full outer shell (lower energy)',
+      'Losing electrons makes a positive cation; gaining electrons makes a negative anion',
+      'Ionic bonds transfer electrons from a metal to a nonmetal, and the ions stack into a lattice',
+      'Covalent bonds share electron pairs between nonmetals',
+      'Unequal sharing makes a polar bond - one end slightly +, the other slightly -',
+      'Metallic bonds share a "sea" of mobile electrons',
+      'VSEPR: electron pairs repel, setting a molecule\u2019s 3D shape',
+    ],
+    slides: [
+      {
+        type: 'explainer',
+        component: 'BondStabilityScene',
+        title: 'Why atoms bond',
+        body: 'Remember those restless valence electrons from the last lesson? This is what they do. Atoms bond to reach a more stable, lower-energy arrangement - usually a full outer shell. By sharing or transferring electrons, a restless atom can fill that shell and settle down. Nearly every chemical bond comes back to this one drive for stability.',
+        instructions: 'Compare an incomplete shell to a complete one.',
+      },
+      {
+        type: 'explainer',
+        component: 'ExplainerGraphic',
+        title: 'How an atom becomes an ion',
+        body: 'The simplest way to complete a shell is to trade electrons. Hand an electron away and you are left with extra positive charge - a cation; grab an extra electron and you gain negative charge - an anion. Either way the atom is now charged: it has become an ion.',
+        interactionConfig: { graphic: 'transfer', caption: 'Lose an electron -> positive cation; gain one -> negative anion.' },
+      },
+      {
         type: 'predict',
         component: 'PredictRevealCard',
         title: 'Predict: gain or lose?',
@@ -401,28 +594,101 @@ const LESSON_DEFS = [
         type: 'clickableDiagram',
         component: 'IonFormationScene',
         title: 'Why atoms form ions',
-        body: 'Atoms gain or lose electrons to reach a stable, full outer shell. When the number of electrons no longer matches the protons, the atom carries a net charge - it becomes an ion.',
+        body: 'Now build one. An atom gains or loses electrons to reach a stable, full outer shell. The moment its electron count no longer matches its protons, the atom carries a net charge - it has become an ion.',
         instructions: 'Add or remove electrons until the outer shell is full, and watch the net charge (the ion) appear.',
-      },
-      {
-        type: 'explainer',
-        component: 'ExplainerGraphic',
-        title: 'Why ions stack into lattices',
-        body: 'A single Na+ and Cl- attract each other - but that pull reaches out in every direction, so each ion grabs more oppositely charged neighbors. They keep stacking into a vast, repeating 3D grid called a crystal lattice. That orderly packing is exactly why table salt forms little cube-shaped crystals.',
-        interactionConfig: { graphic: 'lattice', caption: 'Opposite charges attract in all directions, building a repeating grid.' },
       },
       {
         type: 'dragSort',
         component: 'IonTransferCanvas',
         title: 'Cations vs. anions',
-        body: 'Losing electrons makes a positive ion called a cation (e.g., Na+). Gaining electrons makes a negative ion called an anion (e.g., Cl-). Metals tend to form cations; nonmetals tend to form anions - and together they stack into the lattice you just met.',
-        instructions: 'Transfer the electron, then view the NaCl crystal to see the lattice form.',
+        body: 'A positive ion is a cation (e.g., Na+); a negative ion is an anion (e.g., Cl-). Metals tend to form cations and nonmetals anions - and because opposite charges attract, a cation and an anion pull together. That attraction between opposite charges is what an ionic bond is made of - you will build one shortly.',
+        instructions: 'Transfer the electron, then view the NaCl crystal the ions build.',
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'IonChargePredictor',
+        title: 'Calculating an ion\u2019s charge',
+        body: 'Here is a fast way to predict an ion\u2019s charge without memorizing tables: count an atom\u2019s outer (valence) electrons, then pick whichever is fewer - losing them or gaining a few to fill the shell. The mismatch left between protons and electrons is the charge.',
+        instructions: 'Tap any element to walk through the three-step shortcut.',
+      },
+      {
+        type: 'classify',
+        component: 'MultipleChoiceCheck',
+        title: 'Check: predict ion charges',
+        body: 'Predict the charge each atom takes when it becomes an ion.',
+        instructions: 'Pick the charge for each, then check.',
+        isCheck: true,
+        check: {
+          validationMode: 'multipleChoice',
+          questions: [
+            { id: 'na', prompt: 'Charge of a sodium (Na) ion?', options: ['+1', '-1', '+2'], answer: '+1' },
+            { id: 'mg', prompt: 'Charge of a magnesium (Mg) ion?', options: ['+1', '+2', '-2'], answer: '+2' },
+            { id: 'cl', prompt: 'Charge of a chlorine (Cl) ion?', options: ['+1', '-1', '-2'], answer: '-1' },
+            { id: 'o', prompt: 'Charge of an oxygen (O) ion?', options: ['-1', '-2', '+2'], answer: '-2' },
+          ],
+          hint: 'Metals tend to lose electrons (+); nonmetals tend to gain (-).',
+          feedbackCorrect: 'You predicted those charges perfectly.',
+          feedbackIncorrect: 'Think about whether the atom gains or loses electrons to fill its shell.',
+        },
+      },
+      {
+        type: 'predict',
+        component: 'PredictRevealCard',
+        title: 'Predict: how do metals and nonmetals bond?',
+        body: 'Metals have few valence electrons; nonmetals have many. Predict what happens when they meet.',
+        instructions: 'Predict, then reveal.',
+        interactionConfig: {
+          prompt: 'A metal (few valence electrons) meets a nonmetal (nearly full shell). What happens?',
+          options: [
+            { id: 'a', label: 'The metal transfers electrons to the nonmetal', correct: true },
+            { id: 'b', label: 'They share electrons equally', correct: false },
+            { id: 'c', label: 'Nothing - they cannot bond', correct: false },
+          ],
+          reveal:
+            'The metal gives up its few valence electrons to the nonmetal. Both reach full shells, become oppositely charged ions, and attract - that is an ionic bond.',
+        },
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'IonicBondScene',
+        title: 'Ionic bonding',
+        body: 'In an ionic bond, a metal donates one or more electrons to a nonmetal. The resulting + and - ions attract strongly. The transfer must balance: pick the numbers of each ion so the positive and negative charges cancel to a neutral formula.',
+        instructions: 'Pick a metal and a nonmetal, then transfer electrons to see how many of each ion are needed for a neutral formula.',
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'LatticeViewer3D',
+        title: 'Why ions stack into lattices',
+        body: 'That + and - attraction does not stop at one pair. The pull reaches out in every direction, so each ion grabs more oppositely charged neighbors, stacking into a vast, repeating 3D grid called a crystal lattice. That orderly packing is exactly why table salt forms little cube-shaped crystals.',
+        instructions: 'Drag to rotate the salt crystal in 3D and see how Na+ and Cl- ions alternate in every direction.',
+      },
+      {
+        type: 'explainer',
+        component: 'ExplainerGraphic',
+        title: 'Ways to draw an atom',
+        body: 'Chemists draw atoms in a few different ways depending on what they want to show. The shell model shows electrons orbiting in rings. A Lewis dot diagram shows just the outer (valence) electrons as dots around the symbol. A line (structural) diagram shows each shared pair as a single line between atoms. Knowing all three makes the next diagrams much easier to read.',
+        interactionConfig: { graphic: 'diagrams', caption: 'Shell model, Lewis dots, and line structures all describe the same atoms.' },
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'LewisDotBuilder',
+        title: 'Lewis structures',
+        body: 'A Lewis structure places an atom\u2019s valence electrons as dots around its symbol - a quick way to see how many electrons it still needs to fill its outer shell. The pattern is the same for every main-group element: one dot per valence electron, placed around the symbol. Try a few elements; once you can read these dots, the shared pairs (lines) in the next slides will make sense.',
+        instructions: 'Tap the symbol to add one dot per valence electron, then switch elements and match each one.',
+      },
+      {
+        type: 'clickableDiagram',
+        component: 'CovalentShareCanvas',
+        title: 'Covalent bonding',
+        body: 'When two nonmetals bond, neither wants to give up electrons, so they share. A shared pair of electrons is a single covalent bond; two shared pairs make a double bond. Sharing lets both atoms count the shared electrons toward a full shell.',
+        instructions: 'Tap between atoms to add shared pairs (shown as lines or Lewis dots) and build H2, H2O, and CO2.',
+        interactionConfig: { molecule: 'H2O' },
       },
       {
         type: 'clickableDiagram',
         component: 'PolarBondViewer',
         title: 'Sharing is not always equal',
-        body: 'Ions form when an electron is transferred completely. But atoms often share electrons instead - and the sharing is rarely perfectly even. The atom that pulls harder (the more electronegative one) hogs the shared electrons and turns slightly negative, while its partner turns slightly positive. This unequal sharing is called polarity.',
+        body: 'Ionic bonds transfer an electron completely; covalent bonds share. But shared electrons are rarely shared evenly. The atom that pulls harder (the more electronegative one) hogs the shared pair and turns slightly negative, while its partner turns slightly positive. This unequal sharing is called polarity.',
         instructions: 'Drag the slider to change how unequally the two atoms pull, from equal sharing to a full transfer.',
       },
       {
@@ -447,117 +713,6 @@ const LESSON_DEFS = [
           reveal:
             'Oxygen. It is more electronegative than hydrogen, so it pulls the shared electrons closer and carries the slight negative (delta-) charge - leaving the two hydrogens slightly positive (delta+).',
         },
-      },
-      {
-        type: 'clickableDiagram',
-        component: 'IonChargePredictor',
-        title: 'Calculating an ion\u2019s charge',
-        body: 'Here is a fast way to predict an ion\u2019s charge without memorizing tables: count an atom\u2019s outer (valence) electrons, then pick whichever is fewer - losing them or gaining a few to fill the shell. The mismatch that is left between protons and electrons is the charge.',
-        instructions: 'Tap any element to walk through the three-step shortcut.',
-      },
-      {
-        type: 'matching',
-        component: 'MultipleChoiceCheck',
-        title: 'Check: ion charges & isotopes',
-        body: 'Predict charges and tell isotopes apart.',
-        instructions: 'Pick the answer for each.',
-        isCheck: true,
-        check: {
-          validationMode: 'multipleChoice',
-          questions: [
-            { id: 'na', prompt: 'Charge of a sodium (Na) ion?', options: ['+1', '-1', '+2'], answer: '+1' },
-            { id: 'mg', prompt: 'Charge of a magnesium (Mg) ion?', options: ['+1', '+2', '-2'], answer: '+2' },
-            { id: 'cl', prompt: 'Charge of a chlorine (Cl) ion?', options: ['+1', '-1', '-2'], answer: '-1' },
-            { id: 'o', prompt: 'Charge of an oxygen (O) ion?', options: ['-1', '-2', '+2'], answer: '-2' },
-            { id: 'iso', prompt: 'Two atoms have 6 protons but different neutrons. They are...', options: ['Different elements', 'Isotopes of carbon', 'Ions'], answer: 'Isotopes of carbon' },
-          ],
-          hint: 'Metals tend to lose electrons (+); nonmetals tend to gain (-).',
-          feedbackCorrect: 'You predicted those charges perfectly.',
-          feedbackIncorrect: 'Think about whether the atom gains or loses electrons.',
-        },
-      },
-    ],
-  },
-  {
-    title: 'Chemical Bonding',
-    shortDescription:
-      'Explore why atoms bond and how ionic, covalent, and metallic bonds differ.',
-    estimatedMinutes: 25,
-    icon: 'bond',
-    learningObjectives: [
-      'Explain why atoms bond',
-      'Distinguish ionic, covalent, and metallic bonds',
-      'Read simple Lewis dot structures',
-      'Predict molecular shapes with VSEPR',
-    ],
-    recap: [
-      'Atoms bond to reach a stable, full outer shell (lower energy)',
-      'Ionic bonds transfer electrons from a metal to a nonmetal',
-      'Covalent bonds share electron pairs between nonmetals',
-      'Metallic bonds share a "sea" of mobile electrons',
-      'Lewis dots show an atom\u2019s valence electrons',
-      'VSEPR: electron pairs repel, setting a molecule\u2019s 3D shape',
-    ],
-    slides: [
-      {
-        type: 'explainer',
-        component: 'BondStabilityScene',
-        title: 'Why atoms bond',
-        body: 'Atoms bond to reach a more stable, lower-energy arrangement - usually a full outer shell. An atom with an incomplete outer shell is reactive; by sharing or transferring electrons it can fill that shell and settle down. Nearly every chemical bond comes back to this drive for stability.',
-        instructions: 'Compare an incomplete shell to a complete one.',
-      },
-      {
-        type: 'predict',
-        component: 'PredictRevealCard',
-        title: 'Predict: how do metals and nonmetals bond?',
-        body: 'Metals have few valence electrons; nonmetals have many. Predict what happens when they meet.',
-        instructions: 'Predict, then reveal.',
-        interactionConfig: {
-          prompt: 'A metal (few valence electrons) meets a nonmetal (nearly full shell). What happens?',
-          options: [
-            { id: 'a', label: 'The metal transfers electrons to the nonmetal', correct: true },
-            { id: 'b', label: 'They share electrons equally', correct: false },
-            { id: 'c', label: 'Nothing - they cannot bond', correct: false },
-          ],
-          reveal:
-            'The metal gives up its few valence electrons to the nonmetal. Both reach full shells, become oppositely charged ions, and attract - that is an ionic bond.',
-        },
-      },
-      {
-        type: 'clickableDiagram',
-        component: 'IonicBondScene',
-        title: 'Ionic bonding',
-        body: 'In an ionic bond, a metal donates one or more electrons to a nonmetal. The resulting + and - ions attract strongly and stack into a repeating lattice, like the cubic crystal of table salt (NaCl).',
-        instructions: 'Pick a metal and a nonmetal, then transfer electrons to see how many of each ion are needed for a neutral formula.',
-      },
-      {
-        type: 'explainer',
-        component: 'ExplainerGraphic',
-        title: 'Ways to draw an atom',
-        body: 'Chemists draw atoms in a few different ways depending on what they want to show. The shell model shows electrons orbiting in rings. A Lewis dot diagram shows just the outer (valence) electrons as dots around the symbol. A line (structural) diagram shows each shared pair as a single line between atoms. Knowing all three makes the next diagrams much easier to read.',
-        interactionConfig: { graphic: 'diagrams', caption: 'Shell model, Lewis dots, and line structures all describe the same atoms.' },
-      },
-      {
-        type: 'clickableDiagram',
-        component: 'LewisDotBuilder',
-        title: 'Lewis dot basics',
-        body: 'A Lewis dot diagram places an atom\u2019s valence electrons as dots around its symbol. It is a quick visual bookkeeping tool that makes it easy to see how many electrons an atom needs to fill its outer shell.',
-        instructions: 'Tap the symbol to add one dot per valence electron until you match the element.',
-      },
-      {
-        type: 'clickableDiagram',
-        component: 'LewisDotBuilder',
-        title: 'Lewis dots: more practice',
-        body: 'The pattern is the same for every main-group element: place one dot per valence electron, going around the symbol. Once you can read these dots, the shared pairs (lines) in the next slide will make sense.',
-        instructions: 'Switch elements and place the right number of dots for each one.',
-      },
-      {
-        type: 'clickableDiagram',
-        component: 'CovalentShareCanvas',
-        title: 'Covalent bonding',
-        body: 'When two nonmetals bond, neither wants to give up electrons, so they share. A shared pair of electrons is a single covalent bond; two shared pairs make a double bond. Sharing lets both atoms count the shared electrons toward a full shell.',
-        instructions: 'Tap between atoms to add shared pairs (shown as lines or Lewis dots) and build H2, H2O, and CO2.',
-        interactionConfig: { molecule: 'H2O' },
       },
       {
         type: 'classify',
@@ -630,11 +785,11 @@ const LESSON_DEFS = [
         instructions: 'Apply a voltage to make the electron sea flow, or push the metal to slide a layer.',
       },
       {
-        type: 'explainer',
-        component: 'ParticleModelViewer',
+        type: 'clickableDiagram',
+        component: 'MolecularVsIonicViewer',
         title: 'Molecules vs. ionic compounds',
-        body: 'Covalent bonding makes discrete molecules - separate units like H2O. Ionic bonding makes giant repeating lattices, not molecules. That difference explains why molecular substances often have low melting points while ionic crystals are hard and high-melting.',
-        instructions: 'Compare the two particle diagrams side by side.',
+        body: 'Covalent bonding makes discrete molecules - separate units like H2O or CO2. Ionic bonding makes giant repeating lattices, not molecules. That structural difference is why molecular substances usually melt at low temperatures while ionic crystals are hard and high-melting.',
+        instructions: 'Switch between a molecular solid and an ionic lattice, then raise the temperature to see why one melts easily and the other does not.',
       },
       {
         type: 'classify',
@@ -732,10 +887,17 @@ const LESSON_DEFS = [
         },
       },
       {
+        type: 'matching',
+        component: 'FormulaNameMatcher',
+        title: 'Naming covalent compounds',
+        body: 'Prefixes encode the counts: mono- (1), di- (2), tri- (3), tetra- (4). CO is carbon monoxide; CO2 is carbon dioxide; N2O4 is dinitrogen tetroxide.',
+        instructions: 'Match formulas like CO, CO2, and N2O4 to their names.',
+      },
+      {
         type: 'nameBuilder',
         component: 'CompoundNameBuilder',
         title: 'Check: name the covalent compound',
-        body: 'Covalent compounds use prefixes to show how many of each atom.',
+        body: 'Now use those prefixes yourself. Covalent compounds use a prefix to show how many of each atom.',
         instructions: 'Assemble the correct name from the blocks.',
         isCheck: true,
         check: {
@@ -747,13 +909,6 @@ const LESSON_DEFS = [
           feedbackCorrect: 'Correct - CO2 is carbon dioxide.',
           feedbackIncorrect: 'Use the prefix for two oxygens: di-.',
         },
-      },
-      {
-        type: 'matching',
-        component: 'FormulaNameMatcher',
-        title: 'Naming covalent compounds',
-        body: 'Prefixes encode the counts: mono- (1), di- (2), tri- (3), tetra- (4). CO is carbon monoxide; CO2 is carbon dioxide; N2O4 is dinitrogen tetroxide.',
-        instructions: 'Match formulas like CO, CO2, and N2O4 to their names.',
       },
       {
         type: 'flashcards',
@@ -782,33 +937,13 @@ const LESSON_DEFS = [
           feedbackIncorrect: 'Treat the polyatomic ion as one named unit.',
         },
       },
-      {
-        type: 'matching',
-        component: 'FormulaNameMatcher',
-        title: 'Check: formula \u2194 name',
-        body: 'Match formulas to names and names to formulas.',
-        instructions: 'Pair each formula with its correct name.',
-        isCheck: true,
-        check: {
-          validationMode: 'matching',
-          pairs: [
-            { left: 'NaCl', right: 'sodium chloride' },
-            { left: 'CO2', right: 'carbon dioxide' },
-            { left: 'MgCl2', right: 'magnesium chloride' },
-            { left: 'CaCO3', right: 'calcium carbonate' },
-          ],
-          hint: 'Metal first, then nonmetal; covalent uses prefixes.',
-          feedbackCorrect: 'You can read chemistry like a language now!',
-          feedbackIncorrect: 'Re-check the metal/nonmetal order and prefixes.',
-        },
-      },
     ],
   },
   {
     title: 'Chemical Reactions and Balancing Equations',
     shortDescription:
       'Watch reactions rearrange atoms and balance simple equations.',
-    estimatedMinutes: 18,
+    estimatedMinutes: 22,
     icon: 'reaction',
     learningObjectives: [
       'Identify reactants and products',
@@ -881,77 +1016,9 @@ const LESSON_DEFS = [
       {
         type: 'steppers',
         component: 'EquationBalancer',
-        title: 'Using coefficients',
-        body: 'A coefficient multiplies an entire formula, scaling every atom in it. Place coefficients in front of formulas and watch the atom tallies change until both sides match.',
-        instructions: 'Use the +/- steppers and watch atom counts update live.',
-      },
-      {
-        type: 'explainer',
-        component: 'ReactionTypeDiagram',
-        title: 'Reactions follow patterns',
-        body: 'Most reactions fall into a handful of recognizable patterns. Learning the patterns lets you predict products instead of memorizing every reaction. The first pattern is synthesis - watch two simple substances combine into one.',
-        instructions: 'Watch the atoms combine, then read the pattern.',
-        interactionConfig: { reactionType: 'synthesis' },
-      },
-      {
-        type: 'explainer',
-        component: 'ReactionTypeDiagram',
-        title: 'Decomposition: breaking down',
-        body: 'Decomposition is the reverse of synthesis: a single compound breaks into simpler pieces, usually when you add energy like heat, light, or electricity. Splitting water into hydrogen and oxygen gases is a classic example.',
-        instructions: 'Watch the compound break apart into two products.',
-        interactionConfig: { reactionType: 'decomposition' },
-      },
-      {
-        type: 'explainer',
-        component: 'ReactionTypeDiagram',
-        title: 'Single replacement',
-        body: 'In a single replacement, a lone element pushes another element out of a compound and takes its place. A more reactive metal, for instance, can displace a less reactive one from its compound.',
-        instructions: 'Watch element A replace B inside the compound.',
-        interactionConfig: { reactionType: 'single' },
-      },
-      {
-        type: 'explainer',
-        component: 'ReactionTypeDiagram',
-        title: 'Double replacement',
-        body: 'In a double replacement, two compounds swap partners. The positive and negative ions trade places, often forming a solid (a precipitate), a gas, or water.',
-        instructions: 'Watch both compounds exchange partners.',
-        interactionConfig: { reactionType: 'double' },
-      },
-      {
-        type: 'explainer',
-        component: 'ReactionTypeDiagram',
-        title: 'Combustion',
-        body: 'Combustion is the rapid reaction of a fuel with oxygen, releasing energy as heat and light. Burning a hydrocarbon fuel produces carbon dioxide and water. It powers engines, stoves, and campfires alike.',
-        instructions: 'Watch the fuel react with oxygen to form CO2 and water.',
-        interactionConfig: { reactionType: 'combustion' },
-      },
-      {
-        type: 'classify',
-        component: 'ClassifyCheck',
-        title: 'Check: recognize the reaction type',
-        body: 'Each reaction type follows a recognizable pattern. With practice you can spot the type just from the shape of the equation.',
-        instructions: 'Sort each equation into its reaction type, then check.',
-        isCheck: true,
-        check: {
-          validationMode: 'classify',
-          categories: ['synthesis', 'decomposition', 'combustion'],
-          items: [
-            { id: 'syn', label: '2H2 + O2 -> 2H2O', answer: 'synthesis' },
-            { id: 'dec', label: '2H2O -> 2H2 + O2', answer: 'decomposition' },
-            { id: 'com', label: 'CH4 + 2O2 -> CO2 + 2H2O', answer: 'combustion' },
-            { id: 'syn2', label: 'N2 + 3H2 -> 2NH3', answer: 'synthesis' },
-          ],
-          hint: 'Things combine = synthesis; one breaks apart = decomposition; a fuel + O2 = combustion.',
-          feedbackCorrect: 'You can name reaction types on sight!',
-          feedbackIncorrect: 'Look at whether things combine, break apart, or burn in oxygen.',
-        },
-      },
-      {
-        type: 'steppers',
-        component: 'EquationBalancer',
-        title: 'Check: balance the equation',
-        body: 'Balance a classic equation using only coefficients.',
-        instructions: 'Set the coefficients to balance the equation.',
+        title: 'Now you balance it',
+        body: 'Your turn: balance the same reaction from the worked example. A coefficient multiplies an entire formula, scaling every atom in it - adjust them until every atom count matches on both sides, then check.',
+        instructions: 'Set the coefficients to balance H2 + O2 -> H2O, then press Check.',
         isCheck: true,
         check: {
           validationMode: 'balance',
@@ -959,26 +1026,33 @@ const LESSON_DEFS = [
           answer: { H2: 2, O2: 1, H2O: 2 },
           hint: 'Balance oxygen first, then hydrogen.',
           feedbackCorrect: 'Balanced! Matter is conserved.',
-          feedbackIncorrect: 'Count each atom on both sides and adjust.',
+          feedbackIncorrect: 'Count each atom on both sides and adjust the coefficients.',
         },
       },
       {
-        type: 'classify',
-        component: 'MultipleChoiceCheck',
-        title: 'Check: reaction types',
-        body: 'Match each pattern to its name.',
-        instructions: 'Answer each question.',
+        type: 'steppers',
+        component: 'EquationBalancer',
+        title: 'Check: a tougher equation',
+        body: 'Now balance one with three substances: make ammonia from nitrogen and hydrogen, using only coefficients.',
+        instructions: 'Set the coefficients to balance N2 + H2 -> NH3, then check.',
         isCheck: true,
         check: {
-          validationMode: 'multipleChoice',
-          questions: [
-            { id: 'syn', prompt: 'A + B -> AB is which type?', options: ['Synthesis', 'Decomposition', 'Combustion'], answer: 'Synthesis' },
-            { id: 'dec', prompt: 'AB -> A + B is which type?', options: ['Synthesis', 'Decomposition', 'Single replacement'], answer: 'Decomposition' },
-            { id: 'comb', prompt: 'A fuel reacting with O2 to make CO2 + H2O is...', options: ['Combustion', 'Double replacement', 'Synthesis'], answer: 'Combustion' },
-          ],
-          hint: 'Build up = synthesis; break down = decomposition.',
-          feedbackCorrect: 'You can name reaction types on sight!',
-          feedbackIncorrect: 'Look at whether things combine, break apart, or swap.',
+          validationMode: 'balance',
+          equation: 'N2 + H2 -> NH3',
+          answer: { N2: 1, H2: 3, NH3: 2 },
+          hint: 'You need 6 hydrogen atoms on each side; balance hydrogen last.',
+          feedbackCorrect: 'Balanced! N2 + 3H2 -> 2NH3.',
+          feedbackIncorrect: 'Count nitrogen and hydrogen on both sides and adjust.',
+        },
+      },
+      {
+        type: 'explainer',
+        component: 'ReactionTypeDiagram',
+        title: 'Reactions follow patterns',
+        body: 'Now that you can balance an equation, here is a shortcut for what to expect: most reactions fall into a handful of recognizable patterns. Learn the patterns and you can predict products instead of memorizing every reaction. Use the tabs to step through all five - synthesis, decomposition, single and double replacement, and combustion - and run each one.',
+        instructions: 'Pick a reaction type, then press React to watch that pattern play out.',
+        interactionConfig: {
+          reactionTypes: ['synthesis', 'decomposition', 'single', 'double', 'combustion'],
         },
       },
     ],
@@ -1051,11 +1125,11 @@ const LESSON_DEFS = [
         interactionConfig: { grams: 36, molarMass: 18, substance: 'H\u2082O' },
       },
       {
-        type: 'explainer',
-        component: 'MoleConceptScene',
+        type: 'clickableDiagram',
+        component: 'MolesParticlesConverter',
         title: 'From moles to particles',
         body: 'Once you have moles, multiply by 6.022 x 10^23 to get the actual number of particles. Going the other way, divide particles by Avogadro\u2019s number to get moles. The mole sits in the middle of every count.',
-        instructions: 'Adjust the moles and read the particle count.',
+        instructions: 'Pick a direction and feed a quantity through the converter to see the multiply / divide step.',
       },
       {
         type: 'clickableDiagram',
@@ -1097,7 +1171,7 @@ const LESSON_DEFS = [
     title: 'States of Matter, Solutions, and Acids/Bases',
     shortDescription:
       'Connect chemistry to everyday substances, solutions, and the pH scale.',
-    estimatedMinutes: 18,
+    estimatedMinutes: 22,
     icon: 'beaker',
     learningObjectives: [
       'Compare solids, liquids, and gases',
@@ -1117,15 +1191,15 @@ const LESSON_DEFS = [
         type: 'clickableDiagram',
         component: 'StateParticlesAnimator',
         title: 'States of matter',
-        body: 'The three everyday states differ in how their particles are arranged and how much they move. In a solid, particles are packed and only vibrate in place. In a liquid, they touch but slide past each other. In a gas, they are far apart and zoom freely.',
-        instructions: 'Toggle solid, liquid, and gas to see particle spacing and motion.',
+        body: 'Start with how particles are arranged in the three everyday states. In a solid, particles are locked in a packed, orderly grid and only vibrate in place. In a liquid, they still touch but can slide past one another. In a gas, they are spread far apart with lots of empty space between them. Same particles - very different spacing.',
+        instructions: 'Toggle solid, liquid, and gas to compare how the particles are arranged.',
       },
       {
         type: 'clickableDiagram',
         component: 'TemperatureSlider',
         title: 'Phase changes',
-        body: 'Temperature is really a measure of particle motion. Add energy and particles move faster; remove it and they slow down. Enough heating melts a solid to a liquid, then boils it into a gas - and cooling reverses each step.',
-        instructions: 'Drag the temperature slider to melt and boil the substance.',
+        body: 'Now add energy. Temperature really measures how fast particles move: heat them and they jostle faster and more randomly; cool them and they slow down. Add enough energy and a solid melts to a liquid, then boils into a gas - and cooling reverses each step. The arrangement you just saw is set by how much the particles are moving.',
+        instructions: 'Drag the temperature slider to speed up the particles and melt, then boil, the substance.',
       },
       {
         type: 'predict',
@@ -1146,16 +1220,16 @@ const LESSON_DEFS = [
       },
       {
         type: 'clickableDiagram',
-        component: 'DensityCompare',
-        title: 'Density basics',
-        body: 'Density is how much matter is packed into a given space (mass per volume). The same-size box of lead has far more mass than one of feathers because lead\u2019s particles are heavier and more tightly packed. Density is why some things float and others sink.',
-        instructions: 'Compare two equal volumes and predict which is denser.',
+        component: 'DensityFloat3D',
+        title: 'Density: what floats?',
+        body: 'You met density back in the measurement lesson - mass packed into a volume (mass / volume). Here is what it does in the real world: an object floats when it is less dense than the liquid around it, and sinks when it is denser. It even shapes the states of matter - most solids sink in their own liquid, but ice is famously less dense than water, which is why ice cubes float.',
+        instructions: 'Change an object\u2019s density and drop it in the liquid to watch it float or sink.',
       },
       {
         type: 'predict',
         component: 'PredictRevealCard',
         title: 'Predict: salt in water',
-        body: 'You stir salt into water and it seems to vanish. Predict what really happens to it.',
+        body: 'So far we have followed pure substances changing state. But most everyday chemistry happens in mixtures - especially things dissolved in water. You stir salt into water and it seems to vanish. Predict what really happens to it.',
         instructions: 'Predict, then reveal the process.',
         interactionConfig: {
           prompt: 'What happens when salt dissolves in water?',
@@ -1172,8 +1246,8 @@ const LESSON_DEFS = [
         type: 'clickableDiagram',
         component: 'SolutionConcentrationMixer',
         title: 'What is a solution?',
-        body: 'A solution is a uniform mixture where a solute dissolves into a solvent. In saltwater, salt is the solute and water is the solvent. The particles spread out so evenly that the mixture looks like a single clear substance.',
-        instructions: 'Watch salt dissolve into water.',
+        body: 'A solution is a uniform mixture where a solute dissolves into a solvent. In saltwater, salt is the solute and water is the solvent. How crowded those dissolved particles are is the solution\u2019s concentration.',
+        instructions: 'Add solute or water to change how concentrated the solution is.',
       },
       {
         type: 'classify',
@@ -1202,11 +1276,11 @@ const LESSON_DEFS = [
         instructions: 'Drag each real household item to acidic, neutral, or basic.',
       },
       {
-        type: 'classify',
-        component: 'AcidBaseClassifier',
+        type: 'clickableDiagram',
+        component: 'AcidBaseExplorer',
         title: 'Properties of acids and bases',
-        body: 'Acids tend to taste sour and react with metals; bases tend to feel slippery and taste bitter. (Never taste or touch lab chemicals!) Indicators like litmus change color to reveal which is which.',
-        instructions: 'Drag each example into the acid or base category.',
+        body: 'Acids tend to taste sour and react with metals; bases tend to feel slippery and taste bitter. (Never taste or touch lab chemicals!) Indicators like litmus change color to reveal which is which. Explore a few everyday substances and see how each behaves.',
+        instructions: 'Pick a substance and an indicator, then see whether it acts as an acid or a base.',
       },
       {
         type: 'explainer',
@@ -1267,6 +1341,38 @@ function quiz(title, questions, hint, feedbackCorrect, feedbackIncorrect) {
   };
 }
 
+/**
+ * "Key Takeaways" recap slide, auto-built from a lesson's `recap` bullets and
+ * shown right before the end-of-lesson quiz. Reinforces the lesson spine
+ * (hook -> concept -> ramp -> worked example -> you try -> recap -> quiz).
+ */
+function recapSlide(points, goal) {
+  return {
+    type: 'summary',
+    component: 'KeyTakeaways',
+    title: 'Key takeaways',
+    body: 'Here is the big picture from this lesson - the ideas worth carrying forward.',
+    goal: goal || 'Review the lesson\u2019s key ideas',
+    interactionConfig: { points },
+  };
+}
+
+/**
+ * Worked-example ("I do") slide: a modeled, step-by-step solution the learner
+ * reveals one step at a time before the matching "you try" check.
+ */
+function workedExample(title, body, config, goal) {
+  return {
+    type: 'explainer',
+    component: 'WorkedExample',
+    title,
+    body,
+    goal: goal || null,
+    instructions: 'Reveal each step, then try one yourself on the next slide.',
+    interactionConfig: config,
+  };
+}
+
 const LESSON_EXTRAS = [
   {
     prepend: [
@@ -1290,12 +1396,35 @@ const LESSON_EXTRAS = [
           type: 'explainer',
           component: 'BuildingBlocksExercise',
           title: 'Just a few kinds of building blocks',
-          body: 'Here is a wonderful idea: everything around you is built from only about 100 kinds of atoms. It works like LEGO - a handful of brick types snap together into endless creations. Try it below: the same three bricks build several completely different things.',
-          instructions: 'Tap bricks to match each build, then build the next one from the same few types.',
+          body: 'Here is a wonderful idea: everything around you is built from only about 100 kinds of atoms. It works like LEGO - a few kinds of atoms snap together into endless different molecules. Try it below: use the same handful of atoms to build several completely different molecules.',
+          instructions: 'Add atoms to the tray to match each target molecule, then build the next one from the same few atom types.',
+          interactionConfig: {
+            atoms: [
+              { sym: 'H', name: 'Hydrogen', color: '#e9edf7' },
+              { sym: 'O', name: 'Oxygen', color: '#f472b6' },
+              { sym: 'C', name: 'Carbon', color: '#94a3b8' },
+            ],
+            builds: [
+              { id: 'water', name: 'Water', formula: 'H2O', need: { H: 2, O: 1 } },
+              { id: 'co2', name: 'Carbon dioxide', formula: 'CO2', need: { C: 1, O: 2 } },
+              { id: 'methane', name: 'Methane', formula: 'CH4', need: { C: 1, H: 4 } },
+            ],
+          },
         },
       },
       { insertAfter: 'Elements, compounds, and mixtures', slide: explainer('Compounds vs. mixtures: cake vs. salad', 'An easy way to feel the difference: a salad is a mixture - the lettuce, tomato, and cheese keep their own identities and you could pick them back apart. A baked cake is like a compound - the eggs, flour, and sugar have reacted into something brand-new you cannot separate by hand.', 'jars', 'Mixture = salad (separable); compound = cake (transformed).') },
       { insertAfter: 'The periodic table', slide: explainer('Why the table is organized this way', 'The periodic table is not a random list - it is arranged like a well-organized library. Books on the same shelf share a topic; elements in the same column (group) share similar behavior. That organization lets you predict how an element acts just from where it sits.', 'grid', 'Like a library shelves similar books, the table groups similar elements.') },
+      { insertAfter: 'Why the table is organized this way', slide: explainer('One trend you can predict', 'Here is one pattern to look for before we graph anything: as you move DOWN a column (group), atoms get bigger, because each row adds a new electron shell. Patterns like this one repeat across the whole table - that is what "periodic" means.', 'periodicTrend', 'Down a group, atoms get larger - one of many repeating trends.') },
+      {
+        insertAfter: 'One trend you can predict',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'PeriodicTrendsGraph',
+          title: 'Periodic trends, on a graph',
+          body: 'Now see the patterns on a graph. Because the table is organized, element properties climb and reset with each new row (period). Start with atomic radius - the size trend you just predicted - then explore the others.',
+          instructions: 'Switch properties and tap points to see how radius, mass, and electronegativity trend.',
+        },
+      },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'Which one has mass and takes up space (is matter)?', options: ['A beam of light', 'A cup of air', 'A musical note'], answer: 'A cup of air' },
@@ -1303,6 +1432,29 @@ const LESSON_EXTRAS = [
       { id: 'q3', prompt: 'Which particle sits in the nucleus and has no charge?', options: ['Proton', 'Neutron', 'Electron'], answer: 'Neutron' },
       { id: 'q4', prompt: 'Elements in the same group (column) have similar...', options: ['mass', 'properties', 'color'], answer: 'properties' },
     ], 'Recall the test for matter, the three categories, the atom parts, and the table layout.', 'Lesson mastered - you have the foundations down!', 'Review the recap points and give it another go.'),
+  },
+  {
+    explainers: [
+      { insertAfter: 'Predict: reading scientific notation', slide: explainer('Big numbers, real units', 'Scientific notation tames the size of a number, but measurements also carry units - and chemistry constantly switches between them (km to m, g to mg). To compare or combine measurements you need a reliable way to change units without changing the amount. That method is coming up next.', 'powersOfTen', 'Powers of ten handle the size; next we handle the units.') },
+      {
+        insertAfter: 'Now you cancel the units',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'DensityBuilder',
+          title: 'Density combines two measurements',
+          body: 'Cancelling units does more than swap one unit for another - it lets you combine measurements. Density is the first example: it pairs mass (how much matter) with volume (how much space) into a single number, mass per volume. Build it yourself and watch the number change.',
+          instructions: 'Set a mass and a volume, then watch density = mass / volume update live.',
+        },
+      },
+      { insertAfter: 'Density: how packed is it?', slide: explainer('How good is a measurement?', 'So far we have focused on what a measurement says. But every measurement is only as trustworthy as the tool behind it - a kitchen scale and a lab balance reading the "same" mass will not agree to the same number of digits. Before we leave measurement, let us look at how precise a reading can honestly be.', 'precisionTargets', 'Accurate = on target; precise = tightly grouped. Good data is both.') },
+    ],
+    quiz: quiz('Lesson skill check', [
+      { id: 'q1', prompt: 'Which unit measures how much space something takes up?', options: ['mass', 'volume', 'temperature'], answer: 'volume' },
+      { id: 'q2', prompt: '3 km equals how many meters?', options: ['300', '3000', '30'], answer: '3000' },
+      { id: 'q3', prompt: 'Which prefix means 1000 times smaller than the base unit?', options: ['kilo-', 'centi-', 'milli-'], answer: 'milli-' },
+      { id: 'q4', prompt: '10^6 is the same as...', options: ['one million', 'one thousand', 'six'], answer: 'one million' },
+      { id: 'q5', prompt: 'To cancel a unit when converting, that unit must appear...', options: ['only on top', 'on the top and the bottom', 'nowhere'], answer: 'on the top and the bottom' },
+    ], 'Recall the four measurements, the prefix sizes, powers of ten, and unit cancelling.', 'You can measure and convert like a chemist!', 'Review prefixes, scientific notation, and how units cancel.'),
   },
   {
     prepend: [
@@ -1314,7 +1466,22 @@ const LESSON_EXTRAS = [
       ),
     ],
     explainers: [
-      { insertAfter: 'Protons define the element', slide: explainer('The proton count is an atom\u2019s ID', 'Think of the proton count as an atom\u2019s ID number, like a student ID or a passport number. No two elements share it: 1 proton is always hydrogen, 8 is always oxygen. Change the ID and you are literally looking at a different element.', 'badge', 'The atomic number is a unique ID - it never lies about identity.') },
+      { insertAfter: 'Protons define the element', slide: {
+        type: 'clickableDiagram',
+        component: 'ElementIdCard',
+        title: 'The proton count is an atom\u2019s ID',
+        body: 'Think of the proton count as an atom\u2019s ID number, like a student ID or a passport number. No two elements share it: 1 proton is always hydrogen, 8 is always oxygen. Change the ID and you are literally looking at a different element.',
+        instructions: 'Each badge shows an atomic number. Tap the one that identifies the element named above.',
+        goal: 'The atomic number is a unique ID - it never lies about identity.',
+        interactionConfig: {
+          targetZ: 6,
+          cards: [
+            { z: 1, symbol: 'H', name: 'Hydrogen' },
+            { z: 6, symbol: 'C', name: 'Carbon' },
+            { z: 8, symbol: 'O', name: 'Oxygen' },
+          ],
+        },
+      } },
       {
         insertAfter: 'Isotopes',
         slide: {
@@ -1325,15 +1492,14 @@ const LESSON_EXTRAS = [
           instructions: 'Add and remove weights (neutrons) and watch the mass number change while the identity stays Carbon.',
         },
       },
-      { insertAfter: 'Valence electrons', slide: explainer('How an atom becomes an ion', 'Atoms are happiest with a full outer shell, so they trade electrons to get there. Giving an electron away is like handing off a token: lose one and you are left with extra positive charge (a cation); grab an extra and you gain negative charge (an anion).', 'transfer', 'Lose an electron -> positive; gain one -> negative.') },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'What decides which element an atom is?', options: ['Protons', 'Neutrons', 'Electrons'], answer: 'Protons' },
       { id: 'q2', prompt: 'Carbon-12 and carbon-14 are...', options: ['different elements', 'isotopes', 'ions'], answer: 'isotopes' },
-      { id: 'q3', prompt: 'An atom that LOSES an electron becomes a...', options: ['cation (+)', 'anion (-)', 'neutron'], answer: 'cation (+)' },
-      { id: 'q4', prompt: 'Magnesium (Mg) tends to form an ion with charge...', options: ['+1', '+2', '-2'], answer: '+2' },
-      { id: 'q5', prompt: 'In water, electrons are shared unequally, so the bond is...', options: ['polar', 'nonpolar', 'metallic'], answer: 'polar' },
-    ], 'Protons = identity; neutrons = isotope; losing electrons makes a + ion; unequal sharing = polar.', 'You have atoms, ions, and polarity down cold!', 'Revisit identity vs. mass, how ions form, and what makes a bond polar.'),
+      { id: 'q3', prompt: 'Mass number counts an atom\u2019s...', options: ['protons only', 'protons + neutrons', 'protons + electrons'], answer: 'protons + neutrons' },
+      { id: 'q4', prompt: 'Valence electrons are found in the...', options: ['nucleus', 'innermost shell', 'outermost shell'], answer: 'outermost shell' },
+      { id: 'q5', prompt: 'Electrons fill energy shells starting from the...', options: ['outermost shell', 'innermost (lowest-energy) shell', 'middle shell'], answer: 'innermost (lowest-energy) shell' },
+    ], 'Protons = identity; mass number = protons + neutrons; isotopes differ in neutrons; valence electrons sit in the outer shell.', 'You have atomic structure down cold!', 'Revisit identity vs. mass, isotopes, and how shells fill.'),
   },
   {
     explainers: [
@@ -1353,19 +1519,23 @@ const LESSON_EXTRAS = [
           type: 'clickableDiagram',
           component: 'GiveVsShareScene',
           title: 'Giving vs. sharing',
-          body: 'Two everyday ways to settle a dispute over a toy: give it away, or share it. Ionic bonding is the give-away - a metal hands electrons to a nonmetal, so charges appear. Covalent bonding is sharing - two nonmetals each hold the same electron pair, so both feel complete with no full charges.',
+          body: 'Two everyday ways to settle a dispute over a toy: give it away, or share it. Ionic bonding is the give-away - a metal hands electrons to a nonmetal, so charges appear. Covalent bonding is sharing - two nonmetals each hold the same electron pair, so both feel complete with no full charges. But sharing is rarely perfectly even, and that uneven pull is exactly what we look at next.',
           instructions: 'Toggle between Give (ionic) and Share (covalent) and watch where the electron pair settles.',
         },
       },
       { insertAfter: 'Metallic bonding', slide: explainer('A sea of shared electrons', 'Imagine marbles (the positive metal ions) sitting in a shallow tray of water (the electrons) that can slosh freely around them. That mobile "sea" of electrons is why metals conduct electricity and bend instead of shattering - the layers slide while the sea keeps holding them together.', 'sea', 'Fixed metal ions bathed in a free-flowing electron sea.') },
+      { insertAfter: 'Check: sharing vs. transferring', slide: explainer('Why a molecule\u2019s shape matters', 'A Lewis diagram is drawn flat, but real molecules are 3D objects - and that 3D shape decides how a molecule behaves. Water is bent, which is exactly why it is polar and dissolves so much; carbon dioxide is straight, so it is not. Shape is why one molecule has a smell, why a drug fits its target, why fats are solid and oils are liquid. So before we name shapes, the real question is: what decides the shape in the first place? That rule is called VSEPR, and it is next.', 'moleculeShapes', 'A molecule\u2019s 3D shape drives its real-world behavior - next we learn the rule that sets it.') },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'Atoms bond mainly to become...', options: ['more reactive', 'more stable', 'heavier'], answer: 'more stable' },
-      { id: 'q2', prompt: 'Sharing electron pairs is a ... bond', options: ['ionic', 'covalent', 'metallic'], answer: 'covalent' },
-      { id: 'q3', prompt: 'NaCl is held together by a ... bond', options: ['ionic', 'covalent', 'metallic'], answer: 'ionic' },
-      { id: 'q4', prompt: 'The "sea of electrons" explains why metals...', options: ['shatter', 'conduct electricity', 'float'], answer: 'conduct electricity' },
-      { id: 'q5', prompt: 'By VSEPR, a central atom with 4 bonds and no lone pairs is...', options: ['linear', 'tetrahedral', 'bent'], answer: 'tetrahedral' },
-    ], 'Stability drives bonding; share = covalent, transfer = ionic, sea = metallic; pairs repel to set shape.', 'You can tell the bond types apart and predict shapes!', 'Review why atoms bond, how each bond type works, and the VSEPR shapes.'),
+      { id: 'q2', prompt: 'An atom that LOSES an electron becomes a...', options: ['cation (+)', 'anion (-)', 'neutron'], answer: 'cation (+)' },
+      { id: 'q3', prompt: 'Magnesium (Mg) tends to form an ion with charge...', options: ['+1', '+2', '-2'], answer: '+2' },
+      { id: 'q4', prompt: 'Sharing electron pairs is a ... bond', options: ['ionic', 'covalent', 'metallic'], answer: 'covalent' },
+      { id: 'q5', prompt: 'NaCl is held together by a ... bond', options: ['ionic', 'covalent', 'metallic'], answer: 'ionic' },
+      { id: 'q6', prompt: 'In water, electrons are shared unequally, so the bond is...', options: ['polar', 'nonpolar', 'metallic'], answer: 'polar' },
+      { id: 'q7', prompt: 'The "sea of electrons" explains why metals...', options: ['shatter', 'conduct electricity', 'float'], answer: 'conduct electricity' },
+      { id: 'q8', prompt: 'By VSEPR, a central atom with 4 bonds and no lone pairs is...', options: ['linear', 'tetrahedral', 'bent'], answer: 'tetrahedral' },
+    ], 'Stability drives bonding; lose e- = cation, gain e- = anion; share = covalent, transfer = ionic, sea = metallic; unequal sharing = polar; pairs repel to set shape.', 'You can form ions and tell the bond types apart!', 'Review how ions form, the three bond types, polarity, and the VSEPR shapes.'),
   },
   {
     explainers: [
@@ -1379,6 +1549,24 @@ const LESSON_EXTRAS = [
           body: 'Keep two numbers straight: a subscript is an ingredient amount inside one serving, while a coefficient is the number of servings. 2H2O is two whole servings of water - the recipe inside each serving never changes, you just make more of them.',
           instructions: 'Add servings and watch the totals scale while each plate keeps the same recipe.',
         },
+      },
+      {
+        insertAfter: 'Misconception check: H2O vs. 2H2O',
+        slide: workedExample(
+          'Worked example: a neutral ionic formula',
+          'You just counted atoms inside a covalent molecule. Ionic formulas work differently: instead of counting shared atoms, you balance the + and - ion charges you met in the bonding lesson until they cancel to zero. Watch how to combine magnesium (Mg, +2) and chlorine (Cl, -1) into a neutral compound, then you will try it on the next slide.',
+          {
+            problem: 'Combine Mg (charge +2) and Cl (charge -1) into a neutral formula.',
+            steps: [
+              { label: 'Write each ion charge', detail: 'Mg is +2, Cl is -1' },
+              { label: 'Total charge must equal 0', detail: 'One +2 needs two -1 charges to cancel' },
+              { label: 'Add chlorides until balanced', detail: '+2 and (2 x -1) = 0' },
+              { label: 'Write the formula', detail: 'One Mg, two Cl -> MgCl2' },
+            ],
+            takeaway: 'Add atoms until the positive and negative charges cancel to zero.',
+          },
+          'Build a neutral ionic formula by cancelling charges',
+        ),
       },
       { insertAfter: 'Reading ionic formulas', slide: explainer('Names are a translation', 'A chemical name is simply the formula written in words. Learning the rules is like learning to translate between two languages: "NaCl" and "sodium chloride" say exactly the same thing - metal first, nonmetal ending in -ide.', 'label', 'Formula and name are the same idea in two languages.') },
       { insertAfter: 'Build an ionic name', slide: explainer('Naming building blocks', 'Two small toolkits cover most beginner naming. Count prefixes tell you how many atoms: mono- (1), di- (2), tri- (3), tetra- (4). Endings tell you the type: a simple two-element compound ends in -ide (chloride, oxide). Learn these few pieces and most names click into place.', 'affixes', 'Prefixes count atoms; -ide ends a simple compound.') },
@@ -1405,9 +1593,72 @@ const LESSON_EXTRAS = [
           instructions: 'Rebuild the same eight bricks and watch the count stay the same.',
         },
       },
+      { insertAfter: 'Misconception check: do atoms disappear?', slide: explainer('Atoms in, atoms out', 'Here is the rule those examples point to: the atoms you start with are exactly the atoms you end with - none are created or destroyed, only rearranged. That is the law of conservation of mass, and it is the reason a chemical equation has to balance. Keeping the atom counts equal on both sides is just bookkeeping for atoms that were never going anywhere.', 'conservation', 'Same atoms before and after - which is why equations must balance.') },
       { insertAfter: 'What balancing means', slide: explainer('Balancing is a seesaw', 'Think of a reaction as a seesaw that must sit level. Each kind of atom has to weigh the same on both sides. If one side is heavier (more atoms), you add whole molecules - never change a formula - until the seesaw balances.', 'seesaw', 'Equal atoms on each side keeps the equation level.') },
-      { insertAfter: 'Reactions follow patterns', slide: explainer('Reactions come in patterns', 'Most reactions are like familiar dance moves - once you know the pattern you can predict the next step. Two partners join (synthesis), one splits into two (decomposition), or pairs swap partners (replacement). Spotting the pattern beats memorizing every reaction.', 'patterns', 'Learn the handful of patterns, predict the products.') },
-      { insertAfter: 'Combustion', slide: explainer('Five patterns, side by side', 'You have now seen all five: synthesis (parts combine), decomposition (one splits apart), single replacement (a lone element swaps in), double replacement (two compounds trade partners), and combustion (a fuel burns in oxygen to make CO\u2082 and water). Look at the shape of an equation and the pattern usually gives the type away.', 'patterns', 'Synthesis, decomposition, single & double replacement, combustion.') },
+      {
+        insertAfter: 'Misconception check: how do we balance?',
+        slide: workedExample(
+          'Worked example: balance H2 + O2 -> H2O',
+          'Follow each step to balance water, then balance the same equation yourself with the steppers next.',
+          {
+            problem: 'Balance the equation H2 + O2 -> H2O using only coefficients.',
+            steps: [
+              { label: 'Count atoms as written', detail: 'Left: 2 H, 2 O. Right: 2 H, 1 O. Oxygen is off.' },
+              { label: 'Fix oxygen first', detail: 'Put a 2 in front of H2O -> right side now has 4 H, 2 O' },
+              { label: 'Re-balance hydrogen', detail: 'Right has 4 H, so put a 2 in front of H2 -> left has 4 H' },
+              { label: 'Final balanced equation', detail: '2H2 + O2 -> 2H2O (4 H, 2 O on each side)' },
+            ],
+            takeaway: 'Only change coefficients; balance one element at a time and recount.',
+          },
+          'Balance an equation by adjusting coefficients',
+        ),
+      },
+      { insertAfter: 'Reactions follow patterns', slide: explainer('Five patterns, side by side', 'You have now seen all five: synthesis (parts combine), decomposition (one splits apart), single replacement (a lone element swaps in), double replacement (two compounds trade partners), and combustion (a fuel burns in oxygen to make CO\u2082 and water). Look at the shape of an equation and the pattern usually gives the type away.', 'patterns', 'Synthesis, decomposition, single & double replacement, combustion.') },
+      { insertAfter: 'Five patterns, side by side', slide: explainer('Reactions release or absorb energy', 'Reactions do not just rearrange atoms - they also move energy. Some give off heat and feel warm (exothermic, like a campfire); others soak heat up and feel cold (endothermic, like an instant cold pack). Hold that one idea - release vs. absorb - before we put it on a graph.', 'energyHill', 'Exothermic gives off heat; endothermic takes heat in.') },
+      {
+        insertAfter: 'Reactions release or absorb energy',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'EnergyDiagram',
+          title: 'Reactions and energy',
+          body: 'Now graph that idea. An exothermic reaction ends lower than it started, giving off heat; an endothermic one ends higher, soaking energy up. Either way, the reaction must first climb an "activation energy" hill to get going.',
+          instructions: 'Toggle exothermic vs. endothermic and raise the activation-energy barrier.',
+        },
+      },
+      { insertAfter: 'Reactions and energy', slide: explainer('Where the energy comes from', 'Why do some reactions warm up while others cool down? It comes down to bonds. Breaking bonds always costs energy - you have to pull atoms apart - while forming new bonds releases energy. If the new bonds release more energy than the old ones cost, the leftover escapes as heat (exothermic). If they release less, the reaction pulls heat in from its surroundings (endothermic).', null, 'Breaking bonds costs energy; forming bonds releases it. The net decides exo vs. endo.') },
+      {
+        insertAfter: 'Where the energy comes from',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'BondEnergyScene',
+          title: 'The energy lives in the bonds',
+          body: 'Slide 15 showed energy going up and down across a reaction - here is where that energy actually comes from. Breaking the reactant bonds costs energy (energy in); forming the new product bonds gives energy back (energy out). Add up both sides and the difference is the whole story: if more comes out than goes in, the reaction is exothermic; if more goes in, it is endothermic.',
+          goal: 'Tally bond energy in vs. out to see why a reaction is exothermic or endothermic.',
+          instructions: 'Step through breaking then forming bonds, and read the energy ledger to see why the reaction is exothermic or endothermic.',
+        },
+      },
+      {
+        insertAfter: 'The energy lives in the bonds',
+        slide: {
+          type: 'classify',
+          component: 'MultipleChoiceCheck',
+          title: 'Check: energy in reactions',
+          body: 'Use what you just saw about bonds, heat, and the activation-energy hill.',
+          instructions: 'Answer each question, then check.',
+          isCheck: true,
+          check: {
+            validationMode: 'multipleChoice',
+            questions: [
+              { id: 'e1', prompt: 'A reaction that releases heat and feels warm is...', options: ['exothermic', 'endothermic', 'neutral'], answer: 'exothermic' },
+              { id: 'e2', prompt: 'Breaking chemical bonds...', options: ['releases energy', 'costs energy', 'does nothing'], answer: 'costs energy' },
+              { id: 'e3', prompt: 'The energy "hill" a reaction must climb to get started is the...', options: ['activation energy', 'molar mass', 'concentration'], answer: 'activation energy' },
+            ],
+            hint: 'Forming bonds releases energy; the start-up hill is the activation energy.',
+            feedbackCorrect: 'You have the energy picture down!',
+            feedbackIncorrect: 'Recall: breaking bonds costs energy; exothermic gives off heat.',
+          },
+        },
+      },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'During a reaction, atoms are...', options: ['destroyed', 'created', 'rearranged'], answer: 'rearranged' },
@@ -1417,11 +1668,13 @@ const LESSON_EXTRAS = [
       { id: 'q5', prompt: 'Balanced: N2 + H2 -> NH3 needs coefficients...', options: ['1, 3, 2', '1, 1, 2', '2, 3, 1'], answer: '1, 3, 2' },
       { id: 'q6', prompt: 'Zn + 2HCl -> ZnCl2 + H2 is which type?', options: ['Single replacement', 'Double replacement', 'Synthesis'], answer: 'Single replacement' },
       { id: 'q7', prompt: 'If 10 g of reactants fully react, the products weigh...', options: ['less than 10 g', 'exactly 10 g', 'more than 10 g'], answer: 'exactly 10 g' },
-    ], 'Mass is conserved; balance with coefficients; learn the reaction patterns.', 'You can balance and classify reactions!', 'Recount atoms on each side and review the patterns.'),
+      { id: 'q8', prompt: 'A reaction that absorbs heat and feels cold is...', options: ['exothermic', 'endothermic', 'combustion'], answer: 'endothermic' },
+      { id: 'q9', prompt: 'Energy is released when chemical bonds are...', options: ['broken', 'formed', 'counted'], answer: 'formed' },
+    ], 'Mass is conserved; balance with coefficients; learn the reaction patterns; bonds store energy (exo releases, endo absorbs).', 'You can balance and classify reactions!', 'Recount atoms on each side and review the patterns and energy.'),
   },
   {
     explainers: [
-      { insertAfter: 'Why chemists need a counting unit', slide: explainer('The mole is a chemist\u2019s dozen', 'We bundle hard-to-count things all the time: a dozen eggs, a pair of shoes, a ream of paper. Atoms are so tiny we need a giant bundle - the mole. Saying "one mole" is just saying "6.022 x 10^23 of them", the way "a dozen" means twelve.', null) },
+      { insertAfter: 'From moles to particles', slide: explainer('From one substance to a whole reaction', 'So far you have counted one substance at a time - its grams, moles, and particles. But a reaction involves several substances at once. The balanced equation you learned to write last lesson is the link: its coefficients tell you the mole ratio between everything in the reaction, so counting one substance lets you count them all.', null, 'Balanced coefficients turn one count into the whole reaction.') },
       {
         insertAfter: 'Molar mass',
         slide: {
@@ -1431,6 +1684,23 @@ const LESSON_EXTRAS = [
           body: 'You cannot count atoms one by one, but you can weigh them. Molar mass is the clever bridge: weigh out a substance\u2019s molar mass in grams and you have exactly one mole. It is like knowing 100 identical paperclips weigh a set amount, so you weigh instead of count.',
           instructions: 'Pour one mole of each substance and watch the balance read its molar mass.',
         },
+      },
+      {
+        insertAfter: 'Weighing a known count',
+        slide: workedExample(
+          'Worked example: grams to moles',
+          'See how to turn a mass you can weigh into a count of moles. The guided stepper on the next slide lets you try the same conversion.',
+          {
+            problem: 'How many moles are in 36 g of water (H2O)?',
+            steps: [
+              { label: 'Find the molar mass of H2O', detail: '1 + 1 + 16 = 18 g/mol' },
+              { label: 'Use moles = grams / molar mass', detail: '36 g / 18 g/mol' },
+              { label: 'Answer', detail: '= 2 mol of water' },
+            ],
+            takeaway: 'moles = grams / molar mass.',
+          },
+          'Convert a mass in grams to a number of moles',
+        ),
       },
       {
         insertAfter: 'Use coefficients as mole ratios',
@@ -1469,7 +1739,61 @@ const LESSON_EXTRAS = [
     explainers: [
       { insertAfter: 'States of matter', slide: explainer('Particles in a crowd', 'Picture people in a room. In a solid they are packed shoulder-to-shoulder, only swaying in place. In a liquid they mingle and slide past each other. In a gas they sprint around an empty gym. Same people (particles) - very different spacing and energy.', 'states', 'Solid: packed. Liquid: mingling. Gas: free to roam.') },
       {
-        insertAfter: 'What is a solution?',
+        insertAfter: 'Particles in a crowd',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'IdealGasLawExplainer',
+          title: 'The gas law: PV = nRT',
+          body: '',
+          instructions: 'Drag n, T, and V to see every value in PV = nRT update live - then press Next to run each thought experiment in the same box.',
+          interactionConfig: {
+            descriptions: [
+              'A roaming gas is captured by four quantities, tied together in one tidy equation: PV = nRT. Pressure (P) is how hard particles tap the walls, volume (V) is the size of the box, n is how much gas you have (in moles), and T is the temperature. R is a fixed constant that keeps the units honest. Read it as a balance - pressure times volume always keeps pace with amount times temperature - so push one quantity and another must respond.',
+              'Thought experiment - heat it up. Hotter particles move faster, so they hit the walls harder and more often. With the box and amount held fixed, raising T drives the pressure up. Watch T jump and the pressure climb.',
+              'Thought experiment - squeeze the box. Shrink the volume and the same particles strike the walls far more often in the smaller space, so lowering V pushes the pressure up. Watch V collapse and the gauge respond.',
+              'Thought experiment - add more gas. More moles means more particles delivering more total wall taps, so raising n raises the pressure too. Every variable still obeys the one equation - PV always keeps pace with nRT.',
+            ],
+            demos: [
+              null,
+              { n: 1, temp: 400, vol: 10 },
+              { n: 1, temp: 300, vol: 3 },
+              { n: 3.5, temp: 300, vol: 10 },
+            ],
+          },
+        },
+      },
+      {
+        insertAfter: 'The gas law: PV = nRT',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'PressureBox3D',
+          title: 'Pressure is a billion tiny taps',
+          body: 'You just watched pressure rise and fall in the equation - but what is pressure, really? Picture countless gas particles bouncing around a container. Every time one hits a wall it gives a tiny push, and billions of those pushes per second add up to the steady force we feel as pressure. So anything that makes particles hit the walls more often, or harder, raises the pressure.',
+          instructions: 'Watch the particles bounce in 3D and count how often they tap the walls.',
+        },
+      },
+      {
+        insertAfter: 'Phase changes',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'PhaseEnergyScene',
+          title: 'Where does the heat go?',
+          body: 'Here is a surprise: while ice is melting, its temperature stays at 0 C even though you keep adding heat. The energy is not speeding particles up - it is going into pulling them apart (loosening the forces that hold them together). Only once everything has melted does the temperature climb again.',
+          instructions: 'Add heat and watch whether the energy speeds particles up or pulls them apart.',
+        },
+      },
+      {
+        insertAfter: 'Where does the heat go?',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'HeatingCurve',
+          title: 'The heating curve',
+          body: 'Plot temperature as you add heat steadily and you see exactly that: the line flattens during melting and boiling, then rises again. Those flat plateaus are where a phase change is happening.',
+          instructions: 'Drag along the curve and watch the particle inset change phase at each plateau.',
+        },
+      },
+      {
+        insertAfter: 'Predict: salt in water',
         slide: {
           type: 'clickableDiagram',
           component: 'DissolveSim',
@@ -1478,10 +1802,78 @@ const LESSON_EXTRAS = [
           instructions: 'Stir and watch the cubes vanish while the particles spread evenly.',
         },
       },
-      { insertAfter: 'Concentration', slide: explainer('What acids and bases really are', 'Before the scale, the idea: an acid releases hydrogen ions (H\u207A) when dissolved in water, while a base does the opposite (it mops H\u207A up or releases OH\u207B). More free H\u207A means more acidic. Lemon juice is loaded with H\u207A; soapy water has very little.', null) },
-      { insertAfter: 'What acids and bases really are', slide: explainer('The pH scale is a dial', 'pH is just a tidy way to report how much H\u207A is present. Think of a dial from 0 to 14: turn it low for strongly acidic (lemon juice), centered at 7 for neutral (pure water), and high for strongly basic (soap). It packs a huge range of H\u207A concentrations into one friendly number.', 'dial', 'Low = acidic, 7 = neutral, high = basic.') },
-      { insertAfter: 'Water\u2019s role', slide: explainer('pH counts powers of ten', 'Here is the key to pH math: each whole step is a tenfold change in acidity. Going from pH 5 to pH 4 means 10\u00D7 more acidic; pH 5 to pH 3 means 100\u00D7 (two steps = 10 \u00D7 10). The smaller the pH, the more H\u207A ions are crowded in.', null) },
-      { insertAfter: 'pH counts powers of ten', slide: explainer('A quick pH calculation', 'So to compare two solutions, just count the steps between them and raise 10 to that power. pH 6 vs pH 2 is 4 steps apart, so the pH 2 solution is 10\u2074 = 10,000 times more acidic. No heavy arithmetic - just powers of ten.', null) },
+      { insertAfter: 'Concentration', slide: explainer('What acids and bases really are', 'You just measured how concentrated a solution is. For acids and bases, one dissolved particle matters most: the hydrogen ion. An acid releases hydrogen ions (H\u207A) when dissolved in water, while a base does the opposite (it mops H\u207A up or releases OH\u207B). More free H\u207A means more acidic. Lemon juice is loaded with H\u207A; soapy water has very little.', null) },
+      {
+        insertAfter: 'What acids and bases really are',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'IonReleaseScene',
+          title: 'Acids release H\u207A, bases release OH\u207B',
+          body: 'See it at the particle level. Drop an acid into water and it sheds hydrogen ions (H\u207A) into the solution; drop a base in and it releases hydroxide ions (OH\u207B) instead. The more H\u207A a solution carries, the more strongly acidic it is - that single count is what the pH scale is about to capture.',
+          instructions: 'Add an acid or a base to the water and watch which ions it releases.',
+        },
+      },
+      { insertAfter: 'Acids release H\u207A, bases release OH\u207B', slide: explainer('From counting ions to one number', 'Counting individual H\u207A ions is hopeless - even a sip of soda holds a staggering number of them, and the count spans many powers of ten between acids and bases. Chemists needed a friendlier way to report "how much H\u207A," so they invented a single number that compresses that whole range. That number is pH.', null, 'pH squeezes a huge range of H\u207A counts into one easy number.') },
+      { insertAfter: 'From counting ions to one number', slide: explainer('The pH scale is a dial', 'pH is just a tidy way to report how much H\u207A is present. Think of a dial from 0 to 14: turn it low for strongly acidic (lemon juice), centered at 7 for neutral (pure water), and high for strongly basic (soap). It packs a huge range of H\u207A concentrations into one friendly number.', 'dial', 'Low = acidic, 7 = neutral, high = basic.') },
+      {
+        insertAfter: 'Water\u2019s role',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'PHPowersOfTen',
+          title: 'pH counts powers of ten',
+          body: 'Here is the key to pH math: each whole step is a tenfold change in acidity. Going from pH 5 to pH 4 means 10\u00D7 more acidic; pH 5 to pH 3 means 100\u00D7 (two steps = 10 \u00D7 10). The smaller the pH, the more H\u207A ions are crowded in.',
+          instructions: 'Drag the pH and count the \u00D710 jumps to neutral water (pH 7).',
+        },
+      },
+      {
+        insertAfter: 'pH counts powers of ten',
+        slide: workedExample(
+          'Worked example: comparing two pH values',
+          'See how to compare the acidity of two solutions using only powers of ten. You will try your own comparison on the next slide.',
+          {
+            problem: 'How many times more acidic is pH 2 than pH 6?',
+            steps: [
+              { label: 'Count the whole steps between them', detail: 'pH 6 to pH 2 is 4 steps' },
+              { label: 'Each step is a x10 change', detail: 'So the difference is 10 x 10 x 10 x 10' },
+              { label: 'Raise 10 to the number of steps', detail: '10^4 = 10,000' },
+              { label: 'Answer', detail: 'pH 2 is 10,000 times more acidic than pH 6' },
+            ],
+            takeaway: 'Fold difference = 10^(number of pH steps between the solutions).',
+          },
+          'Compare two solutions using powers of ten',
+        ),
+      },
+      {
+        insertAfter: 'Worked example: comparing two pH values',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'PHCompareCalc',
+          title: 'A quick pH calculation',
+          body: 'Now you try. To compare two solutions, count the steps between them and raise 10 to that power. pH 6 vs pH 2 is 4 steps apart, so the pH 2 solution is 10\u2074 = 10,000 times more acidic. No heavy arithmetic - just powers of ten.',
+          instructions: 'Set two pH values, then read off the steps and the 10^(steps) fold difference.',
+        },
+      },
+      {
+        insertAfter: 'A quick pH calculation',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'NeutralizationScene',
+          title: 'Acids and bases cancel out',
+          body: 'When you mix an acid and a base, they neutralize each other - the H\u207A from the acid and the OH\u207B from the base join to make plain water (plus a dissolved salt). If you add just enough base to use up all the acid, you have hit the "equivalence point": the exact balance where neither one is left over.',
+          instructions: 'Add base to the acid and watch H\u207A and OH\u207B pair up into water.',
+        },
+      },
+      { insertAfter: 'Acids and bases cancel out', slide: explainer('Finding the exact balance point', 'How do you know the precise moment all the acid is used up? You cannot see ions, so you watch pH instead. As you add base, the solution stays acidic for a while, then swings rapidly toward neutral and beyond right as the last H\u207A is consumed. That sudden swing pinpoints the equivalence point - and it is exactly what the next tool, a titration, is built to catch.', null, 'Track pH as you add base; the sharp swing marks the equivalence point.') },
+      {
+        insertAfter: 'Finding the exact balance point',
+        slide: {
+          type: 'clickableDiagram',
+          component: 'TitrationSim',
+          title: 'Titration: finding the balance point',
+          body: 'A titration adds base to an acid a little at a time to find that balance point. Plot pH against the base added and the curve stays low, then leaps upward right at the equivalence point. A dye called an indicator flips color exactly at that jump.',
+          instructions: 'Add base with the slider and watch the curve jump and the indicator turn pink.',
+        },
+      },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'In which state are particles packed and only vibrating?', options: ['Solid', 'Liquid', 'Gas'], answer: 'Solid' },
@@ -1515,6 +1907,8 @@ function buildContent() {
       if (at >= 0) assembledSlides.splice(at + 1, 0, slide);
       else assembledSlides.push(slide);
     });
+    // Key Takeaways recap, then the end-of-lesson quiz.
+    if (def.recap?.length) assembledSlides.push(recapSlide(def.recap));
     if (extras.quiz) assembledSlides.push(extras.quiz);
 
     assembledSlides.forEach((slide, slideIdx) => {
@@ -1537,7 +1931,7 @@ function buildContent() {
         interactionConfig: slide.interactionConfig || {},
         isCheck: Boolean(slide.isCheck),
         checkConfig: slide.check || null,
-        learningGoal: slide.title,
+        learningGoal: slide.goal || slide.title,
       });
     });
 

@@ -60,9 +60,10 @@ export default function GiveVsShareScene({ onReady, savedState, onSaveState }) {
           <text x={BX} y={CY + 5} textAnchor="middle" fontWeight="800" fontSize="15" fill="#0e0f13">B</text>
           <text x={BX} y={CY - 38} textAnchor="middle" fontWeight="800" fontSize="16" fill="var(--accent-blue)" style={{ opacity: give ? 1 : 0, transition: 'opacity 320ms ease' }}>&#8722;</text>
 
-          {/* the shared / given electron pair */}
-          <circle cx={eX - 6} cy={CY + 1} r="5" fill="#fff" />
-          <circle cx={eX + 6} cy={CY + 1} r="5" fill="#fff" />
+          {/* the shared / given electron pair - bright accent + dark stroke so the
+              dots stay visible against any surface (dark or light theme) */}
+          <circle cx={eX - 6} cy={CY + 1} r="5.5" fill="var(--accent-yellow)" stroke="#0e0f13" strokeWidth="1.5" />
+          <circle cx={eX + 6} cy={CY + 1} r="5.5" fill="var(--accent-yellow)" stroke="#0e0f13" strokeWidth="1.5" />
         </svg>
       </div>
 

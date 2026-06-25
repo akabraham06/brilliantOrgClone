@@ -127,18 +127,26 @@ function MoleculeSet({ atoms, visible, fromSide }) {
 
 export default function ReactionTypeDiagram({ slide, onReady }) {
   const cfg = slide?.interactionConfig || {};
-  const r = REACTIONS[cfg.reactionType] || REACTIONS.synthesis;
+  // Single-type (legacy) or a multi-type selector that folds several reaction
+  // types into one slide.
+  const types =
+    Array.isArray(cfg.reactionTypes) && cfg.reactionTypes.length
+      ? cfg.reactionTypes.filter((t) => REACTIONS[t])
+      : [cfg.reactionType && REACTIONS[cfg.reactionType] ? cfg.reactionType : 'synthesis'];
+  const [sel, setSel] = useState(0);
   const [phase, setPhase] = useState('before');
+  const key = types[Math.min(sel, types.length - 1)];
+  const r = REACTIONS[key];
 
   useEffect(() => {
     onReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reset to the "before" state whenever the reaction type changes.
+  // Reset to the "before" state whenever the selected reaction type changes.
   useEffect(() => {
     setPhase('before');
-  }, [cfg.reactionType]);
+  }, [key]);
 
   const reactants = layout(r.reactants, 'left');
   const products = layout(r.products, 'right');
@@ -150,6 +158,22 @@ export default function ReactionTypeDiagram({ slide, onReady }) {
 
   return (
     <div className={v.stage} style={{ width: '100%' }}>
+      {types.length > 1 && (
+        <div className={v.toggleGroup} role="tablist" aria-label="Reaction type">
+          {types.map((t, i) => (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={i === sel}
+              className={`${v.toggle} ${i === sel ? v.toggleActive : ''}`}
+              onClick={() => setSel(i)}
+            >
+              {REACTIONS[t].name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className={styles.head}>
         <span className={styles.badge}>{r.name}</span>
         <span className={styles.pattern}>{r.pattern}</span>
@@ -190,7 +214,7 @@ export default function ReactionTypeDiagram({ slide, onReady }) {
         </svg>
       </div>
 
-      <p className={v.muted} style={{ maxWidth: 420, textAlign: 'center' }}>{r.desc}</p>
+      <p className={v.muted} style={{ maxWidth: 420, textAlign: 'center' }} aria-live="polite">{r.desc}</p>
       <div className={v.row}>
         <span className={v.muted}>e.g. {r.example}</span>
         <button type="button" className={`${v.btn} ${v.btnPrimary}`} onClick={react}>

@@ -3,8 +3,23 @@ import v from './viz.module.css';
 import styles from './ClassifyBoard.module.css';
 import DragChip from './DragChip.jsx';
 import Formula from './Formula.jsx';
+import {
+  motion,
+  AnimatePresence,
+  LayoutGroup,
+  ReducedMotionConfig,
+  placeSpring,
+  revealVariants,
+} from './lib/Motion.jsx';
 
 const PARTICLE_TYPES = ['element', 'compound', 'mixture'];
+
+// A placed chip fades up in a short stagger when grading is revealed; opacity
+// only, so it never fights the layout transform that moves the chip.
+const placedChipVariants = {
+  placed: { opacity: 1 },
+  graded: (idx) => ({ opacity: [0.5, 1], transition: { delay: idx * 0.06, duration: 0.35 } }),
+};
 
 /** Derive a particle category for the flip reveal (explicit field or answer). */
 function particleType(item) {
@@ -63,7 +78,7 @@ function FlipChip({ item, type, onTap }) {
     return () => window.clearTimeout(t);
   }, []);
   return (
-    <div className={`${styles.flip} ${styles.dropIn}`}>
+    <div className={styles.flip}>
       <button type="button" className={`${styles.flipInner} ${flipped ? styles.flipped : ''}`} onClick={() => onTap(item.id)} aria-label={`${item.label}: ${type}. Tap to remove.`}>
         <span className={`${styles.face} ${styles.front}`}>
           {item.image && <img src={item.image} alt="" className={styles.faceImg} />}
@@ -148,7 +163,7 @@ export default function ClassifyBoard({
 
   function itemClass(itemId) {
     const correct = items.find((i) => i.id === itemId)?.answer;
-    let cls = `${v.chip} ${styles.dropIn}`;
+    let cls = v.chip;
     if (submitted && assignments[itemId] === correct) cls += ` ${v.chipSelected}`;
     return cls;
   }
@@ -161,83 +176,119 @@ export default function ClassifyBoard({
   }
 
   return (
-    <div className={v.stage} style={{ width: '100%' }}>
-      <div className={v.bins}>
-        {categories.map((cat) => (
-          <div key={cat} className={`${v.bin} ${styles.trayInner}`} data-dropzone={cat}>
-            <button
-              type="button"
-              className={v.binLabel}
-              onClick={() => placeInto(cat)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              {cat}
-            </button>
-            <div className={v.binItems}>
-              {items
-                .filter((i) => assignments[i.id] === cat)
-                .map((i) =>
-                  shouldReveal(i) ? (
-                    <FlipChip key={i.id} item={i} type={particleType(i)} onTap={submitted ? () => {} : tapItem} />
-                  ) : (
+    <ReducedMotionConfig>
+      <LayoutGroup>
+        <div className={v.stage} style={{ width: '100%' }}>
+          <div className={v.bins}>
+            {categories.map((cat) => (
+              <div key={cat} className={`${v.bin} ${styles.trayInner}`} data-dropzone={cat}>
+                <button
+                  type="button"
+                  className={v.binLabel}
+                  onClick={() => placeInto(cat)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  {cat}
+                </button>
+                <div className={v.binItems}>
+                  {items
+                    .filter((i) => assignments[i.id] === cat)
+                    .map((i, idx) => (
+                      // layoutId shared with the tray chip: framer translates the
+                      // chip from the tray to its bin (and the tray reflows) when
+                      // it is placed. Only an additive wrapper around DragChip.
+                      <motion.div
+                        key={i.id}
+                        layout
+                        layoutId={`cb-${i.id}`}
+                        custom={idx}
+                        variants={placedChipVariants}
+                        animate={submitted ? 'graded' : 'placed'}
+                        transition={placeSpring}
+                      >
+                        {shouldReveal(i) ? (
+                          <FlipChip item={i} type={particleType(i)} onTap={submitted ? () => {} : tapItem} />
+                        ) : (
+                          <DragChip
+                            id={i.id}
+                            label={<Formula value={i.label} />}
+                            image={i.image}
+                            className={itemClass(i.id)}
+                            disabled={submitted}
+                            onTap={tapItem}
+                            onDrop={assign}
+                          />
+                        )}
+                      </motion.div>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <AnimatePresence>
+            {unassigned.length > 0 && (
+              <motion.div
+                className={v.row}
+                data-dropzone="__tray__"
+                layout
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                {unassigned.map((i) => (
+                  <motion.div key={i.id} layout layoutId={`cb-${i.id}`} transition={placeSpring}>
                     <DragChip
-                      key={i.id}
                       id={i.id}
                       label={<Formula value={i.label} />}
                       image={i.image}
-                      className={itemClass(i.id)}
+                      className={selected === i.id ? `${v.chip} ${v.chipSelected}` : v.chip}
                       disabled={submitted}
                       onTap={tapItem}
                       onDrop={assign}
                     />
-                  ),
-                )}
-            </div>
-          </div>
-        ))}
-      </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-      {unassigned.length > 0 && (
-        <div className={v.row} data-dropzone="__tray__">
-          {unassigned.map((i) => (
-            <DragChip
-              key={i.id}
-              id={i.id}
-              label={<Formula value={i.label} />}
-              image={i.image}
-              className={selected === i.id ? `${v.chip} ${v.chipSelected}` : v.chip}
-              disabled={submitted}
-              onTap={tapItem}
-              onDrop={assign}
-            />
-          ))}
+          {selected != null && (
+            <p className={v.muted}>Drag it to a bin, or tap a category above to place it.</p>
+          )}
+
+          <AnimatePresence mode="wait">
+            {graded &&
+              (submitted ? (
+                <motion.div
+                  key="feedback"
+                  className={allCorrect ? v.feedbackOk : v.feedbackBad}
+                  variants={revealVariants}
+                  initial="hidden"
+                  animate="shown"
+                  exit="exit"
+                  transition={placeSpring}
+                >
+                  <p>{allCorrect ? config.feedbackCorrect : config.feedbackIncorrect}</p>
+                  {!allCorrect && config.hint && <p>Hint: {config.hint}</p>}
+                  <button type="button" className={v.btn} onClick={reset} style={{ marginTop: 8 }}>
+                    Try again
+                  </button>
+                </motion.div>
+              ) : (
+                <button
+                  key="check"
+                  type="button"
+                  className={`${v.btn} ${v.btnPrimary}`}
+                  onClick={submit}
+                  disabled={!allAssigned}
+                >
+                  Check answer
+                </button>
+              ))}
+          </AnimatePresence>
         </div>
-      )}
-
-      {selected != null && (
-        <p className={v.muted}>Drag it to a bin, or tap a category above to place it.</p>
-      )}
-
-      {graded && (
-        submitted ? (
-          <div className={allCorrect ? v.feedbackOk : v.feedbackBad}>
-            <p>{allCorrect ? config.feedbackCorrect : config.feedbackIncorrect}</p>
-            {!allCorrect && config.hint && <p>Hint: {config.hint}</p>}
-            <button type="button" className={v.btn} onClick={reset} style={{ marginTop: 8 }}>
-              Try again
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            className={`${v.btn} ${v.btnPrimary}`}
-            onClick={submit}
-            disabled={!allAssigned}
-          >
-            Check answer
-          </button>
-        )
-      )}
-    </div>
+      </LayoutGroup>
+    </ReducedMotionConfig>
   );
 }

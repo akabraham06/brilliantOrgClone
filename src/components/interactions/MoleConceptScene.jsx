@@ -60,7 +60,14 @@ export default function MoleConceptScene({ onReady }) {
         </div>
         <div className={v.stat}>
           <div className={v.statValue} style={{ color: 'var(--accent-green)', fontSize: 'var(--text-xl)' }}>
-            {(moles * AVOGADRO).toExponential(3)}
+            {(() => {
+              const [mant, exp] = (moles * AVOGADRO).toExponential(3).split('e');
+              return (
+                <>
+                  {mant} &times; 10<sup>{Number(exp)}</sup>
+                </>
+              );
+            })()}
           </div>
           <div className={v.statLabel}>particles</div>
         </div>

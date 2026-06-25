@@ -1,37 +1,67 @@
 import { useEffect, useState } from 'react';
+import ParticleField3D from './lib/ParticleField3D.jsx';
+import { usePrefersReducedMotion } from './lib/motion.js';
 import v from './viz.module.css';
-import styles from './StateParticlesAnimator.module.css';
 
 const ORDER = ['Solid', 'Liquid', 'Gas'];
 
+/*
+ * Each state is the SAME matter at different energy. We change how the shared
+ * 3D particle field behaves (and how tightly it is bounded) so the three states
+ * read as locked / sliding / free:
+ *  - Solid  : tightly packed lattice, particles only vibrate in place.
+ *  - Liquid : loosely packed, particles drift and slide past one another.
+ *  - Gas    : sparse, fast, bouncing off every wall and filling the box.
+ * Containment is guaranteed by ParticleField3D, which clamps every particle to
+ * the wireframe box bounds.
+ */
 const STATES = {
-  Solid: { note: 'Particles are packed in a fixed pattern - they only vibrate in place.', amp: styles.ampLow, temp: 0.12, color: 'var(--accent-blue)' },
-  Liquid: { note: 'Particles stay close but slide past one another - the shape flows.', amp: styles.ampMed, temp: 0.5, color: 'var(--accent-green)' },
-  Gas: { note: 'Particles break free and zoom far apart in every direction.', amp: styles.ampHigh, temp: 0.92, color: 'var(--accent-orange)' },
+  Solid: {
+    mode: 'vibrate',
+    count: 36,
+    bounds: [2.0, 1.3, 2.0],
+    color: '#60a5fa',
+    radius: 0.22,
+    speed: 0.25,
+    note: 'Particles are locked in a fixed pattern - they can only vibrate in place. Fixed shape, fixed volume.',
+    accent: 'var(--accent-blue)',
+  },
+  Liquid: {
+    mode: 'flow',
+    count: 28,
+    bounds: [2.3, 1.45, 2.3],
+    color: '#4ade80',
+    radius: 0.2,
+    speed: 0.7,
+    note: 'Particles stay close but slide and tumble past each other - a liquid keeps its volume but flows to fit its container.',
+    accent: 'var(--accent-green)',
+  },
+  Gas: {
+    mode: 'random',
+    count: 16,
+    bounds: [2.6, 1.7, 2.6],
+    color: '#fb923c',
+    radius: 0.18,
+    speed: 1.1,
+    note: 'Particles break free and zoom in every direction, bouncing off the walls to fill the whole container.',
+    accent: 'var(--accent-orange)',
+  },
 };
 
-// The SAME 12 particles are reused for every state so they glide between
-// arrangements instead of popping - read as melting / evaporating.
-const POSITIONS = {
-  Solid: [
-    [80, 55], [130, 55], [180, 55], [230, 55],
-    [80, 95], [130, 95], [180, 95], [230, 95],
-    [80, 135], [130, 135], [180, 135], [230, 135],
-  ],
-  Liquid: [
-    [70, 60], [128, 52], [188, 62], [248, 54],
-    [60, 100], [120, 96], [185, 104], [250, 98],
-    [78, 140], [134, 136], [200, 144], [258, 132],
-  ],
-  Gas: [
-    [40, 40], [110, 28], [185, 48], [262, 34],
-    [70, 92], [150, 84], [232, 100], [292, 72],
-    [48, 146], [128, 138], [208, 150], [280, 136],
-  ],
+const STATIC_NOTE = {
+  Solid: 'Static view: a tightly packed, ordered grid of particles.',
+  Liquid: 'Static view: particles loosely packed and touching, ready to flow.',
+  Gas: 'Static view: a few particles spread far apart across the container.',
 };
 
+/**
+ * Solid / liquid / gas explorer driven by a shared, fully-contained 3D particle
+ * field. Toggling the state changes packing, speed and motion mode so the same
+ * matter visibly transitions between locked, sliding and free behaviour.
+ */
 export default function StateParticlesAnimator({ onReady }) {
   const [idx, setIdx] = useState(0);
+  const reduce = usePrefersReducedMotion();
 
   useEffect(() => {
     onReady?.();
@@ -39,7 +69,6 @@ export default function StateParticlesAnimator({ onReady }) {
   }, []);
 
   const state = ORDER[idx];
-  const pts = POSITIONS[state];
   const cfg = STATES[state];
 
   const heat = () => setIdx((i) => Math.min(ORDER.length - 1, i + 1));
@@ -47,52 +76,57 @@ export default function StateParticlesAnimator({ onReady }) {
 
   return (
     <div className={v.stage} style={{ width: '100%' }}>
-      <div className={v.row} style={{ alignItems: 'stretch', gap: 'var(--space-3)', width: '100%', justifyContent: 'center' }}>
-        {/* thermometer */}
-        <svg viewBox="0 0 40 180" width="40" height="180" role="img" aria-label={`Temperature: ${state}`}>
-          <rect x="14" y="10" width="12" height="140" rx="6" fill="var(--color-bg-elevated)" stroke="var(--color-border-strong)" />
-          <rect
-            x="14"
-            y={10 + 140 * (1 - cfg.temp)}
-            width="12"
-            height={140 * cfg.temp}
-            rx="6"
-            fill={cfg.color}
-            style={{ transition: 'all 0.9s cubic-bezier(0.4,0,0.2,1)' }}
-          />
-          <circle cx="20" cy="158" r="14" fill={cfg.color} stroke="var(--color-border-strong)" style={{ transition: 'fill 0.9s' }} />
-        </svg>
-
-        <div className={v.svgWrap} style={{ maxWidth: 300, flex: 1 }}>
-          <svg viewBox="0 0 300 180" className={v.svg} role="img" aria-label={`${state} particle arrangement`}>
-            <rect x="6" y="6" width="288" height="168" rx="12" fill="var(--color-bg-elevated)" stroke="var(--color-border)" />
-            {pts.map(([x, y], i) => (
-              <g key={i} className={styles.mover} style={{ transform: `translate(${x}px, ${y}px)` }}>
-                <circle
-                  r="9"
-                  fill={cfg.color}
-                  style={{ transition: 'fill 0.9s' }}
-                  className={`${styles.particle} ${cfg.amp}`}
-                />
-                <circle r="9" fill="none" />
-              </g>
-            ))}
-          </svg>
+      <div className={`${v.panel} ${v.panelWide}`}>
+        <ParticleField3D
+          key={state}
+          count={cfg.count}
+          mode={cfg.mode}
+          bounds={cfg.bounds}
+          color={cfg.color}
+          radius={cfg.radius}
+          speed={cfg.speed}
+          height={250}
+          camera={{ position: [0, 0, 8.5], fov: 45 }}
+          label={`${state}: ${cfg.note}`}
+        />
+        <div className={v.sceneTitle} style={{ marginTop: 'var(--space-2)' }}>
+          {state} &mdash; particles in a container
         </div>
       </div>
 
-      <div className={v.toggleGroup} role="group" aria-label="Current state">
+      <div className={v.toggleGroup} role="group" aria-label="State of matter">
         {ORDER.map((s, i) => (
-          <button key={s} type="button" className={i === idx ? `${v.toggle} ${v.toggleActive}` : v.toggle} onClick={() => setIdx(i)}>{s}</button>
+          <button
+            key={s}
+            type="button"
+            className={i === idx ? `${v.toggle} ${v.toggleActive}` : v.toggle}
+            onClick={() => setIdx(i)}
+            aria-pressed={i === idx}
+          >
+            {s}
+          </button>
         ))}
       </div>
 
       <div className={v.row}>
-        <button type="button" className={v.btn} onClick={freeze} disabled={idx === 0}>&#10052; Freeze</button>
-        <button type="button" className={`${v.btn} ${v.btnPrimary}`} onClick={heat} disabled={idx === ORDER.length - 1}>Heat &#128293;</button>
+        <button type="button" className={v.btn} onClick={freeze} disabled={idx === 0}>
+          &#10052;&#65039; Cool
+        </button>
+        <button type="button" className={`${v.btn} ${v.btnPrimary}`} onClick={heat} disabled={idx === ORDER.length - 1}>
+          Heat &#128293;
+        </button>
       </div>
 
-      <p className={v.muted} style={{ textAlign: 'center' }}>{cfg.note}</p>
+      <div className={v.legend}>
+        <span className={v.legendItem}><span className={v.legendDot} style={{ background: 'var(--accent-blue)' }} />Solid</span>
+        <span className={v.legendItem}><span className={v.legendDot} style={{ background: 'var(--accent-green)' }} />Liquid</span>
+        <span className={v.legendItem}><span className={v.legendDot} style={{ background: 'var(--accent-orange)' }} />Gas</span>
+      </div>
+
+      <p className={v.muted} role="status" aria-live="polite" style={{ textAlign: 'center', maxWidth: 440 }}>
+        {cfg.note}
+        {reduce ? ` ${STATIC_NOTE[state]}` : ''}
+      </p>
     </div>
   );
 }

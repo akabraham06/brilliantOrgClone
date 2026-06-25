@@ -61,7 +61,20 @@
   display: flex;
   justify-content: space-between;
   padding: 4px 2px 0;
-  color: var(--color-text-subtle);
+  color: var(--color-text-muted);
   font-weight: 700;
   font-size: var(--text-xs);
+}
+
+/* Post-submit chip marking: non-color cues (✓ / ✗) plus semantic colors. */
+.chipCorrect {
+  border-color: var(--color-correct);
+  background: var(--color-correct-bg);
+  color: var(--color-text);
+}
+
+.chipWrong {
+  border-color: var(--color-incorrect);
+  background: var(--color-incorrect-bg);
+  color: var(--color-text);
 }

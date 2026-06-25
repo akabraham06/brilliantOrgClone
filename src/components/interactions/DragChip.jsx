@@ -10,7 +10,7 @@ import v from './viz.module.css';
  * - A plain click/Enter/Space (no drag) fires `onTap(id)` - the accessible
  *   fallback for keyboard and touch users.
  */
-export default function DragChip({ id, label, image, className = '', disabled = false, onTap, onDrop }) {
+export default function DragChip({ id, label, image, className = '', disabled = false, selected, onTap, onDrop }) {
   const startRef = useRef(null);
   const movedRef = useRef(false);
   const suppressClickRef = useRef(false);
@@ -29,6 +29,9 @@ export default function DragChip({ id, label, image, className = '', disabled = 
 
   function handleDown(e) {
     if (disabled) return;
+    // Start every gesture clean: a previous drag that ended off-target could
+    // leave suppressClickRef set and silently swallow this tap.
+    suppressClickRef.current = false;
     startRef.current = { x: e.clientX, y: e.clientY };
     movedRef.current = false;
     // Capture so we keep receiving move/up even if the finger leaves the chip.
@@ -99,6 +102,7 @@ export default function DragChip({ id, label, image, className = '', disabled = 
         className={`${className} ${image ? v.chipWithImage : ''} ${dragging ? v.dragSource : ''}`}
         style={{ touchAction: 'none' }}
         disabled={disabled}
+        aria-pressed={typeof selected === 'boolean' ? selected : undefined}
         onPointerDown={handleDown}
         onPointerMove={handleMove}
         onPointerUp={handleUp}

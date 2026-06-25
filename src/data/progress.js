@@ -14,14 +14,19 @@ export function getLessonStatus(lessonId, progress = EMPTY) {
 }
 
 export function getLessonPercent(lessonId, progress = EMPTY) {
-  return progress.lessons?.[lessonId]?.percent || 0;
+  const raw = progress.lessons?.[lessonId]?.percent || 0;
+  // Clamp to [0,100]: stored percents can be stale/over-100 after a lesson was
+  // restructured (more completed slide ids than the current slide count).
+  return Math.min(100, Math.max(0, raw));
 }
 
 /** Course percent = average of per-lesson percents across all lessons. */
 export function getCoursePercent(lessons = [], progress = EMPTY) {
   if (!lessons.length) return 0;
+  // getLessonPercent already clamps each lesson to [0,100], so the average can
+  // never exceed 100 even when stored progress is stale.
   const total = lessons.reduce((sum, l) => sum + getLessonPercent(l.lessonId, progress), 0);
-  return Math.round(total / lessons.length);
+  return Math.min(100, Math.round(total / lessons.length));
 }
 
 /** Next lesson to work on: the in-progress one, else first not-completed. */

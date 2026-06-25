@@ -44,9 +44,9 @@ export default function CoefficientSubscriptID({ slide, onReady, savedState, onS
   return (
     <div className={v.stage} style={{ width: '100%' }}>
       <div className={v.objective}>
-        {step === 0 && <><strong>Step 1:</strong> tap the <strong>coefficient</strong> - the number that multiplies whole molecules.</>}
-        {step === 1 && <><strong>Step 2:</strong> now tap a <strong>subscript</strong> - a number that counts atoms inside one molecule.</>}
-        {step >= 2 && <><strong>Nice!</strong> The big number in front is the coefficient; the small numbers after symbols are subscripts.</>}
+        {step === 0 && <><strong>Step 1:</strong> tap the <strong>coefficient</strong> - like the number of <em>batches</em> of the recipe. It multiplies every whole molecule.</>}
+        {step === 1 && <><strong>Step 2:</strong> now tap a <strong>subscript</strong> - like the amount of one <em>ingredient</em> in a single batch. It counts atoms inside one molecule.</>}
+        {step >= 2 && <><strong>Nice!</strong> The coefficient is how many batches (whole molecules) you make; a subscript is how much of each ingredient (atoms) goes inside one molecule.</>}
       </div>
 
       <div className={s.formula} aria-label={`Formula ${coefficient} ${units.map((u) => u.el + u.sub).join(' ')}`}>
@@ -82,7 +82,7 @@ export default function CoefficientSubscriptID({ slide, onReady, savedState, onS
       )}
       {step >= 2 && (
         <p className={v.feedbackOk} style={{ textAlign: 'center' }}>
-          In {coefficient}{units.map((u) => u.el + (u.sub > 1 ? u.sub : '')).join('')}, the {coefficient} multiplies every atom, while each subscript stays inside one molecule.
+          In {coefficient}{units.map((u) => u.el + (u.sub > 1 ? u.sub : '')).join('')}, the {coefficient} is like making {coefficient} batches - it multiplies every atom - while each subscript is the per-batch amount that stays inside one molecule.
         </p>
       )}
     </div>

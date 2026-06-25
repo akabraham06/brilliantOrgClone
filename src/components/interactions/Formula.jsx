@@ -65,8 +65,26 @@ export function formatFormula(input) {
     }
 
     if ((ch === '+' || ch === '-') && prevIsFormula) {
-      // Only a charge when it is not a hyphen between words (e.g. "C-O").
       const next = str[i + 1];
+      // Charge written sign-first, e.g. "Cl-1", "O-2", "Mg+2" (as some callers
+      // pass it). Consume the magnitude and render a proper superscript,
+      // dropping a magnitude of 1 (Cl-1 -> Cl^- not Cl^1-).
+      if (next != null && /\d/.test(next)) {
+        let j = i + 1;
+        while (j < str.length && /\d/.test(str[j])) j += 1;
+        const mag = str.slice(i + 1, j);
+        flush();
+        nodes.push(
+          <sup key={key} className="chem-sup">
+            {mag === '1' ? '' : mag}
+            {ch === '-' ? '\u2212' : '+'}
+          </sup>,
+        );
+        key += 1;
+        i = j - 1;
+        continue;
+      }
+      // Otherwise only a charge when it is not a hyphen between words ("C-O").
       const isCharge = next == null || /[\s),.;:]/.test(next);
       if (isCharge) {
         flush();

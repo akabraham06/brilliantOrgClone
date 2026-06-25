@@ -73,9 +73,9 @@ export default function MoleConversionStepper({ slide, onReady }) {
       <div className={`${v.stage} ${v.popIn}`} style={{ width: '100%' }}>
         <p className={v.muted} style={{ textAlign: 'center' }}>
           Every grams &harr; moles &harr; particles trip uses the same two bridges. Trace the path,
-          then test yourself.
+          then work out the numbers yourself.
         </p>
-        <ConversionMap grams={grams} molarMass={molarMass} moles={moles} substance={substance} />
+        <ConversionMap substance={substance} />
         <div className={v.row}>
           <button type="button" className={`${v.btn} ${v.btnPrimary}`} onClick={() => setPhase('quiz')}>
             Got it &mdash; let me try &rarr;
@@ -109,9 +109,17 @@ export default function MoleConversionStepper({ slide, onReady }) {
           <p className={v.muted}>Step {step + 1} of {steps.length}</p>
         </>
       ) : (
-        <div className={v.feedbackOk}>
+        <div className={v.feedbackOk} role="status" aria-live="polite">
           <p>
-            {grams} g of {substance} = <strong>{moles} mol</strong> = {(moles * AVOGADRO).toExponential(2)} particles.
+            {grams} g of {substance} = <strong>{moles} mol</strong> ={' '}
+            {(() => {
+              const [mant, exp] = (moles * AVOGADRO).toExponential(2).split('e');
+              return (
+                <>
+                  {mant} &times; 10<sup>{Number(exp)}</sup> particles.
+                </>
+              );
+            })()}
           </p>
         </div>
       )}
@@ -119,8 +127,12 @@ export default function MoleConversionStepper({ slide, onReady }) {
   );
 }
 
-/** Animated conversion map: grams -> (/ molar mass) -> moles -> (x NA) -> particles. */
-function ConversionMap({ grams, molarMass, moles, substance }) {
+/**
+ * Animated conversion map showing the PROCESS only - grams -> (/ molar mass) ->
+ * moles -> (x Avogadro) -> particles - without the specific numbers, so it
+ * doesn't spoil the questions the learner is about to attempt.
+ */
+function ConversionMap({ substance }) {
   const node = (label, sub, color) => (
     <div className={v.popIn} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, minWidth: 72 }}>
       <div style={{ padding: '10px 14px', borderRadius: 'var(--radius-lg)', fontWeight: 800, background: 'var(--color-bg-elevated)', border: `2px solid ${color}`, color }}>{label}</div>
@@ -135,10 +147,10 @@ function ConversionMap({ grams, molarMass, moles, substance }) {
   );
   return (
     <div className={v.row} style={{ alignItems: 'flex-start', gap: 'var(--space-2)', flexWrap: 'wrap', justifyContent: 'center' }}>
-      {node(`${grams} g`, substance, 'var(--accent-orange)')}
-      {op(`\u00F7 ${molarMass} g/mol`)}
-      {node(`${moles} mol`, 'moles', 'var(--accent-green)')}
-      {op('\u00D7 6.022\u00D710\u00B2\u00B3')}
+      {node('grams', substance, 'var(--accent-orange)')}
+      {op('\u00F7 molar mass')}
+      {node('moles', 'moles', 'var(--accent-green)')}
+      {op('\u00D7 Avogadro')}
       {node('particles', 'count', 'var(--accent-blue)')}
     </div>
   );

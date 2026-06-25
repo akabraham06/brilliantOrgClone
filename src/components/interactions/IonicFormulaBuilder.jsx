@@ -86,12 +86,16 @@ export default function IonicFormulaBuilder({ onReady, savedState, onSaveState }
 
       <div className={v.readout}>
         <div className={v.stat}>
-          <div className={v.statValue} style={{ color: neutral ? 'var(--accent-green)' : 'var(--accent-orange)' }}>
+          <div
+            className={v.statValue}
+            style={{ color: submitted ? (neutral ? 'var(--accent-green)' : 'var(--accent-orange)') : 'var(--color-text)' }}
+          >
             {net > 0 ? `+${net}` : net}
           </div>
           <div className={v.statLabel}>net charge</div>
         </div>
-        {neutral && (
+        {/* Reveal the confirmed neutral formula only after a correct Check. */}
+        {submitted && neutral && (
           <div className={v.stat}>
             <div className={v.statValue} style={{ color: 'var(--accent-green)' }}><Formula value={formula} /></div>
             <div className={v.statLabel}>neutral formula</div>

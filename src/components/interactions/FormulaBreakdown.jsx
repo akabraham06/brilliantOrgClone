@@ -122,7 +122,9 @@ export default function FormulaBreakdown({ slide, onReady }) {
       <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 800 }}>
         <span style={{ color: 'var(--accent-yellow)' }}>{coeff > 1 ? coeff : ''}</span>
         {Object.entries(composition).map(([el, n]) => (
-          <span key={el} style={{ color: atomColor(el) }}>
+          // Use the theme text color (not atomColor) so light atoms like H stay
+          // legible on the light theme; the molecule diagram carries the color.
+          <span key={el} style={{ color: 'var(--color-text)' }}>
             {el}<sub>{n > 1 ? n : ''}</sub>
           </span>
         ))}

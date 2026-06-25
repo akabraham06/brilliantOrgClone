@@ -170,6 +170,8 @@ export default function EquationBalancer({
       ? savedState.coeffs
       : all.map(() => 1),
   );
+  // Graded mode only: whether the learner has pressed "Check answer".
+  const [submitted, setSubmitted] = useState(savedState?.submitted ?? false);
 
   const left = sideCounts(reactants, coeffs, 0);
   const right = sideCounts(products, coeffs, reactants.length);
@@ -178,35 +180,45 @@ export default function EquationBalancer({
   const leftTotal = Object.values(left).reduce((a, b) => a + b, 0);
   const rightTotal = Object.values(right).reduce((a, b) => a + b, 0);
 
-  // No redundant "Check" button: the balancer is self-evident. Satisfy the
-  // slide live - ungraded slides are always ready; graded checks report the
-  // result the moment the equation becomes balanced.
+  // Ungraded practice is always "ready" on mount. Graded checks do NOT
+  // auto-report: the learner must press "Check answer" (see check()), so we
+  // intentionally never call onResult from an effect here.
   useEffect(() => {
-    if (!graded) {
-      onReady?.();
-    } else {
-      onResult?.(balanced);
-    }
+    if (!graded) onReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [balanced, graded]);
+  }, []);
 
   function setCoeff(i, delta) {
     setCoeffs((prev) => {
       const next = prev.map((c, idx) => (idx === i ? Math.min(9, Math.max(1, c + delta)) : c));
-      onSaveState?.({ coeffs: next });
+      // Adjusting coefficients clears a previous graded submission so stale
+      // feedback never lingers while the learner keeps tweaking.
+      onSaveState?.({ coeffs: next, submitted: false });
       return next;
     });
+    if (graded) setSubmitted(false);
+  }
+
+  function check() {
+    setSubmitted(true);
+    onResult?.(balanced);
+    onSaveState?.({ coeffs, submitted: true });
+  }
+
+  function tryAgain() {
+    setSubmitted(false);
+    onSaveState?.({ coeffs, submitted: false });
   }
 
   function Term({ formula, i }) {
     return (
       <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button type="button" className={v.stepBtn} style={{ width: 32, height: 32, fontSize: 16 }} onClick={() => setCoeff(i, -1)} aria-label={`Decrease ${formula}`}>&minus;</button>
+          <button type="button" className={v.stepBtn} style={{ fontSize: 16 }} onClick={() => setCoeff(i, -1)} aria-label={`Decrease ${formula}`}>&minus;</button>
           <span style={{ fontWeight: 800, fontSize: 'var(--text-lg)', minWidth: 56, textAlign: 'center' }}>
             <span style={{ color: 'var(--accent-yellow)' }}>{coeffs[i]}</span> {formula}
           </span>
-          <button type="button" className={v.stepBtn} style={{ width: 32, height: 32, fontSize: 16 }} onClick={() => setCoeff(i, 1)} aria-label={`Increase ${formula}`}>+</button>
+          <button type="button" className={v.stepBtn} style={{ fontSize: 16 }} onClick={() => setCoeff(i, 1)} aria-label={`Increase ${formula}`}>+</button>
         </span>
       </span>
     );
@@ -258,14 +270,38 @@ export default function EquationBalancer({
         })}
       </div>
 
-      {balanced ? (
-        <p className={v.feedbackOk}>
-          {graded ? config.feedbackCorrect || 'Balanced! Matter is conserved.' : 'Balanced! Every atom count matches.'}
-        </p>
+      {graded ? (
+        <>
+          {!submitted && (
+            <div className={v.row}>
+              <button type="button" className={`${v.btn} ${v.btnPrimary}`} onClick={check}>
+                Check answer
+              </button>
+            </div>
+          )}
+          {submitted && balanced && (
+            <p className={v.feedbackOk} role="status" aria-live="polite">
+              {config.feedbackCorrect || 'Balanced! Matter is conserved.'}
+            </p>
+          )}
+          {submitted && !balanced && (
+            <>
+              <p className={v.feedbackBad} role="status" aria-live="polite">
+                {config.feedbackIncorrect || 'Not balanced yet.'}
+                {config.hint ? ` Hint: ${config.hint}` : ''}
+              </p>
+              <div className={v.row}>
+                <button type="button" className={v.btn} onClick={tryAgain}>
+                  Try again
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      ) : balanced ? (
+        <p className={v.feedbackOk}>Balanced! Every atom count matches.</p>
       ) : (
-        <p className={v.muted}>
-          {graded && config.hint ? `Hint: ${config.hint}` : 'Not balanced yet - keep adjusting the coefficients.'}
-        </p>
+        <p className={v.muted}>Not balanced yet - keep adjusting the coefficients.</p>
       )}
     </div>
   );

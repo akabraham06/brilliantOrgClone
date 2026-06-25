@@ -55,6 +55,34 @@
   transition: width var(--transition-base);
 }
 
+.goalBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: calc(-1 * var(--space-2)) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.goalIcon {
+  color: var(--accent-purple);
+  font-size: var(--text-base);
+  line-height: 1;
+}
+
+.goalLabel {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.goalText {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
 .stage {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -239,7 +267,24 @@
 }
 
 @media (max-width: 600px) {
+  /* Tighten the player's vertical rhythm + card padding so more of each slide
+     is visible without scrolling. */
+  .player {
+    gap: var(--space-3);
+  }
   .stage {
-    padding: var(--space-5);
+    padding: var(--space-4);
+  }
+  /* Tighten footer button padding so "Back" + "Finish lesson" fit one row on
+     the narrowest phones without overflowing. */
+  .footer {
+    flex-wrap: wrap;
+  }
+  .backBtn,
+  .nextBtn {
+    padding: var(--space-3) var(--space-4);
+  }
+  .nextBtn {
+    flex: 1;
   }
 }

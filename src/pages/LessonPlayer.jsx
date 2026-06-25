@@ -222,6 +222,14 @@ function LessonPlayerInner() {
         <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
       </div>
 
+      {current.learningGoal && (
+        <p className={styles.goalBar} aria-live="polite">
+          <span className={styles.goalIcon} aria-hidden="true">&#9678;</span>
+          <span className={styles.goalLabel}>Focus:</span>
+          <span className={styles.goalText}>{current.learningGoal}</span>
+        </p>
+      )}
+
       <main className={styles.stage}>
         <SlideRenderer
           key={current.slideId}

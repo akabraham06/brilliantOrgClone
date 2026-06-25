@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import Scene3D from './lib/Scene3D.jsx';
+/* eslint-disable react/no-unknown-property -- react-three-fiber intrinsics use three.js props (position, args, intensity, ...) */
+import { useEffect, useMemo, useState } from 'react';
+import { Vector3, Quaternion } from 'three';
+import Viewport3D from './lib/Viewport3D.jsx';
 import Formula from './Formula.jsx';
 import v from './viz.module.css';
-import s from './VseprViewer.module.css';
 
 // Tetrahedral frame with one vertex pointing up (methane orientation).
 const TOP = [0, 1, 0];
@@ -24,19 +25,72 @@ const SHAPES = {
 };
 const ORDER = ['linear', 'trigonal', 'tetrahedral', 'pyramidal', 'bent'];
 
-const DIST = 66;
-const toDeg = (rad) => (rad * 180) / Math.PI;
+// CPK-ish hex colors aligned with the app's atomColor convention (formula.js),
+// resolved to literals because three.js materials can't read CSS custom props.
+const ATOM_3D = { H: '#e9edf7', O: '#f472b6', C: '#9aa3b2', N: '#60a5fa', B: '#fb923c', F: '#ffd34e', Na: '#a78bfa', Cl: '#4ade80' };
+const colorFor = (sym) => ATOM_3D[sym] || '#60a5fa';
 
-/**
- * CSS transform that aims a left-anchored bar from the origin toward dir.
- * Atoms are placed in screen space (CSS +Y points down), so the vertical
- * component is negated to match the atom positions.
- */
-function stickTransform([x, y, z]) {
-  const sy = -y;
-  const ay = toDeg(Math.atan2(-z, x));
-  const az = toDeg(Math.asin(Math.max(-1, Math.min(1, sy))));
-  return `rotateY(${ay}deg) rotateZ(${az}deg)`;
+const BOND_LEN = 1.75;
+const LONE_LEN = 1.3;
+const UP = new Vector3(0, 1, 0);
+
+/** A lit sphere representing one atom. */
+function Atom({ position, radius, color }) {
+  return (
+    <mesh position={position}>
+      <sphereGeometry args={[radius, 32, 32]} />
+      <meshStandardMaterial color={color} roughness={0.3} metalness={0.05} />
+    </mesh>
+  );
+}
+
+/** A cylinder bond from the central atom (origin) out to `to`. */
+function Bond({ to, color = '#c2c9d6' }) {
+  const { position, quaternion, length } = useMemo(() => {
+    const end = new Vector3(...to);
+    const len = end.length() || 1;
+    const q = new Quaternion().setFromUnitVectors(UP, end.clone().normalize());
+    return { position: end.clone().multiplyScalar(0.5).toArray(), quaternion: [q.x, q.y, q.z, q.w], length: len };
+  }, [to]);
+  return (
+    <mesh position={position} quaternion={quaternion}>
+      <cylinderGeometry args={[0.1, 0.1, length, 20]} />
+      <meshStandardMaterial color={color} roughness={0.55} metalness={0.1} />
+    </mesh>
+  );
+}
+
+/** A translucent electron cloud lobe sitting where a lone pair points. */
+function LonePair({ dir }) {
+  const { position, quaternion } = useMemo(() => {
+    const d = new Vector3(...dir).normalize();
+    const q = new Quaternion().setFromUnitVectors(UP, d);
+    return { position: d.clone().multiplyScalar(LONE_LEN).toArray(), quaternion: [q.x, q.y, q.z, q.w] };
+  }, [dir]);
+  return (
+    <mesh position={position} quaternion={quaternion} scale={[0.6, 0.92, 0.6]}>
+      <sphereGeometry args={[0.5, 24, 24]} />
+      <meshStandardMaterial color="#ffd34e" transparent opacity={0.34} roughness={0.4} emissive="#ffd34e" emissiveIntensity={0.18} depthWrite={false} />
+    </mesh>
+  );
+}
+
+function VseprScene({ shape, showLone }) {
+  return (
+    <group>
+      <Atom position={[0, 0, 0]} radius={0.62} color={colorFor(shape.central)} />
+      {shape.bonds.map((dir, i) => {
+        const pos = new Vector3(...dir).normalize().multiplyScalar(BOND_LEN).toArray();
+        return (
+          <group key={`bond-${i}`}>
+            <Bond to={pos} />
+            <Atom position={pos} radius={0.43} color={colorFor(shape.terminal)} />
+          </group>
+        );
+      })}
+      {showLone && shape.lone.map((dir, i) => <LonePair key={`lone-${i}`} dir={dir} />)}
+    </group>
+  );
 }
 
 export default function VseprViewer({ onReady, savedState, onSaveState }) {
@@ -70,56 +124,13 @@ export default function VseprViewer({ onReady, savedState, onSaveState }) {
         ))}
       </div>
 
-      <Scene3D height={236} label={`3D model of ${shape.name} geometry (${shape.example})`}>
-        <div className={s.geo}>
-          {/* bonds */}
-          {shape.bonds.map((dir, i) => (
-            <div key={`stick-${i}`} className={s.stick} style={{ width: DIST, transform: stickTransform(dir) }} />
-          ))}
-
-          {/* lone-pair "clouds" */}
-          {showLone &&
-            shape.lone.map((dir, i) => (
-              <div
-                key={`lone-${i}`}
-                className={s.lone}
-                style={{ transform: `translate3d(${dir[0] * (DIST - 16)}px, ${-dir[1] * (DIST - 16)}px, ${dir[2] * (DIST - 16)}px)` }}
-              >
-                <span />
-                <span />
-              </div>
-            ))}
-
-          {/* terminal atoms */}
-          {shape.bonds.map((dir, i) => (
-            <div
-              key={`atom-${i}`}
-              className={s.atom}
-              style={{
-                width: 34,
-                height: 34,
-                background: `radial-gradient(circle at 32% 30%, #fff, ${i % 2 ? 'var(--accent-blue)' : 'var(--accent-green)'} 44%, rgba(0,0,0,0.55))`,
-                transform: `translate3d(${dir[0] * DIST}px, ${-dir[1] * DIST}px, ${dir[2] * DIST}px)`,
-              }}
-            >
-              {shape.terminal}
-            </div>
-          ))}
-
-          {/* central atom (origin) */}
-          <div
-            className={`${s.atom} ${s.center}`}
-            style={{
-              width: 46,
-              height: 46,
-              background: 'radial-gradient(circle at 32% 30%, #fff, var(--accent-purple) 44%, rgba(0,0,0,0.55))',
-              transform: 'translate3d(0,0,0)',
-            }}
-          >
-            {shape.central}
-          </div>
-        </div>
-      </Scene3D>
+      <Viewport3D
+        height={252}
+        camera={{ position: [0, 0, 6.4], fov: 45 }}
+        label={`Interactive 3D ball-and-stick model of ${shape.name} geometry (${shape.example}), bond angle ${shape.angle}${shape.lone.length ? `, with ${shape.lone.length} lone pair${shape.lone.length > 1 ? 's' : ''}` : ''}. Drag to rotate.`}
+      >
+        <VseprScene shape={shape} showLone={showLone} />
+      </Viewport3D>
 
       <div className={v.readout}>
         <div className={v.stat}>

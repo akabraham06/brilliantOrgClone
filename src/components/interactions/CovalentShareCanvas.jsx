@@ -1,11 +1,21 @@
+/* eslint-disable react/no-unknown-property -- react-three-fiber intrinsics use three.js props (position, args, intensity, ...) */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Vector3, Quaternion } from 'three';
 import Sphere from './lib/Sphere.jsx';
-import Scene3D from './lib/Scene3D.jsx';
+import Viewport3D from './lib/Viewport3D.jsx';
 import { useRaf } from './lib/motion.js';
 import { atomColor } from './formula.js';
 import Formula from './Formula.jsx';
 import v from './viz.module.css';
 import styles from './CovalentShareCanvas.module.css';
+
+// CPK-ish hex aligned with the atomColor convention, resolved for three.js.
+const GEO_3D = { H: '#e9edf7', O: '#f472b6', C: '#9aa3b2', N: '#60a5fa' };
+const geoColor = (sym) => GEO_3D[sym] || '#60a5fa';
+const GEO_SCALE = 0.045;
+const GEO_UP = new Vector3(0, 1, 0);
+// Screen-space geo coords -> three world coords (+y is up, so flip y).
+const toWorld = (p) => [p[0] * GEO_SCALE, -p[1] * GEO_SCALE, p[2] * GEO_SCALE];
 
 // Each molecule: a center atom + outer atoms; each connection needs N shared
 // pairs (1 = single, 2 = double). geo = 3D coords for the rotatable view.
@@ -14,6 +24,8 @@ const MOLECULES = {
     center: { symbol: 'H', x: 110, y: 90 },
     atoms: [{ symbol: 'H', x: 200, y: 90, pairs: 1 }],
     note: 'Two hydrogens share one pair - a single covalent bond.',
+    shapeName: 'Linear',
+    angle: 'one shared pair',
     geo: [
       { symbol: 'H', p: [-34, 0, 0], r: 16 },
       { symbol: 'H', p: [34, 0, 0], r: 16 },
@@ -26,6 +38,8 @@ const MOLECULES = {
       { symbol: 'H', x: 220, y: 130, pairs: 1 },
     ],
     note: 'Oxygen shares one pair with each hydrogen - a bent molecule.',
+    shapeName: 'Bent',
+    angle: '~104.5\u00b0',
     geo: [
       { symbol: 'O', p: [0, -18, 0], r: 22 },
       { symbol: 'H', p: [-38, 26, 0], r: 15 },
@@ -39,6 +53,8 @@ const MOLECULES = {
       { symbol: 'O', x: 235, y: 90, pairs: 2 },
     ],
     note: 'Carbon shares two pairs with each oxygen - linear O=C=O.',
+    shapeName: 'Linear',
+    angle: '180\u00b0',
     geo: [
       { symbol: 'C', p: [0, 0, 0], r: 20 },
       { symbol: 'O', p: [-48, 0, 0], r: 18 },
@@ -127,11 +143,19 @@ export default function CovalentShareCanvas({ slide, onReady }) {
   if (geo) {
     return (
       <div className={v.stage} style={{ width: '100%' }}>
-        <GeometryView molecule={m} />
+        <Viewport3D
+          height={248}
+          camera={{ position: [0, 0, 6.6], fov: 45 }}
+          label={`Interactive 3D ball-and-stick model of ${name}: ${m.shapeName} shape, bond angle ${m.angle}. Drag to rotate.`}
+        >
+          <GeometryScene molecule={m} />
+        </Viewport3D>
         <div className={v.row}>
           <button type="button" className={v.btn} onClick={() => setGeo(false)}>Back to builder</button>
         </div>
-        <p className={v.muted}>Drag to rotate and see the real shape of <Formula value={name} />.</p>
+        <p className={v.muted}>
+          Drag to rotate the real 3D shape of <Formula value={name} /> - {m.shapeName.toLowerCase()}, bond angle {m.angle}. {m.note}
+        </p>
       </div>
     );
   }
@@ -219,42 +243,60 @@ export default function CovalentShareCanvas({ slide, onReady }) {
   );
 }
 
-/** Rotatable ball-and-stick geometry of the molecule (CSS 3D). */
-function GeometryView({ molecule }) {
-  const center = molecule.geo[0];
+/** A lit sphere for one atom in the geometry view. */
+function GeoAtom({ position, radius, color }) {
   return (
-    <Scene3D height={230} label={`Rotatable 3D model of ${molecule.center.symbol} molecule`}>
-      <div className={styles.geo}>
-        {molecule.geo.slice(1).map((atom, i) => {
-          const dx = atom.p[0] - center.p[0];
-          const dy = atom.p[1] - center.p[1];
-          const len = Math.hypot(dx, dy);
-          const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
-          return (
-            <div
-              key={`stick${i}`}
-              className={styles.stick}
-              style={{ width: len, transform: `translate3d(${center.p[0]}px, ${center.p[1]}px, ${center.p[2]}px) rotate(${angle}deg)` }}
-            />
-          );
-        })}
-        {molecule.geo.map((atom, i) => (
-          <div
-            key={i}
-            className={styles.geoAtom}
-            style={{
-              width: atom.r * 2,
-              height: atom.r * 2,
-              marginLeft: -atom.r,
-              marginTop: -atom.r,
-              background: `radial-gradient(circle at 32% 30%, #fff, ${atomColor(atom.symbol)} 42%, rgba(0,0,0,0.55))`,
-              transform: `translate3d(${atom.p[0]}px, ${atom.p[1]}px, ${atom.p[2]}px)`,
-            }}
-          >
-            {atom.symbol}
-          </div>
-        ))}
-      </div>
-    </Scene3D>
+    <mesh position={position}>
+      <sphereGeometry args={[radius, 32, 32]} />
+      <meshStandardMaterial color={color} roughness={0.3} metalness={0.05} />
+    </mesh>
+  );
+}
+
+/**
+ * One covalent bond between two world-space points, drawn as `pairs` parallel
+ * cylinders so a double bond (e.g. each C=O in CO2) reads as two rods, not one.
+ */
+function GeoBond({ start, end, pairs = 1 }) {
+  const segments = useMemo(() => {
+    const sV = new Vector3(...start);
+    const eV = new Vector3(...end);
+    const dir = new Vector3().subVectors(eV, sV);
+    const len = dir.length() || 1;
+    const ndir = dir.clone().normalize();
+    const q = new Quaternion().setFromUnitVectors(GEO_UP, ndir);
+    // Perpendicular used to offset parallel rods of a multiple bond.
+    let perp = new Vector3().crossVectors(ndir, GEO_UP);
+    if (perp.lengthSq() < 1e-6) perp = new Vector3().crossVectors(ndir, new Vector3(1, 0, 0));
+    perp.normalize();
+    const mid = new Vector3().addVectors(sV, eV).multiplyScalar(0.5);
+    const gap = 0.13;
+    return Array.from({ length: pairs }, (_, k) => {
+      const off = (k - (pairs - 1) / 2) * gap;
+      const pos = mid.clone().addScaledVector(perp, off);
+      return { position: pos.toArray(), quaternion: [q.x, q.y, q.z, q.w], length: len };
+    });
+  }, [start, end, pairs]);
+  return segments.map((seg, k) => (
+    <mesh key={k} position={seg.position} quaternion={seg.quaternion}>
+      <cylinderGeometry args={[pairs > 1 ? 0.075 : 0.1, pairs > 1 ? 0.075 : 0.1, seg.length, 16]} />
+      <meshStandardMaterial color="#c2c9d6" roughness={0.55} metalness={0.1} />
+    </mesh>
+  ));
+}
+
+/** Rotatable r3f ball-and-stick geometry of the just-built molecule. */
+function GeometryScene({ molecule }) {
+  const atoms = molecule.geo.map((a) => ({ symbol: a.symbol, w: toWorld(a.p), rad: a.r * GEO_SCALE }));
+  const center = atoms[0];
+  return (
+    <group>
+      {atoms.slice(1).map((a, i) => (
+        <GeoBond key={`bond-${i}`} start={center.w} end={a.w} pairs={molecule.atoms[i]?.pairs || 1} />
+      ))}
+      {atoms.map((a, i) => (
+        <GeoAtom key={`atom-${i}`} position={a.w} radius={a.rad} color={geoColor(a.symbol)} />
+      ))}
+    </group>
   );
 }

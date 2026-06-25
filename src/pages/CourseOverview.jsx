@@ -28,6 +28,7 @@ function CourseOverviewContent() {
   const percent = getCoursePercent(lessons, progress);
   const nextLesson = getNextLesson(lessons, progress);
   const started = percent > 0;
+  const courseComplete = percent >= 100;
   const totalExercises = lessons.reduce((sum, l) => sum + (l.slideCount || 0), 0);
   const base = `/app/courses/${courseId}`;
   const nextLink = `${base}/lessons/${nextLesson.lessonId}`;
@@ -106,6 +107,27 @@ function CourseOverviewContent() {
               );
             })}
           </ol>
+
+          <Link
+            to={`${base}/review`}
+            className={`${styles.reviewNode} ${courseComplete ? styles.reviewNodeDone : ''}`}
+          >
+            <span className={styles.reviewMarker} aria-hidden="true">
+              {courseComplete ? '\u2605' : '\u{1F3C6}'}
+            </span>
+            <span className={styles.reviewBody}>
+              <span className={styles.reviewEyebrow}>Capstone</span>
+              <span className={styles.reviewTitle}>Course Review</span>
+              <span className={styles.reviewMeta}>
+                {courseComplete
+                  ? 'Completed \u00b7 reshuffle for a fresh set'
+                  : '~40 mixed questions from every lesson \u00b7 finish to complete the course'}
+              </span>
+            </span>
+            <span className={styles.reviewArrow} aria-hidden="true">
+              &rarr;
+            </span>
+          </Link>
         </div>
       </div>
 

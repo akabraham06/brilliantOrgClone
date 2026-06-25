@@ -21,7 +21,8 @@
   /* ---- Text ---- */
   --color-text: #f4f6fb;
   --color-text-muted: #aab2c5;
-  --color-text-subtle: #6f7891;
+  /* Raised from #6f7891 to clear 4.5:1 on dark surfaces for small text. */
+  --color-text-subtle: #8b93a8;
   --color-text-inverse: #0e0f13;
 
   /* ---- Bright accent palette (icons + actions) ---- */
@@ -32,6 +33,7 @@
   --accent-orange: #fb923c;
   --accent-pink: #f472b6;
   --accent-teal: #2dd4bf;
+  --accent-red: #f87171;
 
   /* ---- Primary action (Brilliant-style bright CTA) ---- */
   --color-primary: #4ade80;
@@ -128,6 +130,7 @@
   --accent-orange: #ea7317;
   --accent-pink: #db2777;
   --accent-teal: #0d9488;
+  --accent-red: #dc2626;
 
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;

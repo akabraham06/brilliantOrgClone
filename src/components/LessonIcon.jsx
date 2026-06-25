@@ -8,6 +8,7 @@ const ACCENTS = {
   reaction: 'var(--accent-orange)',
   mole: 'var(--accent-teal)',
   beaker: 'var(--accent-pink)',
+  ruler: 'var(--accent-yellow)',
 };
 
 function Glyph({ icon }) {
@@ -63,6 +64,15 @@ function Glyph({ icon }) {
           <circle cx="10" cy="13" r="1.1" fill="currentColor" />
           <circle cx="14" cy="15" r="1.1" fill="currentColor" />
           <circle cx="13" cy="11" r="1.1" fill="currentColor" />
+        </>
+      );
+    case 'ruler':
+      return (
+        <>
+          <rect x="3" y="8" width="18" height="8" rx="1.4" fill="none" stroke="currentColor" strokeWidth="1.6" transform="rotate(-45 12 12)" />
+          <line x1="9.5" y1="9.5" x2="10.7" y2="10.7" stroke="currentColor" strokeWidth="1.4" />
+          <line x1="12" y1="12" x2="13.2" y2="13.2" stroke="currentColor" strokeWidth="1.4" />
+          <line x1="14.5" y1="14.5" x2="15.7" y2="15.7" stroke="currentColor" strokeWidth="1.4" />
         </>
       );
     case 'beaker':

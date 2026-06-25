@@ -3,8 +3,13 @@ import styles from './StreakWidget.module.css';
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export default function StreakWidget({ streakCount = 0, completedLessons = 0 }) {
-  // Light up the most recent `streakCount` days (demo visual for Phase 2).
-  const activeFrom = Math.max(0, DAYS.length - streakCount);
+  // Anchor the week row to the real calendar week and light up the streak days
+  // ending on TODAY, so today's dot is the one that glows. JS getDay() is
+  // Sun=0..Sat=6; shift to Mon=0..Sun=6 to match the labels above.
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  // First lit day this week (a longer streak that started last week clamps to 0).
+  const streakStart = todayIdx - streakCount + 1;
+  const isActive = (i) => streakCount > 0 && i >= streakStart && i <= todayIdx;
 
   return (
     <section className={styles.card}>
@@ -24,16 +29,20 @@ export default function StreakWidget({ streakCount = 0, completedLessons = 0 }) 
         </div>
       </div>
 
-      <div className={styles.week} aria-label={`Active ${streakCount} of 7 days`}>
-        {DAYS.map((day, i) => (
-          <div key={i} className={styles.day}>
-            <span
-              className={`${styles.dot} ${i >= activeFrom ? styles.dotActive : ''}`}
-              aria-hidden="true"
-            />
-            <span className={styles.dayLabel}>{day}</span>
-          </div>
-        ))}
+      <div className={styles.week} aria-label={`${streakCount}-day streak, ending today`}>
+        {DAYS.map((day, i) => {
+          const active = isActive(i);
+          const today = i === todayIdx;
+          return (
+            <div key={i} className={styles.day}>
+              <span
+                className={`${styles.dot} ${active ? styles.dotActive : ''} ${today ? styles.dotToday : ''}`}
+                aria-hidden="true"
+              />
+              <span className={`${styles.dayLabel} ${today ? styles.dayLabelToday : ''}`}>{day}</span>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

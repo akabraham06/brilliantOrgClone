@@ -28,12 +28,26 @@ export default function MolarMassLookup({ slide, onReady }) {
   const parts = Object.entries(comp).map(([el, n]) => ({ el, n, mass: massOf(el) * n }));
   const total = parts.reduce((sum, p) => sum + p.mass, 0);
 
-  // Flatten atoms for the ball diagram (cap to keep glucose readable).
+  // Flatten atoms (grouped by element) for the ball diagram.
   const atoms = [];
   parts.forEach((p) => {
     for (let i = 0; i < p.n; i += 1) atoms.push(p.el);
   });
-  const perRow = Math.min(8, Math.ceil(Math.sqrt(atoms.length)));
+
+  // Layout that always fits inside the viewBox, however many atoms there are
+  // (glucose has 24). Cell size shrinks to fit; each ball is sized by a rough
+  // relative atomic radius (H is smaller than C/O) so the picture is more
+  // physically honest, and every row is centered.
+  const VBW = 300;
+  const VBH = 150;
+  const MARGIN = 16;
+  const n = atoms.length;
+  const perRow = Math.min(8, Math.ceil(Math.sqrt(n)));
+  const rows = Math.ceil(n / perRow);
+  const cell = Math.min((VBW - MARGIN * 2) / perRow, (VBH - MARGIN * 2) / rows, 34);
+  const baseR = Math.min(cell * 0.42, 14);
+  const REL = { H: 0.62, C: 1.0, O: 0.9, N: 0.88, Na: 1.15, Cl: 1.12, S: 1.05 };
+  const startY = (VBH - rows * cell) / 2 + cell / 2;
 
   return (
     <div className={v.stage} style={{ width: '100%' }}>
@@ -46,8 +60,8 @@ export default function MolarMassLookup({ slide, onReady }) {
       </div>
 
       {/* Ball diagram of the atoms in one formula unit */}
-      <div className={v.svgWrap} style={{ maxWidth: 320 }}>
-        <svg viewBox="0 0 280 110" className={v.svg} role="img" aria-label={`Atoms in ${formula}`}>
+      <div className={v.svgWrap} style={{ maxWidth: 340 }}>
+        <svg viewBox={`0 0 ${VBW} ${VBH}`} className={v.svg} role="img" aria-label={`Atoms in ${formula}`}>
           <defs>
             <radialGradient id="mm-shade" cx="34%" cy="28%" r="80%">
               <stop offset="0%" stopColor="#fff" stopOpacity="0.8" />
@@ -56,16 +70,18 @@ export default function MolarMassLookup({ slide, onReady }) {
             </radialGradient>
           </defs>
           {atoms.map((el, i) => {
-            const col = i % perRow;
             const row = Math.floor(i / perRow);
-            const rows = Math.ceil(atoms.length / perRow);
-            const x = 140 - (Math.min(perRow, atoms.length) - 1) * 15 + col * 30;
-            const y = 55 - (rows - 1) * 15 + row * 30;
+            const col = i % perRow;
+            const countInRow = Math.min(perRow, n - row * perRow);
+            const startX = (VBW - countInRow * cell) / 2 + cell / 2;
+            const x = startX + col * cell;
+            const y = startY + row * cell;
+            const r = baseR * (REL[el] || 0.92);
             return (
               <g key={i} className={v.popIn}>
-                <circle cx={x} cy={y} r="12" fill={atomColor(el)} stroke="rgba(0,0,0,0.28)" />
-                <circle cx={x} cy={y} r="12" fill="url(#mm-shade)" />
-                <text x={x} y={y + 4} textAnchor="middle" fontSize="10" fontWeight="800" fill="#0e0f13">{el}</text>
+                <circle cx={x} cy={y} r={r} fill={atomColor(el)} stroke="rgba(0,0,0,0.28)" />
+                <circle cx={x} cy={y} r={r} fill="url(#mm-shade)" />
+                <text x={x} y={y + r * 0.34} textAnchor="middle" fontSize={Math.max(8, r * 0.82)} fontWeight="800" fill="#0e0f13">{el}</text>
               </g>
             );
           })}

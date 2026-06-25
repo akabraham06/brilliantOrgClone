@@ -148,8 +148,14 @@ export function ProgressProvider({ children }) {
         lp.completedSlideIds = [...done];
         lp.slideCount = slideCount || lp.slideCount;
         lp.lastSlideIndex = index;
+        // Guard against stale state where stored completedSlideIds outnumber the
+        // current slideCount (lessons get restructured over time). Clamp both the
+        // counted slides and the resulting percent so it can never exceed 100.
+        const completedCount = lp.slideCount
+          ? Math.min(lp.completedSlideIds.length, lp.slideCount)
+          : lp.completedSlideIds.length;
         lp.percent = lp.slideCount
-          ? Math.round((lp.completedSlideIds.length / lp.slideCount) * 100)
+          ? Math.min(100, Math.round((completedCount / lp.slideCount) * 100))
           : 0;
         lessons[lessonId] = lp;
         return { ...prev, lessons };

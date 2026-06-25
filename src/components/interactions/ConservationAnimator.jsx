@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { atomColor } from './formula.js';
-import { useSpring } from './lib/motion.js';
+import { usePrefersReducedMotion, useRaf } from './lib/motion.js';
 import v from './viz.module.css';
 
 /*
@@ -27,15 +27,43 @@ const BONDS_AFTER = [['o1', 'h1'], ['o1', 'h2'], ['o2', 'h3'], ['o2', 'h4']];
 
 const R = { H: 9, O: 12 };
 const lerp = (a, b, t) => a + (b - a) * t;
+// Deliberately slow so learners can track each atom and count before/after.
+const DURATION_MS = 4200;
+// Ease in/out: dwells (moves slowly) near the "before" (0) and "after" (1)
+// states and speeds up through the middle, giving natural pauses to count atoms.
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2);
 
 export default function ConservationAnimator({ onReady }) {
+  const reduce = usePrefersReducedMotion();
   const [reacted, setReacted] = useState(false);
-  const t = useSpring(reacted ? 1 : 0, { stiffness: 0.14 });
+  // Raw 0..1 progress driven at a fixed pace; eased before it positions atoms.
+  const [raw, setRaw] = useState(0);
+  const target = reacted ? 1 : 0;
 
   useEffect(() => {
     onReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Snap to the correct end state when reduced motion is requested.
+  useEffect(() => {
+    if (reduce) setRaw(target);
+  }, [reduce, target]);
+
+  useRaf(
+    (dt) => {
+      setRaw((cur) => {
+        const dir = Math.sign(target - cur);
+        if (dir === 0) return cur;
+        const next = cur + (dir * dt) / DURATION_MS;
+        if ((dir > 0 && next >= target) || (dir < 0 && next <= target)) return target;
+        return next;
+      });
+    },
+    !reduce && raw !== target,
+  );
+
+  const t = easeInOut(raw);
 
   const pos = {};
   ATOMS.forEach((a) => {

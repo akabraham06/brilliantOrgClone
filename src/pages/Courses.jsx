@@ -39,18 +39,20 @@ function CoursesContent() {
       <section className={styles.panel}>
         <div className={styles.courseGrid}>
           <div className={styles.courseItem}>
-            <Link to={courseLink} className={styles.courseCard}>
+            <div className={styles.cardWrap}>
               <span className={styles.gradeTag}>GR 9-11</span>
               {isNew && <span className={styles.newBadge}>NEW</span>}
-              <span className={styles.courseArt} aria-hidden="true">
-                <LessonIcon icon={course.coverIcon} size={84} />
-              </span>
-              {percent > 0 && (
-                <span className={styles.cardProgress} aria-hidden="true">
-                  <span className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
+              <Link to={courseLink} className={styles.courseCard}>
+                <span className={styles.courseArt} aria-hidden="true">
+                  <LessonIcon icon={course.coverIcon} size={84} />
                 </span>
-              )}
-            </Link>
+                {percent > 0 && (
+                  <span className={styles.cardProgress} aria-hidden="true">
+                    <span className={styles.cardProgressFill} style={{ width: `${percent}%` }} />
+                  </span>
+                )}
+              </Link>
+            </div>
             <span className={styles.courseLabel}>{course.title}</span>
           </div>
         </div>

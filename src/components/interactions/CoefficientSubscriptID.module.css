@@ -1,11 +1,14 @@
 .formula {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: center;
-  font-size: 3rem;
+  /* Shrink the equation on narrow phones so longer formulas don't overflow. */
+  font-size: clamp(2rem, 11vw, 3rem);
   font-weight: 800;
   color: var(--color-text);
   padding: var(--space-4) 0;
+  max-width: 100%;
 }
 
 .unit {
@@ -34,13 +37,13 @@
 }
 
 .coeff {
-  font-size: 3rem;
+  font-size: clamp(2rem, 11vw, 3rem);
   color: var(--accent-yellow);
   padding: 0 4px;
 }
 
 .sub {
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 5.5vw, 1.5rem);
   align-self: flex-end;
   color: var(--accent-blue);
   padding: 0 2px;

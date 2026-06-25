@@ -8,6 +8,7 @@ import Home from './pages/Home.jsx';
 import Courses from './pages/Courses.jsx';
 import CourseOverview from './pages/CourseOverview.jsx';
 import LessonPlayer from './pages/LessonPlayer.jsx';
+import ReviewPage from './pages/ReviewPage.jsx';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             path="courses/:courseId/lessons/:lessonId"
             element={<LessonPlayer />}
           />
+          <Route path="courses/:courseId/review" element={<ReviewPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

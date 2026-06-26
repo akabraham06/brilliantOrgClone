@@ -1,0 +1,32 @@
+# Netlify configuration.
+#
+# This repo is a Vite SPA. The site is built with Vite and served as static
+# files, while the OpenAI proxy runs as a Deno Edge Function at /api/ai.
+#
+# NOTE: Secrets and tunables are configured in the Netlify dashboard (Site
+# settings -> Environment variables) or a gitignored local .env for
+# `netlify dev`. They are never stored in this file. See netlify/README.md.
+#
+# Required:  OPENAI_API_KEY, FIREBASE_PROJECT_ID, ALLOWED_ORIGIN
+# Optional:  OPENAI_DEFAULT_MODEL,
+#            RATE_LIMIT_PER_MIN, RATE_LIMIT_PER_DAY,
+#            MONTHLY_TOKEN_BUDGET, GLOBAL_MONTHLY_TOKEN_BUDGET,
+#            MODERATION_ENABLED, MODERATION_MODEL,
+#            STATE_BACKEND, BLOBS_STORE_NAME,
+#            UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback so client-side routes resolve to index.html.
+# (Excludes /api/* which is handled by the edge function below.)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# OpenAI Chat Completions-compatible proxy.
+[[edge_functions]]
+  path = "/api/ai"
+  function = "ai"

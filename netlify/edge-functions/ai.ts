@@ -629,7 +629,15 @@ export default async function handler(req: Request): Promise<Response> {
   };
 
   // 6c. Moderation pass on the latest user message. Fails OPEN.
-  if (envBool("MODERATION_ENABLED", true)) {
+  //
+  // Callers can mark a request as system-generated/trusted by sending a
+  // top-level `moderate: false` (app-built content like anchored explanations,
+  // lesson recaps, adaptive checks, and JSON generation — NOT free-form user
+  // text). For those we skip the extra serial OpenAI moderation round-trip to
+  // cut time-to-first-token. Free-text tutor chat omits the flag and stays
+  // moderated. MODERATION_ENABLED remains the global kill-switch.
+  const skipModeration = (body as { moderate?: unknown }).moderate === false;
+  if (envBool("MODERATION_ENABLED", true) && !skipModeration) {
     const inputs = latestUserTexts(messages);
     const moderationModel =
       Deno.env.get("MODERATION_MODEL") ?? DEFAULT_MODERATION_MODEL;
@@ -645,6 +653,14 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   // 7. Inject defaults + forward to OpenAI.
+  //
+  // Strip our custom, non-OpenAI top-level fields BEFORE forwarding: OpenAI
+  // rejects unknown top-level params, and we forward `body` verbatim via
+  // JSON.stringify(body) below (for both the streaming and non-streaming
+  // paths). `moderate` is the only custom field we add; delete it here so it
+  // can never reach OpenAI.
+  delete (body as { moderate?: unknown }).moderate;
+
   if (!body.model) {
     body.model = Deno.env.get("OPENAI_DEFAULT_MODEL") ?? FALLBACK_MODEL;
   }

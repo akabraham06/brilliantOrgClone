@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import v from './viz.module.css';
 import { atomColor } from './formula.js';
 import { useSpring } from './lib/motion.js';
+import { useStruggleReporter } from '../tutor/useStruggleReporter.js';
 
 const clampN = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 
@@ -173,6 +174,13 @@ export default function EquationBalancer({
   // Graded mode only: whether the learner has pressed "Check answer".
   const [submitted, setSubmitted] = useState(savedState?.submitted ?? false);
 
+  const reportStruggle = useStruggleReporter({
+    enabled: graded,
+    slideId: slide?.slideId,
+    hintSeed:
+      'I\u2019m stuck balancing this equation \u2014 can you give me one small hint for the next step?',
+  });
+
   const left = sideCounts(reactants, coeffs, 0);
   const right = sideCounts(products, coeffs, reactants.length);
   const elements = Array.from(new Set([...Object.keys(left), ...Object.keys(right)]));
@@ -203,6 +211,12 @@ export default function EquationBalancer({
     setSubmitted(true);
     onResult?.(balanced);
     onSaveState?.({ coeffs, submitted: true });
+    reportStruggle(balanced, {
+      event: {
+        prompt: `Balance the equation: ${equation}`,
+        selected: `current coefficients ${all.map((f, i) => `${coeffs[i]} ${f}`).join(' + ')}`,
+      },
+    });
   }
 
   function tryAgain() {

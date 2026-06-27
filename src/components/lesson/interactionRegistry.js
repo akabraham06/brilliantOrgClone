@@ -106,6 +106,8 @@ const CHECKS = {
   balance: lazy(() => import('./checks/BalanceCheck.jsx')),
   pHPlacement: lazy(() => import('./checks/PHPlacementCheck.jsx')),
   nameBuilder: lazy(() => import('./checks/NameBuilderCheck.jsx')),
+  freeResponse: lazy(() => import('./checks/FreeResponseCheck.jsx')),
+  freeRecall: lazy(() => import('./checks/FreeRecallCheck.jsx')),
 };
 
 export function getInteractionComponent(key) {

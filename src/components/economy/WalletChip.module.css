@@ -1,0 +1,118 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+  flex: 0 0 auto;
+  max-width: 100%;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.level,
+.coins {
+  flex: 0 0 auto;
+}
+
+.chip:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--accent-purple);
+}
+
+.level {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.levelLabel {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--color-text-subtle);
+}
+
+.levelNum {
+  font-size: var(--text-sm);
+}
+
+.barWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 48px;
+}
+
+.bar {
+  display: block;
+  height: 6px;
+  width: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-active);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent-purple), #6bd5ff);
+  transition: width 0.5s ease;
+}
+
+.barText {
+  font-size: 10px;
+  color: var(--color-text-subtle);
+}
+
+.coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.coinNum {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Full variant for Home: bigger, roomier. */
+.full {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+}
+
+.full .barWrap {
+  flex: 1;
+  min-width: 80px;
+}
+
+.full .bar {
+  height: 8px;
+}
+
+.full .levelNum {
+  font-size: var(--text-md);
+}
+
+@media (max-width: 600px) {
+  /* Compact nav chip: drop the XP mini-bar, leaving "LV n + coins". The full
+     Home variant keeps its bar. */
+  .barWrap {
+    display: none;
+  }
+  .full .barWrap {
+    display: flex;
+  }
+  .chip:not(.full) {
+    gap: var(--space-1);
+    padding: 6px 9px;
+  }
+}

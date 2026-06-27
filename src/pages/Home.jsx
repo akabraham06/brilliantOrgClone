@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useContent } from '../context/ContentContext.jsx';
 import { useProgress } from '../context/ProgressContext.jsx';
@@ -6,6 +7,10 @@ import ContentGate from '../components/ContentGate.jsx';
 import ContinueLearningCard from '../components/ContinueLearningCard.jsx';
 import StreakWidget from '../components/StreakWidget.jsx';
 import CourseHeroCard from '../components/CourseHeroCard.jsx';
+import WalletChip from '../components/economy/WalletChip.jsx';
+import NextStepCard from '../components/recommend/NextStepCard.jsx';
+import MisconceptionReport from '../components/recommend/MisconceptionReport.jsx';
+import DailyQuestsPanel from '../components/quests/DailyQuestsPanel.jsx';
 import styles from './Home.module.css';
 
 export default function Home() {
@@ -46,12 +51,15 @@ function HomeContent() {
 
       <div className={styles.grid}>
         <div className={styles.main}>
+          <NextStepCard />
+          <DailyQuestsPanel />
           <ContinueLearningCard
             lesson={nextLesson}
             to={lessonLink}
             resume={started}
             slidePercent={slidePercent}
           />
+          <MisconceptionReport />
           <CourseHeroCard
             course={course}
             percent={percent}
@@ -62,6 +70,7 @@ function HomeContent() {
         </div>
 
         <aside className={styles.side}>
+          <WalletChip variant="full" />
           <StreakWidget
             streakCount={progress.streakCount || 0}
             completedLessons={progress.completedLessonIds?.length || 0}
@@ -80,6 +89,11 @@ function HomeContent() {
               </p>
             )}
           </div>
+          <Link to="/app/lab" className={styles.labCard}>
+            <span className={styles.labEyebrow}>AI Lab</span>
+            <p className={styles.labText}>Explore chemistry hands-on in the AI Lab.</p>
+            <span className={styles.labCta}>Open the Lab &rarr;</span>
+          </Link>
         </aside>
       </div>
     </div>

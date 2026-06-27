@@ -1,6 +1,7 @@
 .shell {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--color-bg);
+  overflow-x: hidden;
 }
 
 .content {
@@ -9,8 +10,23 @@
   padding: var(--space-6) var(--space-5) var(--space-8);
 }
 
+@media (max-width: 768px) {
+  .content {
+    padding-inline: var(--space-4);
+  }
+}
+
 @media (max-width: 600px) {
   .content {
-    padding: var(--space-5) var(--space-4) var(--space-7);
+    padding-top: var(--space-5);
+    /* Extra bottom room so the last content can scroll clear of the floating
+       tutor orb (bottom-left) and avatar companion (bottom-right). */
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 400px) {
+  .content {
+    padding-inline: var(--space-3);
   }
 }

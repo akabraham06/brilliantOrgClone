@@ -3,6 +3,7 @@ import v from './viz.module.css';
 import styles from './PHScale.module.css';
 import DragChip from './DragChip.jsx';
 import { useSpring } from './lib/motion.js';
+import { useStruggleReporter } from '../tutor/useStruggleReporter.js';
 import {
   motion,
   AnimatePresence,
@@ -70,6 +71,12 @@ export default function PHScale({ items = [], graded = false, config = {}, onRea
   const [submitted, setSubmitted] = useState(() => savedState?.submitted || false);
   const [activeId, setActiveId] = useState(null);
 
+  const reportStruggle = useStruggleReporter({
+    enabled: graded,
+    hintSeed:
+      'I\u2019m stuck placing these on the pH scale \u2014 can you give me one small hint for the next step?',
+  });
+
   useEffect(() => {
     if (!graded) onReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,6 +123,16 @@ export default function PHScale({ items = [], graded = false, config = {}, onRea
   function submit() {
     setSubmitted(true);
     onResult?.(allCorrect);
+    const misplaced = items
+      .filter((i) => assign[i.id] !== i.answer)
+      .map((i) => i.label || i.id)
+      .join(', ');
+    reportStruggle(allCorrect, {
+      event: {
+        prompt: config.prompt || 'Place each substance in the correct pH zone (acidic / neutral / basic).',
+        selected: misplaced ? `mis-placed: ${misplaced}` : 'incorrect placement',
+      },
+    });
   }
 
   function reset() {

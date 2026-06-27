@@ -1,4 +1,5 @@
 import { useContent } from '../context/ContentContext.jsx';
+import AvatarLoader from './avatar/AvatarLoader.jsx';
 import styles from './ContentGate.module.css';
 
 /**
@@ -9,12 +10,7 @@ export default function ContentGate({ children }) {
   const { course, lessons, loading, error, reload } = useContent();
 
   if (loading) {
-    return (
-      <div className={styles.center} role="status" aria-live="polite">
-        <span className={styles.spinner} aria-hidden="true" />
-        <span className="sr-only">Loading content</span>
-      </div>
-    );
+    return <AvatarLoader variant="block" label="Loading your course" />;
   }
 
   if (error) {

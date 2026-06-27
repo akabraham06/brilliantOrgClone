@@ -2,11 +2,15 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Link, useParams } from 'react-router-dom';
 import { useContent } from '../context/ContentContext.jsx';
 import { useProgress } from '../context/ProgressContext.jsx';
+import { useDailyQuests } from '../context/DailyQuestsContext.jsx';
 import { buildReviewSet } from '../data/reviewQuestions.js';
 import { getCheckComponent } from '../components/lesson/interactionRegistry.js';
 import InteractionFallback from '../components/lesson/InteractionFallback.jsx';
 import ContentGate from '../components/ContentGate.jsx';
 import Formula from '../components/interactions/Formula.jsx';
+import { aiEnabled } from '../firebase/ai.js';
+import { useLearnerProfile } from '../ai/useLearnerProfile.js';
+import { generateReviewItems } from '../ai/reviewGenerator.js';
 import styles from './ReviewPage.module.css';
 
 const REVIEW_COUNT = 40;
@@ -34,11 +38,21 @@ function ReviewPageInner() {
   const { courseId } = useParams();
   const { lessons } = useContent();
   const { completeLesson } = useProgress();
+  const { report: reportQuest } = useDailyQuests();
+  const profile = useLearnerProfile();
 
   // A fresh shuffled set per attempt; bumping `attempt` reshuffles on restart.
   const [attempt, setAttempt] = useState(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const items = useMemo(() => buildReviewSet(REVIEW_COUNT), [attempt]);
+  const staticItems = useMemo(() => buildReviewSet(REVIEW_COUNT), [attempt]);
+
+  // Additive AI mode: a personalized set generated from the learner's weak
+  // spots. Falls back transparently to the static set when unavailable.
+  const [aiItems, setAiItems] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
+
+  const items = aiItems || staticItems;
   const total = items.length;
 
   const [index, setIndex] = useState(0);
@@ -68,7 +82,11 @@ function ReviewPageInner() {
     if (!finished || completedRef.current) return;
     completedRef.current = true;
     lessons.forEach((l) => completeLesson(l.lessonId));
-  }, [finished, lessons, completeLesson]);
+    // Daily quests: the review is retrieval practice AND inherently interleaved
+    // (it mixes questions from every lesson), so it advances both.
+    if (score > 0) reportQuest('retrieval', score);
+    reportQuest('interleave', 1);
+  }, [finished, lessons, completeLesson, score, reportQuest]);
 
   function goNext() {
     if (!answered) return;
@@ -78,7 +96,26 @@ function ReviewPageInner() {
 
   function restart() {
     completedRef.current = false;
+    setAiItems(null);
+    setAiError(false);
     setAttempt((a) => a + 1);
+    setIndex(0);
+    setResults({});
+    setFinished(false);
+  }
+
+  async function practiceWeakSpots() {
+    if (aiLoading) return;
+    setAiLoading(true);
+    setAiError(false);
+    const generated = await generateReviewItems(profile, lessons, { count: 8 });
+    setAiLoading(false);
+    if (!generated) {
+      setAiError(true);
+      return;
+    }
+    completedRef.current = false;
+    setAiItems(generated);
     setIndex(0);
     setResults({});
     setFinished(false);
@@ -122,6 +159,30 @@ function ReviewPageInner() {
       >
         <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
       </div>
+
+      {aiEnabled && (
+        <div className={styles.aiBar}>
+          {aiItems ? (
+            <span className={styles.aiBadge}>
+              Personalized practice &middot; tailored to what you missed
+            </span>
+          ) : (
+            <button
+              type="button"
+              className={styles.aiBtn}
+              onClick={practiceWeakSpots}
+              disabled={aiLoading}
+            >
+              {aiLoading ? 'Generating your set\u2026' : '\u2728 Practice what you missed'}
+            </button>
+          )}
+          {aiError && (
+            <span className={styles.aiErr} role="status">
+              Couldn&rsquo;t generate right now &mdash; showing the standard review.
+            </span>
+          )}
+        </div>
+      )}
 
       <main className={styles.stage}>
         <div className={styles.text}>

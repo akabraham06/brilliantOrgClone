@@ -3,6 +3,7 @@ import v from './viz.module.css';
 import styles from './ClassifyBoard.module.css';
 import DragChip from './DragChip.jsx';
 import Formula from './Formula.jsx';
+import { useStruggleReporter } from '../tutor/useStruggleReporter.js';
 import {
   motion,
   AnimatePresence,
@@ -113,6 +114,12 @@ export default function ClassifyBoard({
   const [selected, setSelected] = useState(null);
   const [submitted, setSubmitted] = useState(savedState?.submitted || false);
 
+  const reportStruggle = useStruggleReporter({
+    enabled: graded,
+    hintSeed:
+      'I\u2019m stuck sorting these \u2014 can you give me one small hint for the next step?',
+  });
+
   useEffect(() => {
     if (!graded) onReady?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,6 +158,16 @@ export default function ClassifyBoard({
     setSubmitted(true);
     onResult?.(allCorrect);
     onSaveState?.({ assignments, submitted: true });
+    const misplaced = items
+      .filter((i) => assignments[i.id] !== i.answer)
+      .map((i) => i.label)
+      .join(', ');
+    reportStruggle(allCorrect, {
+      event: {
+        prompt: config.prompt || 'Sort each item into the correct category.',
+        selected: misplaced ? `mis-sorted: ${misplaced}` : 'incorrect sorting',
+      },
+    });
   }
 
   function reset() {

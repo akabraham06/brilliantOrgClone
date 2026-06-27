@@ -20,12 +20,17 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(280px, 360px) 1fr;
+  grid-template-areas:
+    "info path"
+    "secondary path";
+  grid-template-rows: auto 1fr;
   gap: var(--space-6);
   align-items: start;
 }
 
 /* ---- Left info card ---- */
 .info {
+  grid-area: info;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
@@ -33,13 +38,25 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  position: sticky;
-  top: calc(var(--navbar-height) + var(--space-4));
+  /* The left column (info + next-step + quests) flows with the page. It must not
+     be sticky: pinning it makes the cards below scroll up and collide with /
+     hide behind it as the long lesson tree scrolls. */
+  align-self: start;
+}
+
+/* ---- Secondary column (next-step + daily quests) below the info card ---- */
+.secondary {
+  grid-area: secondary;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
 }
 
 .title {
-  font-size: var(--text-2xl);
+  font-size: clamp(1.5rem, 1.25rem + 1.2vw, 1.75rem);
   margin-top: var(--space-2);
+  overflow-wrap: anywhere;
 }
 
 .description {
@@ -62,20 +79,22 @@
 
 /* ---- Right path ---- */
 .pathCol {
+  grid-area: path;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
+  min-width: 0;
 }
 
 .levelPill {
-  align-self: flex-end;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 2px;
-  min-width: 240px;
-  padding: var(--space-3) var(--space-5);
-  border: 1px solid var(--accent-blue);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--accent-blue);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
@@ -89,9 +108,11 @@
 }
 
 .levelName {
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-text);
-  text-align: center;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .path {
@@ -289,8 +310,75 @@
   color: var(--accent-purple, #a78bfa);
 }
 
+/* ---- Heat Check launch node (flame / orange accent) ---- */
+.heatNode {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 1px solid #ef6f3b;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--color-surface), color-mix(in srgb, #ef6f3b 16%, var(--color-surface)));
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.heatNode:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px color-mix(in srgb, #ef6f3b 30%, transparent);
+}
+
+.heatNode:focus-visible {
+  outline: 2px solid #ef6f3b;
+  outline-offset: 2px;
+}
+
+.heatGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(60% 120% at 12% 50%, rgba(247, 147, 47, 0.22), transparent 60%);
+}
+
+.heatMarker {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+  border-radius: 50%;
+  background: var(--color-surface-active);
+  border: 2px solid #ef6f3b;
+  box-shadow: 0 0 0 6px var(--color-bg), 0 0 18px rgba(247, 147, 47, 0.5);
+}
+
+.heatEyebrow {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ef6f3b;
+}
+
+.heatArrow {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: #ef6f3b;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reviewNode:hover {
+    transform: none;
+  }
+  .heatNode:hover {
     transform: none;
   }
 }
@@ -364,12 +452,42 @@
 @media (max-width: 820px) {
   .layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "path"
+      "info"
+      "secondary";
+    gap: var(--space-5);
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    gap: var(--space-4);
   }
   .info {
-    position: static;
+    padding: var(--space-4);
+    gap: var(--space-2);
   }
-  .levelPill {
-    align-self: stretch;
+  .pathCol {
+    gap: var(--space-4);
+  }
+  /* Tighten the path tree so node text has more room on phones. */
+  .node {
+    gap: var(--space-3);
+  }
+  .marker {
+    width: 48px;
+    height: 48px;
+  }
+  .path::before {
+    left: 23px;
+  }
+  .reviewMarker,
+  .heatMarker {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
   }
 }
 

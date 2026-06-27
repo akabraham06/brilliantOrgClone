@@ -2,8 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useContent } from '../context/ContentContext.jsx';
 import { useProgress } from '../context/ProgressContext.jsx';
+import { useTutor } from '../context/TutorContext.jsx';
+import { useEconomy } from '../context/EconomyContext.jsx';
+import { useDailyQuests } from '../context/DailyQuestsContext.jsx';
 import { fetchLessonSlides } from '../firebase/content.js';
 import { getLessonAccuracy } from '../data/progress.js';
+import { REWARDS } from '../data/economy.js';
+import { useLearnerMemory } from '../ai/useLearnerMemory.js';
 import ContentGate from '../components/ContentGate.jsx';
 import SlideRenderer from '../components/lesson/SlideRenderer.jsx';
 import LessonComplete from '../components/lesson/LessonComplete.jsx';
@@ -30,7 +35,20 @@ function LessonPlayerInner() {
     completeLesson,
     getResumeIndex,
   } = useProgress();
+  const { setGroundingSlide } = useTutor();
+  const { report: reportQuest } = useDailyQuests();
+  const { seedReviewTopics } = useLearnerMemory();
+  const {
+    grant,
+    loading: economyLoading,
+    xp: economyXp,
+    coins: economyCoins,
+    level: economyLevel,
+  } = useEconomy();
   const resumedRef = useRef(null);
+  // Snapshot of XP/coins/level when the lesson begins, so LessonComplete can show
+  // exactly what was earned during this run (checks + free-response + bonuses).
+  const startStatsRef = useRef(null);
   const [confirmQuit, setConfirmQuit] = useState(false);
 
   const lesson = useMemo(
@@ -99,10 +117,31 @@ function LessonPlayerInner() {
     startLesson(lessonId, slides.length);
   }, [loading, slides, lessonId, getResumeIndex, startLesson]);
 
+  // Snapshot the economy at lesson start (once it has hydrated) so the completion
+  // screen can report exactly what this run earned.
+  useEffect(() => {
+    if (economyLoading) return;
+    if (startStatsRef.current?.lessonId === lessonId) return;
+    startStatsRef.current = {
+      lessonId,
+      xp: economyXp,
+      coins: economyCoins,
+      level: economyLevel,
+    };
+  }, [economyLoading, lessonId, economyXp, economyCoins, economyLevel]);
+
   // Track the current slide as last-visited (drives Home's resume + lesson %).
   useEffect(() => {
     if (current && !completed) recordSlideViewed(lessonId, current.slideId, index);
   }, [current, index, completed, lessonId, recordSlideViewed]);
+
+  // Keep the AI tutor grounded in the slide the learner is currently viewing.
+  useEffect(() => {
+    setGroundingSlide(!completed ? current || null : null);
+  }, [current, completed, setGroundingSlide]);
+
+  // Drop the grounding slide when leaving the lesson player.
+  useEffect(() => () => setGroundingSlide(null), [setGroundingSlide]);
 
   // When a slide's requirement is satisfied, persist it as completed.
   useEffect(() => {
@@ -120,9 +159,26 @@ function LessonPlayerInner() {
   const handleResult = useCallback(
     (correct) => {
       setSatisfied((prev) => ({ ...prev, [current?.slideId]: correct }));
-      if (current?.isCheck) recordCheckResult(lessonId, current.slideId, correct);
+      if (current?.isCheck) {
+        recordCheckResult(lessonId, current.slideId, correct);
+        // Idempotent reward on the first time a check is answered correctly.
+        // (Granting only on correct avoids the adaptive check's pre-answer
+        // onResult(false) locking in an "attempt" tier.)
+        if (correct) {
+          // Low-stakes retrieval checks (free-recall, warm-ups, discrimination)
+          // grant a small fixed reward to keep the completion economy calibrated.
+          const reward = current.checkConfig?.lowStakes
+            ? REWARDS.lowStakes
+            : REWARDS.check.correct;
+          grant({
+            key: `check:${current.slideId}`,
+            xp: reward.xp,
+            coins: reward.coins,
+          });
+        }
+      }
     },
-    [current, lessonId, recordCheckResult],
+    [current, lessonId, recordCheckResult, grant],
   );
 
   const registerNextIntercept = useCallback((fn) => {
@@ -173,6 +229,7 @@ function LessonPlayerInner() {
         accuracy={getLessonAccuracy(lessonId, progress)}
         slideCount={slides.length}
         streakCount={progress.streakCount || 0}
+        startStats={startStatsRef.current}
       />
     );
   }
@@ -200,6 +257,26 @@ function LessonPlayerInner() {
     nextInterceptRef.current = null;
     if (isLast) {
       completeLesson(lessonId);
+      // Lesson-completion reward (idempotent per lesson).
+      grant({ key: `lesson:${lessonId}`, xp: REWARDS.lesson.xp, coins: REWARDS.lesson.coins });
+      // Seed spaced-repetition cards for every concept this lesson taught, so the
+      // existing scheduler actually tracks learned material (not just mistakes).
+      // Idempotent: seedCards skips topics already tracked.
+      const learnedTopics = [
+        ...(lesson.learningObjectives || []),
+        ...(lesson.recap || []),
+      ]
+        .filter((t) => typeof t === 'string' && t.trim())
+        .map((topic) => ({ topic, lessonId }));
+      if (learnedTopics.length) seedReviewTopics(learnedTopics);
+      // Daily quest: "foundation" — finishing a lesson builds the prerequisite base.
+      reportQuest('foundation', 1);
+      // Course 100% bonus the moment the final lesson is done (idempotent per course).
+      const completedSet = new Set(progress.completedLessonIds || []);
+      completedSet.add(lessonId);
+      if (lessons.length > 0 && lessons.every((l) => completedSet.has(l.lessonId))) {
+        grant({ key: `course:${courseId}`, xp: REWARDS.course.xp, coins: REWARDS.course.coins });
+      }
       setCompleted(true);
     } else {
       setIndex((i) => i + 1);
@@ -239,6 +316,7 @@ function LessonPlayerInner() {
           registerNextIntercept={registerNextIntercept}
           savedState={slideState[current.slideId]}
           onSaveState={saveSlideState}
+          lessonSlides={slides}
         />
       </main>
 

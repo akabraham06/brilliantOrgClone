@@ -2,7 +2,23 @@ import { useEffect, useState } from 'react';
 import { getElement, shellConfig } from './elements.js';
 import OrbitalAtom from './lib/OrbitalAtom.jsx';
 import DragChip from './DragChip.jsx';
+import { useStruggleReporter } from '../tutor/useStruggleReporter.js';
 import v from './viz.module.css';
+
+const FIELD_LABEL = {
+  protons: 'protons',
+  neutrons: 'neutrons',
+  electrons: 'electrons',
+  mass: 'mass number',
+  charge: 'charge',
+  symbol: 'element',
+};
+
+/** Human-readable summary of a challenge's target, for tutor grounding only. */
+function describeTarget(conditions = []) {
+  const parts = conditions.map((c) => `${FIELD_LABEL[c.field] || c.field} = ${c.value}`);
+  return parts.length ? parts.join(', ') : 'the target atom';
+}
 
 const PROTON = 'var(--accent-orange)';
 const NEUTRON = '#8b93a7';
@@ -59,6 +75,15 @@ export default function AtomDiagram({ slide, onReady, savedState, onSaveState })
   const [picked, setPicked] = useState(null);
   const [checked, setChecked] = useState(savedState?.passed ? 'pass' : null);
 
+  // After a couple of failed "Check" presses, the tutor auto-opens with a
+  // single slight hint. Only active when this slide is a gated challenge.
+  const reportStruggle = useStruggleReporter({
+    enabled: Boolean(challenge),
+    slideId: slide?.slideId,
+    hintSeed:
+      'I\u2019m stuck building this atom \u2014 can you give me one small hint for the next step?',
+  });
+
   useEffect(() => {
     if (!challenge) onReady?.();
     else if (savedState?.passed) onReady?.();
@@ -92,6 +117,16 @@ export default function AtomDiagram({ slide, onReady, savedState, onSaveState })
     if (ok) {
       onReady?.();
       persist(protons, neutrons, electrons, true);
+      reportStruggle(true);
+    } else {
+      reportStruggle(false, {
+        event: {
+          prompt: challenge.prompt,
+          selected: `${protons} protons, ${neutrons} neutrons, ${electrons} electrons (currently ${element?.symbol || '?'}-${massNumber}, charge ${charge})`,
+          correct: describeTarget(challenge.conditions),
+          slideId: slide?.slideId,
+        },
+      });
     }
   }
 

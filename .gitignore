@@ -22,6 +22,9 @@ dist-ssr
 firebase-debug.log
 .firebaserc.local
 
+# Netlify (local dev state, edge function cache)
+.netlify/
+
 # Agent tooling / skills (local, not part of the app)
 .agents
 .impeccable

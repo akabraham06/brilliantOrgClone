@@ -1,0 +1,196 @@
+.root {
+  position: fixed;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 1000;
+}
+
+.panelWrap {
+  transform-origin: bottom left;
+}
+
+.launcher {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  transform-origin: bottom left;
+}
+
+/* ---- Proactive help nudge ---- */
+.nudge {
+  width: min(240px, calc(100vw - 32px));
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-3) var(--space-3) var(--space-3);
+}
+
+.nudgeText {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: var(--leading-normal);
+}
+
+.nudgeActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.nudgeYes,
+.nudgeDismiss {
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.nudgeYes {
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.nudgeYes:hover {
+  background: var(--color-primary-hover);
+}
+
+.nudgeDismiss {
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-muted);
+}
+
+.nudgeDismiss:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.nudgeYes:focus-visible,
+.nudgeDismiss:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ---- Orb launcher ---- */
+.orb {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.orb:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.core {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 33% 28%, rgba(255, 255, 255, 0.85), transparent 42%),
+    conic-gradient(
+      from 210deg,
+      var(--accent-green),
+      var(--accent-blue),
+      var(--accent-purple),
+      var(--accent-pink),
+      var(--accent-green)
+    );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    0 0 18px rgba(96, 165, 250, 0.55);
+}
+
+.coreAlive {
+  animation: breathe 3.6s ease-in-out infinite;
+}
+
+/* Stronger, faster glow while a proactive help offer is pending. */
+.orbAttention {
+  animation: attention 1.4s ease-in-out infinite;
+  border-radius: 50%;
+}
+
+/* ---- Orbiting accent particles ---- */
+.orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orbit1 { animation: orbitspin 6s linear infinite; }
+.orbit2 { animation: orbitspin 9s linear infinite reverse; }
+.orbit3 { animation: orbitspin 7.5s linear infinite; }
+
+.particle {
+  position: absolute;
+  top: 1px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin-left: -3.5px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.orbit2 .particle { top: auto; bottom: 2px; }
+.orbit3 .particle { top: 50%; left: 2px; }
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+      0 4px 14px rgba(0, 0, 0, 0.4),
+      0 0 16px rgba(96, 165, 250, 0.5);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+      0 6px 20px rgba(0, 0, 0, 0.45),
+      0 0 28px rgba(167, 139, 250, 0.7);
+  }
+}
+
+@keyframes orbitspin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes attention {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167, 139, 250, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(167, 139, 250, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coreAlive,
+  .orbit1,
+  .orbit2,
+  .orbit3 {
+    animation: none;
+  }
+
+  /* Keep a static attention ring instead of the pulsing animation. */
+  .orbAttention {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.6);
+  }
+}

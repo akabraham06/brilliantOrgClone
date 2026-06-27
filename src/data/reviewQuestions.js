@@ -156,7 +156,16 @@ function buildPool() {
   const pool = [];
 
   slides
-    .filter((s) => s.isCheck && s.checkConfig)
+    .filter(
+      (s) =>
+        s.isCheck &&
+        s.checkConfig &&
+        // Free-recall brain dumps and "recall from last time" warm-ups are
+        // lesson-path retrieval, not standalone poolable items — keep them out
+        // of the randomized end-of-course review.
+        s.checkConfig.validationMode !== 'freeRecall' &&
+        !s.checkConfig.excludeFromReview,
+    )
     .forEach((slide) => {
       const cfg = slide.checkConfig;
       const mode = cfg.validationMode;

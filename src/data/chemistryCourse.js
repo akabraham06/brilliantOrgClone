@@ -26,6 +26,7 @@ export const SLIDE_TYPES = [
   'flashcards',
   'matching',
   'pHPlacement',
+  'freeRecall',
   'summary',
 ];
 
@@ -1017,15 +1018,15 @@ const LESSON_DEFS = [
         type: 'steppers',
         component: 'EquationBalancer',
         title: 'Now you balance it',
-        body: 'Your turn: balance the same reaction from the worked example. A coefficient multiplies an entire formula, scaling every atom in it - adjust them until every atom count matches on both sides, then check.',
-        instructions: 'Set the coefficients to balance H2 + O2 -> H2O, then press Check.',
+        body: 'Your turn - but with a fresh reaction, not the one you just watched. Sodium reacts with chlorine gas to make table salt. A coefficient multiplies an entire formula, scaling every atom in it; adjust them until every atom count matches on both sides, then check.',
+        instructions: 'Set the coefficients to balance Na + Cl2 -> NaCl, then press Check.',
         isCheck: true,
         check: {
           validationMode: 'balance',
-          equation: 'H2 + O2 -> H2O',
-          answer: { H2: 2, O2: 1, H2O: 2 },
-          hint: 'Balance oxygen first, then hydrogen.',
-          feedbackCorrect: 'Balanced! Matter is conserved.',
+          equation: 'Na + Cl2 -> NaCl',
+          answer: { Na: 2, Cl2: 1, NaCl: 2 },
+          hint: 'Balance chlorine first (it comes in pairs), then sodium.',
+          feedbackCorrect: 'Balanced! 2Na + Cl2 -> 2NaCl. Matter is conserved.',
           feedbackIncorrect: 'Count each atom on both sides and adjust the coefficients.',
         },
       },
@@ -1156,7 +1157,7 @@ const LESSON_DEFS = [
         check: {
           validationMode: 'multipleChoice',
           questions: [
-            { id: 'g2m', prompt: 'How many moles is 36 g of water (molar mass 18 g/mol)?', options: ['1', '2', '0.5'], answer: '2' },
+            { id: 'g2m', prompt: 'How many moles is 22 g of CO2 (molar mass 44 g/mol)?', options: ['1', '0.5', '2'], answer: '0.5' },
             { id: 'ratio', prompt: 'From 2H2 + O2 -> 2H2O, how many moles H2O from 2 mol H2?', options: ['1', '2', '4'], answer: '2' },
             { id: 'part', prompt: 'How many particles are in 1 mole?', options: ['6.022 x 10^23', '1,000', '100'], answer: '6.022 x 10^23' },
           ],
@@ -1272,8 +1273,21 @@ const LESSON_DEFS = [
         type: 'pHPlacement',
         component: 'PHScalePlacement',
         title: 'Acids, bases, and the pH scale',
-        body: 'The pH scale measures how acidic or basic a solution is, from 0 (strongly acidic) to 14 (strongly basic), with 7 neutral. Each step is a tenfold change. Lemon juice is acidic, pure water is neutral, and soap is basic.',
-        instructions: 'Drag each real household item to acidic, neutral, or basic.',
+        body: 'The pH scale measures how acidic or basic a solution is, from 0 (strongly acidic) to 14 (strongly basic), with 7 neutral. Each step is a tenfold change. Now put it to work: sort each everyday item, then check your placements.',
+        instructions: 'Drag each real household item to acidic, neutral, or basic, then press Check.',
+        isCheck: true,
+        goal: 'Sort everyday substances on the pH scale',
+        check: {
+          validationMode: 'pHPlacement',
+          lowStakes: true,
+          items: [
+            { id: 'lemon', label: 'Lemon juice', answer: 'acidic', ph: 2, image: '/images/ph-lemon.png' },
+            { id: 'vinegar', label: 'Vinegar', answer: 'acidic', ph: 3, image: '/images/ph-vinegar.png' },
+            { id: 'water', label: 'Pure water', answer: 'neutral', ph: 7, image: '/images/ph-water.png' },
+            { id: 'soap', label: 'Soap', answer: 'basic', ph: 10, image: '/images/ph-soap.png' },
+            { id: 'baking', label: 'Baking soda', answer: 'basic', ph: 9, image: '/images/ph-baking-soda.png' },
+          ],
+        },
       },
       {
         type: 'clickableDiagram',
@@ -1373,6 +1387,96 @@ function workedExample(title, body, config, goal) {
   };
 }
 
+/**
+ * Free-recall "brain dump" check, inserted just before each lesson's recap.
+ * Effortful retrieval (Karpicke & Roediger, 2008): the learner writes what they
+ * remember from memory, then the recap is revealed for comparison. Non-gating and
+ * low-stakes — the act of retrieving is the point, not a graded score.
+ */
+function freeRecallSlide(recap, objectives, lessonTitle) {
+  return {
+    type: 'freeRecall',
+    title: 'Brain dump: what stuck?',
+    body: 'Before you see the recap, do a quick memory workout. Without scrolling back, write everything you can recall from this lesson. Struggling to pull it up is exactly what makes it stick - then we will reveal the key ideas to compare against.',
+    instructions: 'Write what you remember, then submit to compare against the lesson\u2019s key ideas.',
+    isCheck: true,
+    goal: 'Retrieve the lesson from memory before the recap',
+    check: {
+      validationMode: 'freeRecall',
+      prompt: `Without looking back, write everything you remember about ${lessonTitle || 'this lesson'}.`,
+      recap: recap || [],
+      objectives: objectives || [],
+      lowStakes: true,
+      excludeFromReview: true,
+    },
+  };
+}
+
+/**
+ * "Recall from last time" warm-up: a short multiple-choice retrieval check on
+ * PRIOR lessons, prepended to lessons 2-8. Bakes spaced, cumulative review into
+ * the course path (spacing - Cepeda et al., 2006). Low-stakes and kept out of the
+ * end-of-course review pool.
+ */
+function warmupSlide(questions, note) {
+  return {
+    type: 'classify',
+    component: 'MultipleChoiceCheck',
+    title: 'Recall from last time',
+    body:
+      note ||
+      'Before we build on it, pull the last lesson back from memory. A quick retrieval beats re-reading - it strengthens what you already know. A miss just means it is worth a second look; there is no penalty.',
+    instructions: 'Answer from memory, then check.',
+    isCheck: true,
+    goal: 'Retrieve earlier concepts before adding new ones',
+    check: {
+      validationMode: 'multipleChoice',
+      questions,
+      hint: 'Think back to the previous lesson(s).',
+      feedbackCorrect: 'Still got it - now let\u2019s build on it.',
+      feedbackIncorrect: 'Worth a quick look back at the earlier lesson, then carry on.',
+      lowStakes: true,
+      excludeFromReview: true,
+    },
+  };
+}
+
+/**
+ * Cumulative "recall from last time" warm-up questions, keyed by lessonId. Each
+ * draws on PRIOR lessons so review is spaced across the course (not just within a
+ * lesson). Lesson 1 has nothing prior, so it has no warm-up.
+ */
+const WARMUP_DEFS = {
+  'lesson-2': [
+    { id: 'w1', prompt: 'Which one has mass and takes up space (is matter)?', options: ['A beam of light', 'A cup of air', 'A musical note'], answer: 'A cup of air' },
+    { id: 'w2', prompt: 'Elements in the same group (column) of the periodic table share similar...', options: ['mass', 'properties', 'color'], answer: 'properties' },
+  ],
+  'lesson-3': [
+    { id: 'w1', prompt: 'A compound is...', options: ['one kind of atom', 'different atoms chemically bonded', 'substances just physically mixed'], answer: 'different atoms chemically bonded' },
+    { id: 'w2', prompt: '3 km equals how many meters?', options: ['300', '3000', '30'], answer: '3000' },
+  ],
+  'lesson-4': [
+    { id: 'w1', prompt: 'What decides which element an atom is?', options: ['Protons', 'Neutrons', 'Electrons'], answer: 'Protons' },
+    { id: 'w2', prompt: 'Valence (bonding) electrons sit in the...', options: ['nucleus', 'innermost shell', 'outermost shell'], answer: 'outermost shell' },
+  ],
+  'lesson-5': [
+    { id: 'w1', prompt: 'A bond where a metal transfers electrons to a nonmetal is...', options: ['ionic', 'covalent', 'metallic'], answer: 'ionic' },
+    { id: 'w2', prompt: 'Atoms form bonds mainly to become...', options: ['more reactive', 'more stable', 'heavier'], answer: 'more stable' },
+  ],
+  'lesson-6': [
+    { id: 'w1', prompt: 'In 2H2O, the 2 in front is a...', options: ['subscript', 'coefficient', 'charge'], answer: 'coefficient' },
+    { id: 'w2', prompt: 'How many oxygen atoms are in one formula unit of Ca(OH)2?', options: ['1', '2', '3'], answer: '2' },
+  ],
+  'lesson-7': [
+    { id: 'w1', prompt: 'During a chemical reaction, atoms are...', options: ['destroyed', 'created', 'rearranged'], answer: 'rearranged' },
+    { id: 'w2', prompt: 'To balance an equation you change the...', options: ['subscripts', 'coefficients', 'elements'], answer: 'coefficients' },
+  ],
+  'lesson-8': [
+    { id: 'w1', prompt: 'One mole is about how many particles?', options: ['6.022 x 10^23', '1,000,000', '100'], answer: '6.022 x 10^23' },
+    { id: 'w2', prompt: 'Moles equals grams divided by...', options: ['molar mass', 'volume', 'charge'], answer: 'molar mass' },
+  ],
+};
+
 const LESSON_EXTRAS = [
   {
     prepend: [
@@ -1431,6 +1535,7 @@ const LESSON_EXTRAS = [
       { id: 'q2', prompt: 'A compound is...', options: ['one kind of atom', 'different atoms chemically bonded', 'substances just physically mixed'], answer: 'different atoms chemically bonded' },
       { id: 'q3', prompt: 'Which particle sits in the nucleus and has no charge?', options: ['Proton', 'Neutron', 'Electron'], answer: 'Neutron' },
       { id: 'q4', prompt: 'Elements in the same group (column) have similar...', options: ['mass', 'properties', 'color'], answer: 'properties' },
+      { id: 'qT', transfer: true, prompt: 'New case: is the helium gas inside a party balloon matter?', options: ['Yes - it has mass and takes up space', 'No - gases are not matter', 'Only when the balloon is cold'], answer: 'Yes - it has mass and takes up space' },
     ], 'Recall the test for matter, the three categories, the atom parts, and the table layout.', 'Lesson mastered - you have the foundations down!', 'Review the recap points and give it another go.'),
   },
   {
@@ -1454,6 +1559,7 @@ const LESSON_EXTRAS = [
       { id: 'q3', prompt: 'Which prefix means 1000 times smaller than the base unit?', options: ['kilo-', 'centi-', 'milli-'], answer: 'milli-' },
       { id: 'q4', prompt: '10^6 is the same as...', options: ['one million', 'one thousand', 'six'], answer: 'one million' },
       { id: 'q5', prompt: 'To cancel a unit when converting, that unit must appear...', options: ['only on top', 'on the top and the bottom', 'nowhere'], answer: 'on the top and the bottom' },
+      { id: 'qT', transfer: true, prompt: 'New conversion: 250 cm equals how many meters? (1 m = 100 cm)', options: ['2.5', '25', '0.25'], answer: '2.5' },
     ], 'Recall the four measurements, the prefix sizes, powers of ten, and unit cancelling.', 'You can measure and convert like a chemist!', 'Review prefixes, scientific notation, and how units cancel.'),
   },
   {
@@ -1499,6 +1605,7 @@ const LESSON_EXTRAS = [
       { id: 'q3', prompt: 'Mass number counts an atom\u2019s...', options: ['protons only', 'protons + neutrons', 'protons + electrons'], answer: 'protons + neutrons' },
       { id: 'q4', prompt: 'Valence electrons are found in the...', options: ['nucleus', 'innermost shell', 'outermost shell'], answer: 'outermost shell' },
       { id: 'q5', prompt: 'Electrons fill energy shells starting from the...', options: ['outermost shell', 'innermost (lowest-energy) shell', 'middle shell'], answer: 'innermost (lowest-energy) shell' },
+      { id: 'qT', transfer: true, prompt: 'New case: oxygen-16 and oxygen-18 differ in their number of...', options: ['protons', 'neutrons', 'electrons'], answer: 'neutrons' },
     ], 'Protons = identity; mass number = protons + neutrons; isotopes differ in neutrons; valence electrons sit in the outer shell.', 'You have atomic structure down cold!', 'Revisit identity vs. mass, isotopes, and how shells fill.'),
   },
   {
@@ -1535,6 +1642,7 @@ const LESSON_EXTRAS = [
       { id: 'q6', prompt: 'In water, electrons are shared unequally, so the bond is...', options: ['polar', 'nonpolar', 'metallic'], answer: 'polar' },
       { id: 'q7', prompt: 'The "sea of electrons" explains why metals...', options: ['shatter', 'conduct electricity', 'float'], answer: 'conduct electricity' },
       { id: 'q8', prompt: 'By VSEPR, a central atom with 4 bonds and no lone pairs is...', options: ['linear', 'tetrahedral', 'bent'], answer: 'tetrahedral' },
+      { id: 'qT', transfer: true, prompt: 'New molecule: in HCl, hydrogen and chlorine share electrons unequally. That bond is...', options: ['polar covalent', 'ionic', 'metallic'], answer: 'polar covalent' },
     ], 'Stability drives bonding; lose e- = cation, gain e- = anion; share = covalent, transfer = ionic, sea = metallic; unequal sharing = polar; pairs repel to set shape.', 'You can form ions and tell the bond types apart!', 'Review how ions form, the three bond types, polarity, and the VSEPR shapes.'),
   },
   {
@@ -1570,6 +1678,30 @@ const LESSON_EXTRAS = [
       },
       { insertAfter: 'Reading ionic formulas', slide: explainer('Names are a translation', 'A chemical name is simply the formula written in words. Learning the rules is like learning to translate between two languages: "NaCl" and "sodium chloride" say exactly the same thing - metal first, nonmetal ending in -ide.', 'label', 'Formula and name are the same idea in two languages.') },
       { insertAfter: 'Build an ionic name', slide: explainer('Naming building blocks', 'Two small toolkits cover most beginner naming. Count prefixes tell you how many atoms: mono- (1), di- (2), tri- (3), tetra- (4). Endings tell you the type: a simple two-element compound ends in -ide (chloride, oxide). Learn these few pieces and most names click into place.', 'affixes', 'Prefixes count atoms; -ide ends a simple compound.') },
+      {
+        insertAfter: 'Naming building blocks',
+        slide: {
+          type: 'classify',
+          component: 'MultipleChoiceCheck',
+          title: 'Which naming rule? (mixed practice)',
+          body: 'Now the rules come scrambled together. For each compound, decide whether it is ionic (a metal + a nonmetal) or covalent (two nonmetals) and which naming rule that triggers. Mixing them on purpose feels harder - that is exactly why it builds lasting skill.',
+          instructions: 'Pick the right call for each, then check.',
+          isCheck: true,
+          goal: 'Tell ionic from covalent naming when they are mixed together',
+          check: {
+            validationMode: 'multipleChoice',
+            questions: [
+              { id: 'd1', prompt: 'Which compound is named using count prefixes like di- and tri-?', options: ['NaCl (metal + nonmetal)', 'CO2 (two nonmetals)', 'MgO (metal + nonmetal)'], answer: 'CO2 (two nonmetals)' },
+              { id: 'd2', prompt: 'What is the correct name for the ionic compound MgCl2?', options: ['magnesium dichloride', 'magnesium chloride', 'dimagnesium chloride'], answer: 'magnesium chloride' },
+              { id: 'd3', prompt: 'The fastest tell for which naming rules apply is whether the compound is...', options: ['solid or liquid', 'ionic (metal + nonmetal) or covalent (two nonmetals)', 'big or small'], answer: 'ionic (metal + nonmetal) or covalent (two nonmetals)' },
+            ],
+            hint: 'Metal + nonmetal = ionic (-ide ending, no prefixes). Two nonmetals = covalent (use prefixes).',
+            feedbackCorrect: 'You can switch rules on the fly - that is real fluency.',
+            feedbackIncorrect: 'Check the building blocks first: is it a metal + nonmetal (ionic) or two nonmetals (covalent)?',
+            lowStakes: true,
+          },
+        },
+      },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'In 2H2O, the 2 in front is a...', options: ['subscript', 'coefficient', 'charge'], answer: 'coefficient' },
@@ -1579,6 +1711,7 @@ const LESSON_EXTRAS = [
       { id: 'q5', prompt: 'Aluminum is +3 and oxygen is -2. The neutral formula is...', options: ['AlO', 'Al2O3', 'Al3O2'], answer: 'Al2O3' },
       { id: 'q6', prompt: 'What is the name of N2O4?', options: ['nitrogen oxide', 'dinitrogen tetroxide', 'nitrogen dioxide'], answer: 'dinitrogen tetroxide' },
       { id: 'q7', prompt: 'How many total atoms are in one formula unit of Ca(NO3)2?', options: ['6', '9', '5'], answer: '9' },
+      { id: 'qT', transfer: true, prompt: 'New ions: potassium is +1 and sulfur is -2. The neutral formula is...', options: ['KS', 'K2S', 'KS2'], answer: 'K2S' },
     ], 'Coefficient multiplies molecules; ionic names end in -ide; covalent names use prefixes; cross the charges for ionic formulas.', 'You can read and name compounds now!', 'Re-check subscripts vs. coefficients and the naming rules.'),
   },
   {
@@ -1659,6 +1792,31 @@ const LESSON_EXTRAS = [
           },
         },
       },
+      {
+        insertAfter: 'Check: energy in reactions',
+        slide: {
+          type: 'classify',
+          component: 'MultipleChoiceCheck',
+          title: 'Name that reaction (mixed types)',
+          body: 'Here come all five reaction types jumbled together. For each equation, spot the pattern and name the type - then notice the tell that gave it away. Sorting mixed examples feels harder than drilling one type, and that difficulty is what makes the patterns stick.',
+          instructions: 'Classify each reaction, then check.',
+          isCheck: true,
+          goal: 'Discriminate reaction types when they are interleaved',
+          check: {
+            validationMode: 'multipleChoice',
+            questions: [
+              { id: 'd1', prompt: 'CaCO3 -> CaO + CO2 is which type?', options: ['Synthesis', 'Decomposition', 'Combustion'], answer: 'Decomposition' },
+              { id: 'd2', prompt: 'CH4 + 2O2 -> CO2 + 2H2O is which type?', options: ['Combustion', 'Single replacement', 'Synthesis'], answer: 'Combustion' },
+              { id: 'd3', prompt: 'AgNO3 + NaCl -> AgCl + NaNO3 is which type?', options: ['Double replacement', 'Decomposition', 'Synthesis'], answer: 'Double replacement' },
+              { id: 'd4', prompt: 'The tell: two compounds trading partners is the signature of a...', options: ['single replacement', 'double replacement', 'synthesis'], answer: 'double replacement' },
+            ],
+            hint: 'One splits = decomposition; fuel + O2 -> CO2 + H2O = combustion; two compounds swap = double replacement.',
+            feedbackCorrect: 'You can tell the patterns apart even when they are mixed - nice.',
+            feedbackIncorrect: 'Look at the shape: how many reactants and products, and are partners being swapped?',
+            lowStakes: true,
+          },
+        },
+      },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'During a reaction, atoms are...', options: ['destroyed', 'created', 'rearranged'], answer: 'rearranged' },
@@ -1670,6 +1828,7 @@ const LESSON_EXTRAS = [
       { id: 'q7', prompt: 'If 10 g of reactants fully react, the products weigh...', options: ['less than 10 g', 'exactly 10 g', 'more than 10 g'], answer: 'exactly 10 g' },
       { id: 'q8', prompt: 'A reaction that absorbs heat and feels cold is...', options: ['exothermic', 'endothermic', 'combustion'], answer: 'endothermic' },
       { id: 'q9', prompt: 'Energy is released when chemical bonds are...', options: ['broken', 'formed', 'counted'], answer: 'formed' },
+      { id: 'qT', transfer: true, prompt: 'New reaction: balancing CH4 + O2 -> CO2 + H2O, the O2 and H2O coefficients become...', options: ['2 and 2', '1 and 1', '2 and 1'], answer: '2 and 2' },
     ], 'Mass is conserved; balance with coefficients; learn the reaction patterns; bonds store energy (exo releases, endo absorbs).', 'You can balance and classify reactions!', 'Recount atoms on each side and review the patterns and energy.'),
   },
   {
@@ -1724,6 +1883,30 @@ const LESSON_EXTRAS = [
           },
         },
       },
+      {
+        insertAfter: 'Use coefficients as mole ratios',
+        slide: {
+          type: 'classify',
+          component: 'MultipleChoiceCheck',
+          title: 'Which conversion does it need? (don\u2019t solve)',
+          body: 'You now know three moves: grams to moles (divide by molar mass), moles to particles (multiply by Avogadro\u2019s number), and species to species (use the balanced mole ratio). Here they come mixed. Do not calculate anything - just name which move each problem calls for. Choosing the right tool is the skill that is easy to fake when problems are grouped and hard when they are mixed.',
+          instructions: 'Pick the right conversion for each, then check.',
+          isCheck: true,
+          goal: 'Pick the right conversion when problem types are interleaved',
+          check: {
+            validationMode: 'multipleChoice',
+            questions: [
+              { id: 'd1', prompt: 'You have grams of CO2 and want the number of moles. You should...', options: ['multiply by Avogadro\u2019s number', 'divide by the molar mass', 'use the mole ratio'], answer: 'divide by the molar mass' },
+              { id: 'd2', prompt: 'You have moles of H2 and want the number of molecules. You should...', options: ['divide by the molar mass', 'multiply by 6.022 x 10^23', 'add the coefficients'], answer: 'multiply by 6.022 x 10^23' },
+              { id: 'd3', prompt: 'In 2H2 + O2 -> 2H2O, you know moles of O2 and want moles of H2O. You should...', options: ['use the balanced mole ratio', 'divide by the molar mass', 'multiply by Avogadro\u2019s number'], answer: 'use the balanced mole ratio' },
+            ],
+            hint: 'Grams<->moles uses molar mass; moles<->particles uses Avogadro\u2019s number; species<->species uses the coefficients.',
+            feedbackCorrect: 'Picking the right tool is half the battle - well done.',
+            feedbackIncorrect: 'Match the units you have to the units you want: which bridge connects them?',
+            lowStakes: true,
+          },
+        },
+      },
     ],
     quiz: quiz('Lesson skill check', [
       { id: 'q1', prompt: 'One mole is how many particles?', options: ['6.022 x 10^23', '1,000,000', '100'], answer: '6.022 x 10^23' },
@@ -1733,6 +1916,7 @@ const LESSON_EXTRAS = [
       { id: 'q5', prompt: 'How many grams is 0.5 mol of water (18 g/mol)?', options: ['9 g', '18 g', '36 g'], answer: '9 g' },
       { id: 'q6', prompt: 'The molar mass of CO2 (C=12, O=16) is...', options: ['28 g/mol', '44 g/mol', '32 g/mol'], answer: '44 g/mol' },
       { id: 'q7', prompt: 'How many molecules are in 2 mol of water?', options: ['6.022 x 10^23', '1.2 x 10^24', '3.0 x 10^23'], answer: '1.2 x 10^24' },
+      { id: 'qT', transfer: true, prompt: 'New substance: how many grams is 2 mol of CO2 (molar mass 44 g/mol)?', options: ['88 g', '44 g', '22 g'], answer: '88 g' },
     ], 'A mole is a count; moles = grams / molar mass; coefficients give the ratio.', 'Great quantitative reasoning!', 'Use moles = grams / molar mass and the balanced ratio.'),
   },
   {
@@ -1750,14 +1934,12 @@ const LESSON_EXTRAS = [
             descriptions: [
               'A roaming gas is captured by four quantities, tied together in one tidy equation: PV = nRT. Pressure (P) is how hard particles tap the walls, volume (V) is the size of the box, n is how much gas you have (in moles), and T is the temperature. R is a fixed constant that keeps the units honest. Read it as a balance - pressure times volume always keeps pace with amount times temperature - so push one quantity and another must respond.',
               'Thought experiment - heat it up. Hotter particles move faster, so they hit the walls harder and more often. With the box and amount held fixed, raising T drives the pressure up. Watch T jump and the pressure climb.',
-              'Thought experiment - squeeze the box. Shrink the volume and the same particles strike the walls far more often in the smaller space, so lowering V pushes the pressure up. Watch V collapse and the gauge respond.',
-              'Thought experiment - add more gas. More moles means more particles delivering more total wall taps, so raising n raises the pressure too. Every variable still obeys the one equation - PV always keeps pace with nRT.',
+              'Thought experiment - squeeze the box. Shrink the volume and the same particles strike the walls far more often in the smaller space, so lowering V pushes the pressure up. Watch V collapse and the gauge respond - and notice every variable still obeys the one equation.',
             ],
             demos: [
               null,
               { n: 1, temp: 400, vol: 10 },
               { n: 1, temp: 300, vol: 3 },
-              { n: 3.5, temp: 300, vol: 10 },
             ],
           },
         },
@@ -1770,6 +1952,30 @@ const LESSON_EXTRAS = [
           title: 'Pressure is a billion tiny taps',
           body: 'You just watched pressure rise and fall in the equation - but what is pressure, really? Picture countless gas particles bouncing around a container. Every time one hits a wall it gives a tiny push, and billions of those pushes per second add up to the steady force we feel as pressure. So anything that makes particles hit the walls more often, or harder, raises the pressure.',
           instructions: 'Watch the particles bounce in 3D and count how often they tap the walls.',
+        },
+      },
+      {
+        insertAfter: 'Pressure is a billion tiny taps',
+        slide: {
+          type: 'classify',
+          component: 'MultipleChoiceCheck',
+          title: 'Check: reasoning with PV = nRT',
+          body: 'Put the gas law to work. You do not need any numbers - just reason about which way pressure moves when you change one quantity and hold the rest fixed.',
+          instructions: 'Answer each question, then check.',
+          isCheck: true,
+          goal: 'Predict how P responds to changes in n, T, and V',
+          check: {
+            validationMode: 'multipleChoice',
+            questions: [
+              { id: 'g1', prompt: 'Heat a gas in a sealed, rigid box (V and n fixed). The pressure...', options: ['rises', 'falls', 'stays the same'], answer: 'rises' },
+              { id: 'g2', prompt: 'Squeeze the same gas into a smaller volume (n and T fixed). The pressure...', options: ['rises', 'falls', 'vanishes'], answer: 'rises' },
+              { id: 'g3', prompt: 'In PV = nRT, the n stands for...', options: ['the amount of gas (in moles)', 'the temperature', 'the pressure'], answer: 'the amount of gas (in moles)' },
+            ],
+            hint: 'PV keeps pace with nRT: more T or less V means harder/more frequent wall taps, so higher P.',
+            feedbackCorrect: 'You can reason with the gas law - not just recite it.',
+            feedbackIncorrect: 'Hold the other variables fixed and ask: are particles hitting the walls more or less?',
+            lowStakes: true,
+          },
         },
       },
       {
@@ -1800,6 +2006,31 @@ const LESSON_EXTRAS = [
           title: 'Dissolving spreads it out',
           body: 'When sugar disappears into tea, it has not vanished - it has broken into particles too small to see, spread evenly through the liquid. Dissolving is mixing at the particle level, which is why the sweetness is in every sip.',
           instructions: 'Stir and watch the cubes vanish while the particles spread evenly.',
+        },
+      },
+      {
+        insertAfter: 'Acids, bases, and the pH scale',
+        slide: {
+          type: 'classify',
+          component: 'MultipleChoiceCheck',
+          title: 'Quick checkpoint: which is which?',
+          body: 'A fast mixed checkpoint before the acid-base stretch. Two easily-confused pairs are jumbled together here: acid vs. base, and solute vs. solvent. Sorting them while they are mixed feels harder than taking each on its own - and that difficulty is exactly why it works.',
+          instructions: 'Answer each from memory, then check.',
+          isCheck: true,
+          goal: 'Discriminate acid/base and solute/solvent before the acid-base run',
+          check: {
+            validationMode: 'multipleChoice',
+            questions: [
+              { id: 'd1', prompt: 'Lemon juice releases lots of H\u207A in water. It is...', options: ['an acid', 'a base', 'neutral'], answer: 'an acid' },
+              { id: 'd2', prompt: 'Which is more acidic?', options: ['pH 3', 'pH 6', 'pH 7'], answer: 'pH 3' },
+              { id: 'd3', prompt: 'In salt water, the solute is...', options: ['the salt', 'the water', 'the container'], answer: 'the salt' },
+              { id: 'd4', prompt: 'In sugar dissolved in tea, the solvent is...', options: ['the sugar', 'the tea (water)', 'the cup'], answer: 'the tea (water)' },
+            ],
+            hint: 'Acid = releases H\u207A, lower pH = more acidic. Solute = what dissolves; solvent = what it dissolves into.',
+            feedbackCorrect: 'You can keep both pairs straight - on to acids and bases.',
+            feedbackIncorrect: 'Two ideas, two pairs: H\u207A vs OH\u207B for acid/base, and what-dissolves vs what-it-dissolves-in for solute/solvent.',
+            lowStakes: true,
+          },
         },
       },
       { insertAfter: 'Concentration', slide: explainer('What acids and bases really are', 'You just measured how concentrated a solution is. For acids and bases, one dissolved particle matters most: the hydrogen ion. An acid releases hydrogen ions (H\u207A) when dissolved in water, while a base does the opposite (it mops H\u207A up or releases OH\u207B). More free H\u207A means more acidic. Lemon juice is loaded with H\u207A; soapy water has very little.', null) },
@@ -1883,6 +2114,7 @@ const LESSON_EXTRAS = [
       { id: 'q5', prompt: 'How much more acidic is pH 3 than pH 5?', options: ['2 times', '10 times', '100 times'], answer: '100 times' },
       { id: 'q6', prompt: 'An acid is a substance that releases...', options: ['H\u207A ions', 'OH\u207B ions', 'electrons'], answer: 'H\u207A ions' },
       { id: 'q7', prompt: 'Going from gas to liquid to solid, particle spacing...', options: ['increases', 'decreases', 'stays the same'], answer: 'decreases' },
+      { id: 'qT', transfer: true, prompt: 'New substance: ammonia (NH3) dissolved in water feels slippery and raises the pH. It acts as...', options: ['a base', 'an acid', 'a neutral salt'], answer: 'a base' },
     ], 'States differ by particle spacing; heat adds motion; each pH step is a 10x change.', 'You connected chemistry to everyday life!', 'Review particle spacing, dissolving, and the pH scale.'),
   },
 ];
@@ -1902,13 +2134,19 @@ function buildContent() {
     const assembledSlides = [...def.slides];
     // Lead-in explainers shown before the lesson's first authored slide.
     if (extras.prepend?.length) assembledSlides.unshift(...extras.prepend);
+    // "Recall from last time" cumulative warm-up sits first of all (lessons 2-8).
+    const warmup = WARMUP_DEFS[lessonId];
+    if (warmup?.length) assembledSlides.unshift(warmupSlide(warmup));
     extras.explainers.forEach(({ insertAfter, slide }) => {
       const at = assembledSlides.findIndex((s) => s.title === insertAfter);
       if (at >= 0) assembledSlides.splice(at + 1, 0, slide);
       else assembledSlides.push(slide);
     });
-    // Key Takeaways recap, then the end-of-lesson quiz.
-    if (def.recap?.length) assembledSlides.push(recapSlide(def.recap));
+    // Free-recall brain dump, then the Key Takeaways recap, then the end quiz.
+    if (def.recap?.length) {
+      assembledSlides.push(freeRecallSlide(def.recap, def.learningObjectives, def.title));
+      assembledSlides.push(recapSlide(def.recap));
+    }
     if (extras.quiz) assembledSlides.push(extras.quiz);
 
     assembledSlides.forEach((slide, slideIdx) => {
@@ -1973,4 +2211,157 @@ export function getSlidesForLesson(lessonId) {
   return slides
     .filter((s) => s.lessonId === lessonId)
     .sort((a, b) => a.orderIndex - b.orderIndex);
+}
+
+/**
+ * Per-lesson FREE-RESPONSE banks (Phase 2). Short open-ended questions, each with
+ * a grading rubric the AI grades against (see src/ai/gradeFreeResponse.js). Kept
+ * as a lessonId-keyed lookup (NOT on the Firestore-seeded slides) so authoring
+ * here is the single source of truth and the SkillCheck can read it directly.
+ *
+ * Item shape: { id, prompt, rubric }. The `id` is globally unique so it can key
+ * idempotent XP grants (fr:<id>).
+ */
+const FREE_RESPONSE_BANKS = {
+  'lesson-1': [
+    {
+      id: 'lesson-1-fr1',
+      prompt: 'In your own words, what makes something "matter"? Give one example and one non-example.',
+      rubric: 'Matter has mass and takes up space (volume). A valid example is a physical substance (water, air, a rock); a valid non-example is a form of energy (light, sound, heat).',
+    },
+    {
+      id: 'lesson-1-fr2',
+      prompt: 'Explain the difference between a compound and a mixture, using an everyday example.',
+      rubric: 'A compound is different atoms chemically bonded into a new substance that cannot be separated by physical means (e.g. water, salt, a baked cake). A mixture is substances physically combined that keep their own properties and can be separated (e.g. salad, trail mix).',
+    },
+    {
+      id: 'lesson-1-fr3',
+      prompt: 'Why do elements in the same column (group) of the periodic table behave in similar ways?',
+      rubric: 'Elements in the same group have the same number of outer/valence electrons, so they react and bond in similar ways. The table is organized so similar elements line up in columns.',
+    },
+  ],
+  'lesson-2': [
+    {
+      id: 'lesson-2-fr1',
+      prompt: 'Explain how unit cancellation (dimensional analysis) lets you convert 3 km into meters.',
+      rubric: 'Multiply by a conversion factor (1000 m / 1 km) so the km units cancel and leave meters, giving 3000 m. The key idea is multiplying by a fraction equal to 1 so the amount is unchanged but the unit changes.',
+    },
+    {
+      id: 'lesson-2-fr2',
+      prompt: 'What does density tell you, and how can a small object be heavier than a larger one?',
+      rubric: 'Density is mass per unit volume (mass / volume) — how tightly matter is packed. A small object made of a denser material can have more mass than a larger object made of a less dense material.',
+    },
+    {
+      id: 'lesson-2-fr3',
+      prompt: 'What is the difference between accuracy and precision in a measurement?',
+      rubric: 'Accuracy is how close a measurement is to the true value; precision is how close repeated measurements are to each other (repeatability). Good data is both accurate and precise.',
+    },
+  ],
+  'lesson-3': [
+    {
+      id: 'lesson-3-fr1',
+      prompt: 'Describe where protons, neutrons, and electrons are found in an atom and their charges.',
+      rubric: 'Protons (positive) and neutrons (neutral) are in the nucleus; electrons (negative) move around the nucleus in shells. A neutral atom has equal protons and electrons.',
+    },
+    {
+      id: 'lesson-3-fr2',
+      prompt: 'What is an isotope, and what stays the same versus changes between two isotopes of an element?',
+      rubric: 'Isotopes are atoms of the same element with different numbers of neutrons. The number of protons (atomic number / element identity) stays the same; the number of neutrons (and mass) changes.',
+    },
+    {
+      id: 'lesson-3-fr3',
+      prompt: 'Why does the number of electrons in the outer shell matter for how an atom behaves?',
+      rubric: 'Valence (outer-shell) electrons determine how an atom bonds and reacts. Atoms gain, lose, or share electrons to reach a stable (often full) outer shell.',
+    },
+  ],
+  'lesson-4': [
+    {
+      id: 'lesson-4-fr1',
+      prompt: 'Explain the main difference between an ionic bond and a covalent bond.',
+      rubric: 'In an ionic bond electrons are transferred (metal loses, nonmetal gains), forming charged ions that attract. In a covalent bond electrons are shared between nonmetal atoms.',
+    },
+    {
+      id: 'lesson-4-fr2',
+      prompt: 'Why do atoms form chemical bonds at all?',
+      rubric: 'Atoms bond to reach a more stable, lower-energy state — typically a full/complete outer electron shell (octet). Bonding makes them more stable than being alone.',
+    },
+    {
+      id: 'lesson-4-fr3',
+      prompt: 'What makes a covalent bond polar versus nonpolar?',
+      rubric: 'If the two atoms pull on the shared electrons unequally (different electronegativity), the bond is polar (uneven charge). If they pull equally (identical/similar atoms, e.g. O2), it is nonpolar.',
+    },
+  ],
+  'lesson-5': [
+    {
+      id: 'lesson-5-fr1',
+      prompt: 'In the formula Ca(OH)\u2082, how many of each atom are present, and why?',
+      rubric: 'One calcium (Ca), two oxygen (O), and two hydrogen (H). The subscript 2 multiplies everything inside the parentheses (OH), giving 2 O and 2 H.',
+    },
+    {
+      id: 'lesson-5-fr2',
+      prompt: 'How do you build a neutral ionic compound formula from a metal ion and a nonmetal ion?',
+      rubric: 'Balance the charges so the total positive equals the total negative (crisscross/adjust subscripts) so the compound is neutral overall.',
+    },
+    {
+      id: 'lesson-5-fr3',
+      prompt: 'What does a subscript mean in a chemical formula, and how is it different from a coefficient?',
+      rubric: 'A subscript tells how many atoms of an element are in one unit of the compound; a coefficient (in front) multiplies the whole formula/number of molecules.',
+    },
+  ],
+  'lesson-6': [
+    {
+      id: 'lesson-6-fr1',
+      prompt: 'Why must chemical equations be balanced? What law does this reflect?',
+      rubric: 'Because of conservation of mass — atoms are not created or destroyed, only rearranged. The same number of each atom must appear on both sides.',
+    },
+    {
+      id: 'lesson-6-fr2',
+      prompt: 'When balancing an equation, why can you change coefficients but not subscripts?',
+      rubric: 'Coefficients change how many molecules there are (allowed); changing subscripts would change the identity of the substance into a different compound (not allowed).',
+    },
+    {
+      id: 'lesson-6-fr3',
+      prompt: 'Name one sign that a chemical reaction has taken place and briefly explain it.',
+      rubric: 'Any valid sign: color change, gas/bubbles, precipitate forming, temperature/energy change, light. Explanation should tie it to new substances forming.',
+    },
+  ],
+  'lesson-7': [
+    {
+      id: 'lesson-7-fr1',
+      prompt: 'What is a mole, and why do chemists use it instead of counting atoms directly?',
+      rubric: 'A mole is a counting unit equal to ~6.02 \u00d7 10\u00b2\u00b3 particles (Avogadro\u2019s number). Atoms are far too small/numerous to count individually, so the mole bridges atoms and gram-scale amounts.',
+    },
+    {
+      id: 'lesson-7-fr2',
+      prompt: 'Explain how you would convert grams of a substance into moles.',
+      rubric: 'Divide the mass in grams by the molar mass (g/mol) of the substance. Molar mass comes from the periodic table (sum of atomic masses).',
+    },
+    {
+      id: 'lesson-7-fr3',
+      prompt: 'What does molar mass represent and where do you get it?',
+      rubric: 'Molar mass is the mass of one mole of a substance in grams per mole, found by adding the atomic masses (from the periodic table) of all atoms in the formula.',
+    },
+  ],
+  'lesson-8': [
+    {
+      id: 'lesson-8-fr1',
+      prompt: 'Compare the particle arrangement and motion in solids, liquids, and gases.',
+      rubric: 'Solids: particles tightly packed, fixed positions, vibrate in place. Liquids: close but able to slide past each other. Gases: far apart, fast, fill their container. Spacing/motion increases solid \u2192 liquid \u2192 gas.',
+    },
+    {
+      id: 'lesson-8-fr2',
+      prompt: 'What happens at the particle level when salt dissolves in water?',
+      rubric: 'The salt separates into ions that spread out and become surrounded by water molecules (dissolving/dissociation), distributing evenly through the water.',
+    },
+    {
+      id: 'lesson-8-fr3',
+      prompt: 'On the pH scale, what does it mean that pH 3 is more acidic than pH 5, and by how much?',
+      rubric: 'Lower pH = more acidic (more H\u207A ions). Each pH unit is a tenfold change, so pH 3 is 100 times (10\u00b2) more acidic than pH 5.',
+    },
+  ],
+};
+
+/** Returns the free-response bank for a lesson (empty array if none authored). */
+export function getFreeResponseBank(lessonId) {
+  return FREE_RESPONSE_BANKS[lessonId] || [];
 }

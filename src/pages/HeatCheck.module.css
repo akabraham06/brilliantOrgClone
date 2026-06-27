@@ -1,0 +1,579 @@
+/* ── Full-viewport player ─────────────────────────────────────────────────── */
+.player {
+  position: relative;
+  /* Inset from the navbar (top) and page bottom so the framed module floats with
+     breathing room instead of bleeding into the nav/footer. We re-add a gap on
+     top of cancelling AppLayout's content padding (desktop: space-6 top /
+     space-5 sides / space-8 bottom) and shrink the locked height by 2× the gap,
+     so the page still never scrolls. dvh has a vh fallback for older engines. */
+  height: calc(100vh - var(--navbar-height) - 2 * var(--space-5));
+  height: calc(100dvh - var(--navbar-height) - 2 * var(--space-5));
+  margin: calc(var(--space-5) - var(--space-6)) 0 calc(var(--space-5) - var(--space-8));
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(247, 147, 47, 0.3);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(239, 111, 59, 0.08);
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(239, 111, 59, 0.22), transparent 60%),
+    radial-gradient(80% 60% at 50% 110%, rgba(224, 69, 47, 0.18), transparent 55%),
+    linear-gradient(180deg, #14171f, #0d0f15);
+  color: #f4f6fa;
+}
+
+/* Bounded, centered surface that frames the live round so the controls read as
+   a compact module rather than stretching edge-to-edge. Sizes to its content
+   and is capped at the locked viewport height — only .stageBody scrolls if a
+   single question is taller than the available space. */
+.panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 600px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-2), 1.5vh, var(--space-3));
+  padding: clamp(var(--space-3), 2.4vh, var(--space-5));
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* WebGL heat field: sits behind the panel, clipped to the rounded frame by the
+   container's overflow: hidden, and never intercepts pointer events. */
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Static CSS fallback for the heat field (prefers-reduced-motion, no WebGL, or
+   a canvas failure). Intensity + color ramp with the streak tier so it still
+   "warms up" with the combo, mirroring the 3D scene. */
+.aura {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(60% 55% at 50% 58%, rgba(239, 111, 59, 0.16), transparent 70%);
+  opacity: 0.55;
+  transition: opacity 0.6s ease, background 0.6s ease;
+}
+.aura[data-tier='warm'] { opacity: 0.8; }
+.aura[data-tier='hot'] {
+  opacity: 1;
+  background: radial-gradient(62% 58% at 50% 56%, rgba(245, 133, 58, 0.22), transparent 70%);
+}
+.aura[data-tier='blaze'] {
+  opacity: 1;
+  background: radial-gradient(66% 60% at 50% 54%, rgba(224, 69, 47, 0.26), transparent 72%);
+}
+.aura[data-tier='hot']:not([data-reduce='true']),
+.aura[data-tier='blaze']:not([data-reduce='true']) {
+  animation: auraPulse 2.4s ease-in-out infinite;
+}
+.aura[data-reduce='true'] {
+  animation: none;
+}
+
+@keyframes auraPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ── HUD ──────────────────────────────────────────────────────────────────── */
+.hud {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.quit {
+  color: rgba(244, 246, 250, 0.7);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+.quit:hover { color: #fff; }
+
+.timer {
+  margin: 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.timerIcon { font-size: 0.8em; opacity: 0.8; }
+.timerLow { color: #ff8a5c; }
+
+.runXp {
+  font-weight: 700;
+  color: rgba(244, 246, 250, 0.85);
+  font-size: var(--text-sm);
+}
+.runXpVal {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  color: #ffce6b;
+}
+
+.timeTrack {
+  position: relative;
+  flex-shrink: 0;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.timeFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #ef6f3b, #f7c948);
+  transition: width 0.2s linear;
+}
+
+/* ── Heat meter ───────────────────────────────────────────────────────────── */
+.meterRow {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.flame {
+  font-size: 1.8rem;
+  filter: grayscale(0.7) brightness(0.8);
+  transform-origin: bottom center;
+  transition: filter 0.3s ease, transform 0.3s ease;
+}
+.flame[data-tier='warm'] { filter: grayscale(0.2); }
+.flame[data-tier='hot'] { filter: none; }
+.flame[data-tier='blaze'] { filter: drop-shadow(0 0 8px rgba(247, 147, 47, 0.8)); }
+.flame[data-tier='hot']:not([data-reduce='true']),
+.flame[data-tier='blaze']:not([data-reduce='true']) {
+  animation: flicker 0.7s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(-1deg); }
+  50% { transform: scale(1.12) rotate(1deg); }
+}
+
+.meterBody { flex: 1; }
+.meterTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.multiplier {
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: #ffce6b;
+}
+.streak {
+  font-size: var(--text-xs);
+  color: rgba(244, 246, 250, 0.6);
+}
+.meterTrack {
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.meterFill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, #f7c948, #ef6f3b);
+  transition: width 0.35s ease;
+}
+.meterFill[data-tier='blaze'] { background: linear-gradient(90deg, #f7c948, #e0452f); }
+
+/* ── Stage ────────────────────────────────────────────────────────────────── */
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-2), 1.4vh, var(--space-3));
+  width: 100%;
+  text-align: center;
+}
+
+/* Flexible middle: holds the prompt (and optional diagram), centered. Only this
+   region scrolls if a question is taller than the available space — the page
+   itself never scrolls. */
+.stageBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(var(--space-2), 1.6vh, var(--space-4));
+  width: 100%;
+}
+
+.cardMeta {
+  flex-shrink: 0;
+  min-height: 24px;
+}
+.kind {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(244, 246, 250, 0.55);
+}
+.kindChallenge {
+  color: #ffce6b;
+  background: rgba(247, 201, 72, 0.14);
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+}
+
+.diagram {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+
+.diagramFallback {
+  padding: var(--space-5);
+  text-align: center;
+  color: rgba(244, 246, 250, 0.6);
+  font-size: var(--text-sm);
+}
+
+.prompt {
+  font-size: clamp(1.05rem, 2.4vh, var(--text-xl));
+  font-weight: 700;
+  line-height: var(--leading-snug);
+  margin: 0;
+  color: #fff;
+}
+
+.options {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(var(--space-2), 1.4vh, var(--space-3));
+  width: 100%;
+}
+
+.option {
+  min-height: clamp(48px, 7vh, 64px);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f4f6fa;
+  font-weight: 600;
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+.option:hover:not(:disabled) {
+  border-color: #f7c948;
+  background: rgba(247, 201, 72, 0.12);
+  transform: translateY(-2px);
+}
+.option:disabled { cursor: default; }
+
+.optionCorrect {
+  border-color: var(--color-correct);
+  background: rgba(74, 222, 128, 0.2);
+  color: #d6ffe4;
+}
+.optionWrong {
+  border-color: var(--color-incorrect);
+  background: rgba(248, 113, 113, 0.2);
+  color: #ffe0e0;
+}
+.optionDim { opacity: 0.4; }
+
+@media (max-width: 560px) {
+  .options { grid-template-columns: 1fr; }
+}
+
+/* Match AppLayout's mobile content padding (<=600px: space-5 top / space-4
+   sides / space-7 bottom) so the inset + locked height stays scroll-free, with
+   a slightly tighter gap on small screens. */
+@media (max-width: 600px) {
+  .player,
+  .intro {
+    height: calc(100vh - var(--navbar-height) - 2 * var(--space-4));
+    height: calc(100dvh - var(--navbar-height) - 2 * var(--space-4));
+    margin: calc(var(--space-4) - var(--space-5)) 0 calc(var(--space-4) - var(--space-7));
+  }
+  .player {
+    padding: var(--space-3) var(--space-4);
+  }
+  .panel {
+    padding: clamp(var(--space-3), 2vh, var(--space-4));
+  }
+}
+
+/* Smallest phones: shrink the loud bits so the bounded panel + intro/results
+   card stay within the locked viewport without inner scrolling. */
+@media (max-width: 400px) {
+  .hud { gap: var(--space-2); }
+  .timer { font-size: var(--text-xl); }
+  .runXp { font-size: var(--text-xs); }
+  .meterRow { gap: var(--space-2); }
+  .flame { font-size: 1.5rem; }
+  .introTitle { font-size: var(--text-2xl); }
+  .introSub,
+  .introList { font-size: var(--text-xs); }
+  .resultStats { gap: var(--space-2); }
+  .resultVal { font-size: var(--text-xl); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aura, .flame { animation: none !important; }
+  .option:hover:not(:disabled) { transform: none; }
+}
+
+/* ── Intro / Results cards ────────────────────────────────────────────────── */
+.intro {
+  position: relative;
+  /* Same inset + viewport-locking strategy as the live player (see .player). */
+  height: calc(100vh - var(--navbar-height) - 2 * var(--space-5));
+  height: calc(100dvh - var(--navbar-height) - 2 * var(--space-5));
+  margin: calc(var(--space-5) - var(--space-6)) 0 calc(var(--space-5) - var(--space-8));
+  padding: var(--space-5);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(247, 147, 47, 0.3);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 60px rgba(239, 111, 59, 0.08);
+  background:
+    radial-gradient(100% 70% at 50% 0%, rgba(239, 111, 59, 0.22), transparent 60%),
+    linear-gradient(180deg, #14171f, #0d0f15);
+  color: #f4f6fa;
+}
+
+.introGlow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(247, 147, 47, 0.25), transparent 65%);
+  top: -120px;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+/* Full-viewport three.js ember plume sitting behind the intro card. */
+.introScene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Gentle entrance for the card when the animated lead-in is present. */
+.introCardLive {
+  animation: introRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes introRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .introCardLive {
+    animation: none;
+  }
+}
+
+.introCard {
+  position: relative;
+  max-width: 460px;
+  width: 100%;
+  /* Never exceed the locked container; scroll inside the card only as a last
+     resort on very short viewports so the Start button stays reachable. */
+  max-height: 100%;
+  overflow-y: auto;
+  text-align: center;
+  background: rgba(20, 23, 31, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl);
+  padding: clamp(var(--space-4), 3vh, var(--space-6));
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-lg);
+}
+
+.introFlame {
+  font-size: clamp(2rem, 5vh, 3rem);
+  filter: drop-shadow(0 0 14px rgba(247, 147, 47, 0.7));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .introFlame { animation: flicker 0.9s ease-in-out infinite; }
+}
+
+.introTitle {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  margin: var(--space-2) 0;
+  background: linear-gradient(90deg, #f7c948, #ef6f3b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.introSub {
+  color: rgba(244, 246, 250, 0.8);
+  line-height: var(--leading-normal);
+  margin: 0 0 clamp(var(--space-2), 2vh, var(--space-4));
+  font-size: var(--text-sm);
+}
+
+.introList {
+  list-style: none;
+  margin: 0 0 clamp(var(--space-2), 2vh, var(--space-4));
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+  font-size: var(--text-sm);
+  color: rgba(244, 246, 250, 0.85);
+}
+.introList li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.runsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: rgba(247, 201, 72, 0.12);
+  border: 1px solid rgba(247, 201, 72, 0.3);
+  color: #ffce6b;
+  font-size: var(--text-sm);
+  margin-bottom: clamp(var(--space-2), 2vh, var(--space-4));
+}
+.runsBadge[data-empty='true'] {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(244, 246, 250, 0.7);
+}
+
+.startBtn {
+  display: inline-block;
+  min-height: 52px;
+  padding: var(--space-3) var(--space-8);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-size: var(--text-md);
+  color: #1a1206;
+  background: linear-gradient(90deg, #f7c948, #ef6f3b);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  box-shadow: 0 6px 24px rgba(239, 111, 59, 0.4);
+}
+.startBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(239, 111, 59, 0.5);
+}
+.startBtn:disabled { opacity: 0.7; cursor: wait; }
+
+.introFoot {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-xs);
+  color: rgba(244, 246, 250, 0.5);
+}
+
+.introBack {
+  display: inline-block;
+  margin-top: var(--space-3);
+  color: rgba(244, 246, 250, 0.7);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+.introBack:hover { color: #fff; }
+
+/* Results */
+.resultStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+.resultStat {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.resultVal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: #ffce6b;
+}
+.resultLabel {
+  font-size: var(--text-xs);
+  color: rgba(244, 246, 250, 0.6);
+}
+
+.levelUp {
+  font-weight: 700;
+  color: #ffce6b;
+  margin: 0 0 var(--space-2);
+}
+.blocked {
+  font-size: var(--text-sm);
+  color: rgba(244, 246, 250, 0.7);
+  margin: 0 0 var(--space-2);
+}
+
+.resultActions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}

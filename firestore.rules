@@ -11,9 +11,50 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
-    // User profile: owner-only read/write.
+    // Light shape check for the account-level economy map (XP/coins/cosmetics)
+    // stored on the user doc. Owner-only access is the real guard; this just keeps
+    // the data well-formed and non-negative. Passes when no economy is written.
+    function economyValid() {
+      return !('economy' in request.resource.data)
+        || (
+          request.resource.data.economy.xp is number
+          && request.resource.data.economy.xp >= 0
+          && request.resource.data.economy.coins is number
+          && request.resource.data.economy.coins >= 0
+          && request.resource.data.economy.ownedCosmetics is list
+        );
+    }
+
+    // Light shape check for the persistent learner-memory map (rolling AI summary,
+    // misconception ledger, spaced-repetition cards) stored on the user doc.
+    // Owner-only access is the real guard; this just keeps the data well-formed.
+    // Passes when no learnerMemory is written (e.g. an economy-only merge write).
+    function learnerMemoryValid() {
+      return !('learnerMemory' in request.resource.data)
+        || (
+          request.resource.data.learnerMemory is map
+          && (
+            !('summary' in request.resource.data.learnerMemory)
+            || (
+              request.resource.data.learnerMemory.summary is string
+              && request.resource.data.learnerMemory.summary.size() <= 2000
+            )
+          )
+          && (
+            !('misconceptions' in request.resource.data.learnerMemory)
+            || request.resource.data.learnerMemory.misconceptions is map
+          )
+          && (
+            !('srs' in request.resource.data.learnerMemory)
+            || request.resource.data.learnerMemory.srs is map
+          )
+        );
+    }
+
+    // User profile (incl. the economy + learnerMemory maps): owner-only read/write.
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid) && economyValid() && learnerMemoryValid();
     }
 
     // Course content is readable by any signed-in learner. Client writes are

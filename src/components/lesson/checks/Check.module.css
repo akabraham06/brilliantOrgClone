@@ -127,6 +127,55 @@
   color: var(--color-text-muted);
 }
 
+.aiBlock {
+  margin-top: var(--space-2);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.aiText {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  line-height: var(--leading-normal);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.aiThinking {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.aiDots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.aiDots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-purple);
+  animation: aiblink 1.2s infinite ease-in-out;
+}
+
+.aiDots span:nth-child(2) { animation-delay: 0.2s; }
+.aiDots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes aiblink {
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aiDots span { animation: none; opacity: 0.6; }
+}
+
 .fallbackNote {
   display: flex;
   align-items: center;

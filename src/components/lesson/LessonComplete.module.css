@@ -8,20 +8,129 @@
   gap: var(--space-4);
 }
 
-.badge {
+.avatarCelebrate {
+  position: relative;
+  width: 120px;
+  height: 120px;
   display: grid;
   place-items: center;
-  width: 72px;
-  height: 72px;
   border-radius: 50%;
-  background: var(--color-correct-bg);
-  color: var(--color-correct);
-  font-size: 2rem;
+  background: radial-gradient(60% 60% at 50% 40%, rgba(167, 139, 250, 0.18), transparent 70%);
+}
+
+.badge {
+  position: absolute;
+  right: -2px;
+  bottom: 2px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--color-correct);
+  color: var(--color-primary-text, #fff);
+  font-size: 1.1rem;
   font-weight: 800;
+  border: 3px solid var(--color-bg);
 }
 
 .title {
   font-size: var(--text-3xl);
+}
+
+/* ── Reward card ──────────────────────────────────────────────────────────── */
+.rewardCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(160deg, var(--color-surface), color-mix(in srgb, var(--accent-purple, #a78bfa) 12%, var(--color-surface)));
+  border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 40%, var(--color-border));
+}
+
+.levelUpBanner {
+  font-weight: 700;
+  color: var(--accent-purple, #a78bfa);
+  font-size: var(--text-md);
+}
+
+.rewardRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.rewardChip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.rewardChipVal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.rewardChipLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.levelRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.levelBadge {
+  flex-shrink: 0;
+  font-weight: 800;
+  font-size: var(--text-sm);
+  color: var(--accent-purple, #a78bfa);
+}
+
+.xpBar {
+  flex: 1;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-active);
+  overflow: hidden;
+}
+
+.xpFill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, var(--accent-blue, #60a5fa), var(--accent-purple, #a78bfa));
+  transition: width 0.5s ease;
+}
+
+.levelNext {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.spendLink {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent-purple, #a78bfa);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xpFill { transition: none; }
 }
 
 .subtitle {
@@ -84,6 +193,13 @@
   flex-direction: column;
   gap: var(--space-1);
   color: var(--color-text-muted);
+}
+
+.recapAiText {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+  line-height: var(--leading-normal);
+  white-space: pre-wrap;
 }
 
 .nextCard {

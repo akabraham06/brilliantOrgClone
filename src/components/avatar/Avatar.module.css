@@ -1,0 +1,26 @@
+/* Subtle looping "breathing" idle for avatars shown in the Store (preview + card
+   previews). A gentle vertical bob plus a tiny squash-and-stretch, pivoting from
+   the feet so it reads as a soft creature breathing. Deliberately slow + small.
+   Fully disabled under prefers-reduced-motion. */
+.idle {
+  transform-origin: 50% 92%;
+  animation: avatarBreathe 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes avatarBreathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-2.5%) scale(0.99, 1.012);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle {
+    animation: none;
+    transform: none;
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Formula from './Formula.jsx';
 import v from './viz.module.css';
 import s from './MatchBoard.module.css';
+import { useStruggleReporter } from '../tutor/useStruggleReporter.js';
 import {
   motion,
   AnimatePresence,
@@ -38,6 +39,12 @@ export default function MatchBoard({
   const [matches, setMatches] = useState(savedState?.matches || {});
   const [activeLeft, setActiveLeft] = useState(null);
   const [submitted, setSubmitted] = useState(savedState?.submitted || false);
+
+  const reportStruggle = useStruggleReporter({
+    enabled: graded,
+    hintSeed:
+      'I\u2019m stuck matching these \u2014 can you give me one small hint for the next step?',
+  });
 
   // Right options shown in a rotated order so they don't line up with left.
   const rightOptions = useMemo(() => {
@@ -115,6 +122,18 @@ export default function MatchBoard({
     if (graded) onResult?.(allCorrect);
     if (validated && allCorrect) onReady?.();
     onSaveState?.({ matches, submitted: true });
+    if (graded) {
+      const wrong = pairs
+        .filter((p) => matches[p.left] !== p.right)
+        .map((p) => p.left)
+        .join(', ');
+      reportStruggle(allCorrect, {
+        event: {
+          prompt: config.prompt || 'Match each item on the left to its pair on the right.',
+          selected: wrong ? `still mismatched: ${wrong}` : 'incorrect matches',
+        },
+      });
+    }
   }
 
   function reset() {

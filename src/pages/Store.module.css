@@ -1,0 +1,397 @@
+.page {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: clamp(1.4rem, 4.5vw, var(--text-2xl));
+  font-weight: 800;
+  margin: 0;
+  color: var(--color-text);
+}
+
+.subtitle {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  max-width: 52ch;
+}
+
+.walletBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.walletCoins {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.walletLevel {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+/* ── Layout ───────────────────────────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.previewPanel {
+  position: sticky;
+  top: calc(var(--navbar-height) + var(--space-4));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(160deg, var(--color-surface), var(--color-bg-elevated));
+  border: 1px solid var(--color-border);
+}
+
+.previewAvatar {
+  width: 100%;
+  max-width: 208px;
+  margin-inline: auto;
+  /* Match the avatar viewBox (120x140) so the full taller-than-wide figure sits
+     centered with balanced padding instead of overflowing a forced square. */
+  aspect-ratio: 120 / 140;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: radial-gradient(72% 72% at 50% 44%, rgba(167, 139, 250, 0.16), transparent 70%);
+}
+
+/* Animated stage wrapper: the avatar "jumps" from its feet to put on a hovered
+   item (animation driven in JS via the Web Animations API). */
+.previewStage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  transform-origin: 50% 92%;
+  will-change: transform;
+}
+
+/* Let the (square) avatar SVG fill the aspect-matched box edge to edge. */
+.previewAvatar svg {
+  width: 100%;
+  height: 100%;
+}
+
+.collection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.collectionCount {
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--color-text);
+}
+
+.collectionLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.equippedEmpty {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.equippedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.equippedItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.equippedSlot {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-subtle);
+}
+
+.equippedName {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unequipBtn {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-incorrect);
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+.unequipBtn:hover { text-decoration: underline; }
+
+/* ── Filters ──────────────────────────────────────────────────────────────── */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.filterBtn {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.filterBtn:hover { color: var(--color-text); }
+.filterActive {
+  background: var(--color-surface-active);
+  color: var(--color-text);
+  border-color: var(--accent-purple);
+}
+
+/* ── Grid + cards ─────────────────────────────────────────────────────────── */
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--rarity-color, var(--color-border-strong));
+}
+
+.cardLocked { opacity: 0.72; }
+
+.cardFlash {
+  animation: cardPop 0.9s ease;
+  border-color: var(--color-correct);
+}
+@keyframes cardPop {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5); }
+  100% { box-shadow: 0 0 0 12px rgba(74, 222, 128, 0); }
+}
+
+.cardPreview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: var(--space-3) 0;
+  background: radial-gradient(60% 60% at 50% 40%, color-mix(in srgb, var(--rarity-color, #888) 14%, transparent), transparent 70%);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.rarityTag {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.cardName {
+  font-weight: 700;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+.cardSlot {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.cardAction {
+  padding: 0 var(--space-3) var(--space-3);
+  margin-top: auto;
+}
+
+.actionBtn {
+  width: 100%;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  border: none;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast), opacity var(--transition-fast);
+}
+
+.buyBtn {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+.buyBtn:hover:not(:disabled) { background: var(--color-primary-hover); }
+.buyBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.equipBtn {
+  background: var(--color-surface-active);
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+}
+.equipBtn:hover { background: var(--color-surface-hover); }
+
+.equippedBtn {
+  background: var(--color-correct-bg);
+  color: var(--color-correct);
+  border: 1px solid var(--color-correct);
+}
+
+.lockBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 40px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-pill);
+}
+
+@media (max-width: 820px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .previewPanel {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* ── Mobile (<=600px) ─────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .page {
+    gap: var(--space-4);
+  }
+  .header {
+    gap: var(--space-3);
+  }
+  .walletBox {
+    padding: var(--space-2) var(--space-3);
+  }
+  /* Back to a clean, centered single column so the preview reads as one card. */
+  .previewPanel {
+    flex-direction: column;
+    padding: var(--space-4);
+  }
+
+  /* Filter chips become a tidy, edge-to-edge horizontal-scroll strip so the row
+     never wraps into a lonely orphan chip. Bleeds to the content edges and hides
+     its scrollbar for a clean look; chips stay full-size touch targets. */
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-inline: calc(-1 * var(--space-4));
+    padding-inline: var(--space-4);
+    padding-bottom: var(--space-1);
+  }
+  .filters::-webkit-scrollbar {
+    display: none;
+  }
+  .filterBtn {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Two comfortable columns on phones; collapses to one on the narrowest. */
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover { transform: none; }
+  .cardFlash { animation: none; }
+}

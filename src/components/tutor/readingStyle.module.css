@@ -1,0 +1,22 @@
+/**
+ * Shared opt-in reading style for tutor explanation text. Add the `.readingText`
+ * class to any tutor text element; it only changes appearance when the learner
+ * has turned on the dyslexia-friendly preference (PreferencesContext reflects
+ * that onto <html data-tutor-reading="dyslexic">).
+ *
+ * The style follows common dyslexia-friendly guidance: a humanist sans-serif
+ * with open letterforms, generous letter/word spacing, taller line height, and
+ * left-aligned, slightly wider text — using only widely-available system fonts
+ * (no network fetch).
+ */
+.readingText {
+  /* No effect until the reading preference is on. */
+}
+
+:global(html[data-tutor-reading='dyslexic']) .readingText {
+  font-family: 'Comic Sans MS', 'Trebuchet MS', Verdana, Tahoma, system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  word-spacing: 0.12em;
+  line-height: 1.8;
+  text-align: left;
+}

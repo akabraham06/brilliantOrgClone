@@ -9,6 +9,10 @@ import Courses from './pages/Courses.jsx';
 import CourseOverview from './pages/CourseOverview.jsx';
 import LessonPlayer from './pages/LessonPlayer.jsx';
 import ReviewPage from './pages/ReviewPage.jsx';
+import Practice from './pages/Practice.jsx';
+import Playground from './pages/Playground.jsx';
+import HeatCheck from './pages/HeatCheck.jsx';
+import Store from './pages/Store.jsx';
 
 export default function App() {
   return (
@@ -34,6 +38,10 @@ export default function App() {
             element={<LessonPlayer />}
           />
           <Route path="courses/:courseId/review" element={<ReviewPage />} />
+          <Route path="practice" element={<Practice />} />
+          <Route path="heat-check" element={<HeatCheck />} />
+          <Route path="store" element={<Store />} />
+          <Route path="lab" element={<Playground />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

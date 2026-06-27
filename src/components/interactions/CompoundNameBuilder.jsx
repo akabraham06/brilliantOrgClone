@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Formula from './Formula.jsx';
 import v from './viz.module.css';
+import { useStruggleReporter } from '../tutor/useStruggleReporter.js';
 
 /**
  * Build a compound's name from word blocks. Tap blocks to add them to the name
@@ -18,6 +19,13 @@ export default function CompoundNameBuilder({ slide, graded = false, config = {}
 
   const [chosen, setChosen] = useState(savedState?.chosen || []);
   const [submitted, setSubmitted] = useState(savedState?.submitted || false);
+
+  const reportStruggle = useStruggleReporter({
+    enabled: graded,
+    slideId: slide?.slideId,
+    hintSeed:
+      'I\u2019m stuck naming this compound \u2014 can you give me one small hint for the next step?',
+  });
 
   useEffect(() => {
     if (!graded) onReady?.();
@@ -47,6 +55,12 @@ export default function CompoundNameBuilder({ slide, graded = false, config = {}
     setSubmitted(true);
     onResult?.(correct);
     onSaveState?.({ chosen, submitted: true });
+    reportStruggle(correct, {
+      event: {
+        prompt: `Name the compound ${formula} by choosing word blocks in order.`,
+        selected: chosen.length ? `they built: ${chosen.join(' ')}` : 'no name built yet',
+      },
+    });
   }
   function reset() {
     setSubmitted(false);

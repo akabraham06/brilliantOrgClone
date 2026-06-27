@@ -1,0 +1,395 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  /* Quest rows reflow to the PANEL's width (it can sit in a ~300px column or a
+     wide area), not the viewport — see the @container rule below. */
+  container-type: inline-size;
+  container-name: quests;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-yellow) 9%, var(--color-surface)),
+    var(--color-surface)
+  );
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.titleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.eyebrow {
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-yellow);
+}
+
+.aiTag {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--color-text-inverse);
+  background: var(--accent-yellow);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.blurb {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-yellow);
+  animation: blink 1.2s infinite ease-in-out both;
+}
+
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 1; }
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quest {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-left: 3px solid var(--quest-accent);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.questComplete {
+  background: color-mix(in srgb, var(--quest-accent) 8%, var(--color-bg-elevated));
+}
+
+.questClaimed {
+  opacity: 0.65;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--quest-accent) 16%, transparent);
+}
+
+.questClaimed .icon {
+  color: var(--color-correct);
+  font-weight: 800;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.questHead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.questTitle {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+  color: var(--color-text);
+}
+
+.principle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  max-width: 100%;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--quest-accent);
+  background: color-mix(in srgb, var(--quest-accent) 12%, transparent);
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.principle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.info {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.questDesc {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.science {
+  margin: 2px 0 0;
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--quest-accent) 7%, var(--color-surface));
+  border-radius: var(--radius-sm);
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.track {
+  position: relative;
+  display: block;
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-active);
+  overflow: hidden;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--quest-accent);
+  transition: width var(--transition-slow);
+}
+
+.count {
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-subtle);
+  min-width: 30px;
+  text-align: right;
+}
+
+.action {
+  display: grid;
+  place-items: center;
+  min-width: 76px;
+}
+
+.claimBtn {
+  padding: var(--space-2) var(--space-3);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  color: var(--color-text-inverse);
+  background: var(--accent-yellow);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  animation: pop 0.3s ease;
+  transition: filter var(--transition-fast), transform var(--transition-fast);
+}
+
+.claimBtn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.claimBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.goBtn {
+  padding: var(--space-2) var(--space-3);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.goBtn:hover {
+  background: var(--color-surface-active);
+  border-color: var(--quest-accent);
+}
+
+.goBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.claimed {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-correct);
+}
+
+.flash {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  color: var(--accent-yellow);
+  animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.footTotals {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.totalXp {
+  color: var(--accent-purple);
+}
+
+.totalCoins {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--color-text);
+}
+
+.footAllDone {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-correct);
+}
+
+.capNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--color-text-subtle);
+  cursor: help;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fill,
+  .claimBtn,
+  .goBtn {
+    transition: none;
+  }
+  .dots span,
+  .claimBtn,
+  .flash {
+    animation: none;
+  }
+}
+
+/* Narrow PANEL (e.g. the course-overview side column): drop the wide action
+   column and let the body use the full width so titles/descriptions stop
+   wrapping one word per line. */
+@container quests (max-width: 380px) {
+  .quest {
+    grid-template-columns: auto 1fr;
+  }
+  .action {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+  .action :is(.claimBtn, .goBtn) {
+    width: 100%;
+  }
+}
+
+/* Narrow VIEWPORT fallback (mobile), in case container queries are unavailable. */
+@media (max-width: 520px) {
+  .quest {
+    grid-template-columns: auto 1fr;
+  }
+  .action {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+  .action :is(.claimBtn, .goBtn) {
+    width: 100%;
+  }
+}

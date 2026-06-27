@@ -1,6 +1,7 @@
 /* Light, Brilliant-inspired landing page (overrides the app's dark theme). */
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   background: #ffffff;
   padding: 16px;
   color: #1b1b1b;
@@ -20,6 +21,9 @@
 }
 
 .signIn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: 9px 20px;
   border-radius: 999px;
   border: 1px solid #d7d7d4;
@@ -56,7 +60,7 @@
 .title {
   font-family: 'Georgia', 'Times New Roman', serif;
   font-weight: 700;
-  font-size: 3.4rem;
+  font-size: clamp(2.1rem, 6vw, 3.4rem);
   line-height: 1.05;
   letter-spacing: -0.015em;
   color: #161616;
@@ -203,9 +207,6 @@
     grid-template-columns: 1fr;
     gap: 36px;
   }
-  .title {
-    font-size: 2.6rem;
-  }
   .copy,
   .actions {
     max-width: none;
@@ -216,11 +217,11 @@
 }
 
 @media (max-width: 480px) {
-  .title {
-    font-size: 2.15rem;
-  }
   .heroPanel {
     padding: 28px 18px;
     border-radius: 22px;
+  }
+  .header {
+    padding: 12px 16px;
   }
 }

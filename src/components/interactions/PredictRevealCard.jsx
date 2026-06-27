@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import v from './viz.module.css';
+import { aiEnabled } from '../../firebase/ai.js';
+import { useTutor } from '../../context/TutorContext.jsx';
 import {
   motion,
   AnimatePresence,
@@ -37,7 +39,29 @@ export default function PredictRevealCard({ slide, onReady }) {
   const [done, setDone] = useState(false); // correct OR all options exhausted
   const [gotItRight, setGotItRight] = useState(false);
 
+  const { explainAtAnchor } = useTutor();
+  const optRefs = useRef({}); // option id -> button node, so the tutor can fly to it
+
   const wrongCount = options.filter((o) => !o.correct).length;
+
+  // Once fully attempted, send the tutor over to the last-chosen option with a
+  // tailored deeper explanation of what really happens.
+  function triggerExplain(lastId, isCorrect) {
+    if (!aiEnabled) return;
+    explainAtAnchor({
+      key: `${slide?.slideId || 'predict'}:predict`,
+      anchorEl: optRefs.current[lastId] || null,
+      context: {
+        slide,
+        kind: 'predict',
+        prompt,
+        selected: options.find((x) => x.id === lastId)?.label,
+        correct: options.find((x) => x.correct)?.label,
+        isCorrect,
+        reveal,
+      },
+    });
+  }
 
   function pick(o) {
     if (done || tried.includes(o.id)) return;
@@ -48,6 +72,7 @@ export default function PredictRevealCard({ slide, onReady }) {
       setGotItRight(true);
       setDone(true);
       onReady?.();
+      triggerExplain(o.id, true);
       return;
     }
     // Every wrong option has now been tried -> reveal the explanation.
@@ -55,6 +80,7 @@ export default function PredictRevealCard({ slide, onReady }) {
     if (wrongTried.length >= wrongCount) {
       setDone(true);
       onReady?.();
+      triggerExplain(o.id, false);
     }
   }
 
@@ -77,6 +103,9 @@ export default function PredictRevealCard({ slide, onReady }) {
               <motion.button
                 key={o.id}
                 type="button"
+                ref={(el) => {
+                  optRefs.current[o.id] = el;
+                }}
                 className={cls}
                 style={{ width: '100%', position: 'relative', overflow: 'hidden' }}
                 onClick={() => pick(o)}

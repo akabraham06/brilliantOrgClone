@@ -10,6 +10,12 @@ import {
 import { useAuth } from './AuthContext.jsx';
 import { useContent } from './ContentContext.jsx';
 import { fetchProgress, saveProgress } from '../firebase/progress.js';
+import { aiEnabled } from '../firebase/ai.js';
+import { buildLearnerProfile } from '../ai/learnerProfile.js';
+import {
+  ensureLoaded as ensureMemoryLoaded,
+  maybeRefreshSummary,
+} from '../ai/memoryStore.js';
 
 const ProgressContext = createContext(null);
 
@@ -42,7 +48,7 @@ function isYesterday(prevKey) {
  */
 export function ProgressProvider({ children }) {
   const { user } = useAuth();
-  const { course } = useContent();
+  const { course, lessons } = useContent();
   const courseId = course?.courseId;
 
   const [progress, setProgress] = useState(EMPTY);
@@ -88,6 +94,28 @@ export function ProgressProvider({ children }) {
     }, 700);
     return () => saveTimer.current && window.clearTimeout(saveTimer.current);
   }, [progress, user, courseId]);
+
+  // Keep the persistent learner-memory store warmed for this user (used by the
+  // tutor profile, recommender, practice, and misconception surfaces).
+  useEffect(() => {
+    ensureMemoryLoaded(user?.uid || null);
+  }, [user]);
+
+  // Periodically refresh the rolling AI memory summary as the learner makes
+  // progress. Self-gated on aiEnabled and throttled in the store (it only calls
+  // the model when the progress "signature" changes and a cooldown has elapsed),
+  // so this never spams the API on routine re-renders.
+  useEffect(() => {
+    if (!aiEnabled || !hydratedRef.current || !user) return undefined;
+    const profile = buildLearnerProfile(progress, lessons);
+    const completed = progress.completedLessonIds?.length || 0;
+    if (!profile.overall.attempted && !completed) return undefined;
+    const signature = `${profile.overall.attempted}:${profile.overall.firstTryCorrect}:${completed}`;
+    const t = window.setTimeout(() => {
+      maybeRefreshSummary({ profile, signature, lessons });
+    }, 2000);
+    return () => window.clearTimeout(t);
+  }, [progress, lessons, user]);
 
   const mutate = useCallback((updater) => {
     dirtyRef.current = true;

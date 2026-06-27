@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import styles from './ProtectedRoute.module.css';
+import AvatarLoader from './avatar/AvatarLoader.jsx';
 
 /**
  * Guards authenticated routes. While auth state is resolving it shows a
@@ -12,12 +12,7 @@ export default function ProtectedRoute({ children }) {
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className={styles.loader} role="status" aria-live="polite">
-        <span className={styles.spinner} aria-hidden="true" />
-        <span className="sr-only">Loading</span>
-      </div>
-    );
+    return <AvatarLoader variant="screen" label="Signing you in" />;
   }
 
   if (!user) {

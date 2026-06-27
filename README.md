@@ -74,6 +74,49 @@ npx -y firebase-tools@latest deploy --only hosting
 
 Hosting serves from `dist/` with SPA rewrites configured in `firebase.json`.
 
+## AI features (optional, OpenAI via a secure proxy)
+
+The app includes an optional AI layer powered by **OpenAI**: a context-aware
+chemistry tutor (the animated dot in the bottom-left), adaptive per-mistake check
+feedback, AI-graded free-response skill checks, an AI "Practice what you missed"
+review generator, personalized lesson recaps, the AI Lab, and the Heat Check
+challenge questions.
+
+These features are **off by default** and the app behaves exactly as before when
+they are disabled — every AI call degrades gracefully to the existing static
+content. Personalization is done purely **in-context (prompting)**, never model
+training: each call is grounded in the current slide plus a compact summary of the
+learner's progress (weak lessons, missed checks, the specific wrong option just
+chosen).
+
+### Security model
+
+The OpenAI secret key **never reaches the browser.** The client calls a
+**Netlify Edge Function proxy** (`netlify/edge-functions/ai.ts`, route `/api/ai`)
+with the signed-in user's Firebase ID token. The proxy verifies the token,
+enforces per-user rate limits, a monthly token budget, and content moderation,
+then injects the OpenAI key (read only from a Netlify env var) and forwards the
+request to OpenAI. See `netlify/README.md` for the full deploy + env reference.
+
+To turn the AI features on:
+
+1. **Deploy the proxy.** Connect this repo to Netlify (it builds the SPA *and*
+   the edge function). In the Netlify dashboard set, at minimum:
+   - `OPENAI_API_KEY` — your OpenAI secret key (server-side only).
+   - `FIREBASE_PROJECT_ID` — for ID-token verification.
+   - `ALLOWED_ORIGIN` — the origin(s) the app is served from (e.g. your Firebase
+     Hosting domain), comma-separated.
+2. **Point the app at the proxy** in your `.env`, then rebuild:
+   ```bash
+   VITE_AI_ENABLED=true
+   VITE_AI_PROXY_URL=https://YOUR-SITE.netlify.app/api/ai
+   ```
+   `VITE_AI_PROXY_URL` is baked into the build, so the Firebase-hosted app calls
+   the Netlify-hosted endpoint. Optionally pin a model with `VITE_OPENAI_MODEL`.
+
+Without `VITE_AI_ENABLED=true` and a reachable `VITE_AI_PROXY_URL` (and a
+signed-in user), the AI calls no-op and the app falls back to static content.
+
 ## Project structure
 
 ```

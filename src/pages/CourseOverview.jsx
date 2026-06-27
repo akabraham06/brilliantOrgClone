@@ -10,6 +10,8 @@ import {
 import ContentGate from '../components/ContentGate.jsx';
 import LessonIcon from '../components/LessonIcon.jsx';
 import ProgressBar from '../components/ProgressBar.jsx';
+import NextStepCard from '../components/recommend/NextStepCard.jsx';
+import DailyQuestsPanel from '../components/quests/DailyQuestsPanel.jsx';
 import styles from './CourseOverview.module.css';
 
 export default function CourseOverview() {
@@ -60,7 +62,7 @@ function CourseOverviewContent() {
 
         <div className={styles.pathCol}>
           <div className={styles.levelPill}>
-            <span className={styles.levelEyebrow}>Level {nextLesson.orderIndex}</span>
+            <span className={styles.levelEyebrow}>Up next &middot; Level {nextLesson.orderIndex}</span>
             <span className={styles.levelName}>{nextLesson.title}</span>
           </div>
 
@@ -128,6 +130,28 @@ function CourseOverviewContent() {
               &rarr;
             </span>
           </Link>
+
+          <Link to="/app/heat-check" className={styles.heatNode}>
+            <span className={styles.heatGlow} aria-hidden="true" />
+            <span className={styles.heatMarker} aria-hidden="true">
+              {'\u{1F525}'}
+            </span>
+            <span className={styles.reviewBody}>
+              <span className={styles.heatEyebrow}>Timed mode</span>
+              <span className={styles.reviewTitle}>Heat Check</span>
+              <span className={styles.reviewMeta}>
+                5-minute speed run &middot; build a heat streak for the highest XP &amp; coins
+              </span>
+            </span>
+            <span className={styles.heatArrow} aria-hidden="true">
+              &rarr;
+            </span>
+          </Link>
+        </div>
+
+        <div className={styles.secondary}>
+          <NextStepCard />
+          <DailyQuestsPanel />
         </div>
       </div>
 

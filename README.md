@@ -30,6 +30,8 @@ The course covers eight lessons, in order:
 
 A cumulative **Course Review** and key-takeaways summary round out the experience.
 
+> **Every lesson, slide, and knowledge check in this course was personally reviewed, looked over, and approved by me.** The AI layer below personalizes how this hand-curated content is explained and practiced — it never replaces the authored curriculum.
+
 ## Tech stack
 
 - **React + Vite** — UI and fast dev/build tooling
@@ -76,11 +78,26 @@ Hosting serves from `dist/` with SPA rewrites configured in `firebase.json`.
 
 ## AI features (optional, OpenAI via a secure proxy)
 
-The app includes an optional AI layer powered by **OpenAI**: a context-aware
-chemistry tutor (the animated dot in the bottom-left), adaptive per-mistake check
-feedback, AI-graded free-response skill checks, an AI "Practice what you missed"
-review generator, personalized lesson recaps, the AI Lab, and the Heat Check
-challenge questions.
+The app includes an optional AI layer powered by **OpenAI**. The complete set of AI features:
+
+- **AI Chemistry Tutor** — a context-aware tutor (the animated dot in the bottom-left) that streams responses grounded in the current slide.
+- **Proactive help** — the tutor automatically offers help after a wrong answer or when it detects the learner is struggling.
+- **Anchored deep explanation** — after a full attempt, an explanation card glides to the learner's chosen answer with a tailored "why."
+- **Adaptive per-mistake feedback** — feedback written for the *specific* wrong option a learner selected.
+- **AI-graded free-response skill checks** — open-ended answers scored for comprehension, feeding the learner's personalization profile and the tutor surfaces.
+- **AI-graded free-recall ("brain dump")** — retrieval-practice prompts graded against the lesson's key ideas.
+- **Adaptive end-of-lesson skill checks** — checks generated and calibrated to the learner's earlier in-lesson performance.
+- **Personalized review** — an AI "Practice what you missed" generator, plus an on-demand practice generator.
+- **Personalized lesson recaps** — tailored end-of-lesson summaries.
+- **Misconception detection** — recurring conceptual errors are identified and logged.
+- **Spaced-repetition scheduler** — surfaces learned concepts for timed review.
+- **Adaptive recommender** — the "recommended next step" tuned to the learner.
+- **Persistent learner memory** — a single profile that powers every feature above.
+- **AI challenge questions** — fresh, generated items mixed into Heat Check.
+- **AI Lab** — an exploratory sandbox with a conversational AI guide and open-ended challenges, scoped to the course.
+- **AI-personalized daily quests** — performance-aware quests grounded in learning-science principles, with calibrated XP/coin rewards.
+- **Accessibility rephrasing & feedback capture** — on-demand simpler rephrasing of tutor responses, plus thumbs feedback.
+- **Persistent avatar companion** — an animated, cosmetic-aware companion (also used in loading states).
 
 These features are **off by default** and the app behaves exactly as before when
 they are disabled — every AI call degrades gracefully to the existing static

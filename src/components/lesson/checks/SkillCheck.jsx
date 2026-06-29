@@ -3,6 +3,7 @@ import { getFreeResponseBank } from '../../../data/chemistryCourse.js';
 import { useEconomy } from '../../../context/EconomyContext.jsx';
 import { useDailyQuests } from '../../../context/DailyQuestsContext.jsx';
 import { useProgress } from '../../../context/ProgressContext.jsx';
+import { useRewardToast } from '../../../context/RewardToastContext.jsx';
 import { useLearnerMemory } from '../../../ai/useLearnerMemory.js';
 import { classifyMisconception } from '../../../ai/misconception.js';
 import { aiEnabled } from '../../../firebase/ai.js';
@@ -29,6 +30,7 @@ export default function SkillCheck({ slide, onResult, savedState, onSaveState, l
   const { grant } = useEconomy();
   const { report: reportQuest } = useDailyQuests();
   const { recordCheckResult } = useProgress();
+  const { pushReward } = useRewardToast();
   const { recordReview, recordMisconception } = useLearnerMemory();
   const bank = useMemo(
     () => getFreeResponseBank(slide.lessonId).slice(0, MAX_FR),
@@ -66,7 +68,16 @@ export default function SkillCheck({ slide, onResult, savedState, onSaveState, l
       : (score ?? 0) >= 0.4
         ? REWARDS.freeResponse.partial
         : REWARDS.freeResponse.attempt;
-    grant({ key: `fr:${questionId}`, xp: tier.xp, coins: tier.coins });
+    const res = grant({ key: `fr:${questionId}`, xp: tier.xp, coins: tier.coins });
+    // Frame a correct free-response by the behavior (self-explanation), not coins.
+    if (res.granted && correct) {
+      pushReward({
+        amount: res.xp,
+        coins: res.coins,
+        behavior: 'Explained it yourself',
+        icon: '\u{1F4A1}',
+      });
+    }
     // Daily quest: "transfer" — effortful, explain-it-yourself recall.
     reportQuest('transfer', 1);
 
@@ -143,6 +154,7 @@ export default function SkillCheck({ slide, onResult, savedState, onSaveState, l
               question={q}
               slideContext={slideContext}
               tutorAssist
+              lessonSlides={lessonSlides}
               onResult={() => {}}
               onGraded={handleGraded}
               savedState={frState[q.id]}

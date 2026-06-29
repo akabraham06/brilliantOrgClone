@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { aiEnabled } from '../../../firebase/ai.js';
 import { gradeFreeResponse } from '../../../ai/gradeFreeResponse.js';
 import { useTutor } from '../../../context/TutorContext.jsx';
+import { buildCourseContext } from '../../../ai/courseContext.js';
 import checkStyles from './Check.module.css';
 import styles from './FreeResponseCheck.module.css';
 
@@ -39,11 +40,19 @@ export default function FreeResponseCheck({
   autoFocus = false,
   tutorAssist = false,
   helpAfterAttempts = DEFAULT_HELP_AFTER,
+  lessonSlides,
 }) {
   const q = question || slide?.checkConfig || {};
   const questionId = q.id || slide?.slideId || 'fr';
   const rubric = q.rubric || '';
   const context = slideContext || slide?.bodyText || '';
+
+  // Compact lesson analogy/exercise summary for the anchored explanation to
+  // ground itself in (only built when this surface uses the tutor assist).
+  const courseContext = useMemo(
+    () => (tutorAssist ? buildCourseContext({ lessonSlides, currentSlide: slide }) : ''),
+    [tutorAssist, lessonSlides, slide],
+  );
 
   const [answer, setAnswer] = useState(savedState?.answer || '');
   const [status, setStatus] = useState(savedState?.status || 'idle'); // idle|grading|graded|selfcheck
@@ -130,6 +139,7 @@ export default function FreeResponseCheck({
         correct: rubric,
         isCorrect: result.correct,
         reveal: result.feedback,
+        courseContext,
       },
     });
     reportCheckOutcome(tutorKey, result.correct, {

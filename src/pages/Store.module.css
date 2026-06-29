@@ -3,7 +3,7 @@
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .header {
@@ -14,11 +14,31 @@
   flex-wrap: wrap;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 .title {
   font-size: clamp(1.4rem, 4.5vw, var(--text-2xl));
   font-weight: 800;
   margin: 0;
   color: var(--color-text);
+}
+
+.seasonBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--season-accent, var(--accent-purple));
+  background: color-mix(in srgb, var(--season-accent, var(--accent-purple)) 14%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--season-accent, var(--accent-purple)) 45%, var(--color-border));
 }
 
 .subtitle {
@@ -54,11 +74,135 @@
   color: var(--color-text-subtle);
 }
 
+/* ── Featured today ───────────────────────────────────────────────────────── */
+.featured {
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(160deg, var(--color-surface), color-mix(in srgb, var(--accent-orange, #f0a23b) 10%, var(--color-surface)));
+  border: 1px solid color-mix(in srgb, var(--accent-orange, #f0a23b) 35%, var(--color-border));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.featuredHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.featuredEyebrow {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-orange, #f0a23b);
+}
+
+.featuredBlurb {
+  margin: 2px 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.featuredCountdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  white-space: nowrap;
+}
+
+.featuredGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(144px, 1fr));
+  gap: var(--space-3);
+}
+
+.featuredTag {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: var(--radius-pill);
+  color: var(--color-primary-text, #fff);
+  background: var(--accent-orange, #f0a23b);
+}
+
+.priceWas {
+  text-decoration: line-through;
+  opacity: 0.6;
+  font-weight: 600;
+}
+
+/* ── Mastery exclusives ───────────────────────────────────────────────────── */
+.exclusives {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.exclusivesHead {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exclusivesGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.exclusiveCard {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--rarity-color, #f0a23b) 45%, var(--color-border));
+  background: var(--color-surface);
+  overflow: hidden;
+}
+
+.exclusiveLocked {
+  opacity: 0.82;
+}
+.exclusiveLocked .cardPreview {
+  filter: grayscale(0.55);
+}
+
+.exclusiveLockIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.6rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+
+.exclusiveUnlock {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.35;
+}
+
 /* ── Layout ───────────────────────────────────────────────────────────────── */
 .layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: var(--space-5);
+  grid-template-columns: 260px 1fr;
+  gap: var(--space-4);
   align-items: start;
 }
 
@@ -182,7 +326,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .filterBtn {
@@ -209,8 +353,8 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-3);
 }
 
 .card {

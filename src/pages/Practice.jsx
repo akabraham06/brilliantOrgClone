@@ -3,6 +3,10 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { aiEnabled } from '../firebase/ai.js';
 import { useContent } from '../context/ContentContext.jsx';
 import { useDailyQuests } from '../context/DailyQuestsContext.jsx';
+import { useEconomy } from '../context/EconomyContext.jsx';
+import { useProgress } from '../context/ProgressContext.jsx';
+import { useRewardToast } from '../context/RewardToastContext.jsx';
+import { streakReward, economyDayKey } from '../data/economy.js';
 import { useLearnerProfile } from '../ai/useLearnerProfile.js';
 import { useLearnerMemory } from '../ai/useLearnerMemory.js';
 import { generatePracticeSet } from '../ai/practiceGenerator.js';
@@ -27,6 +31,9 @@ function PracticeInner() {
   const [params] = useSearchParams();
   const { lessons } = useContent();
   const { report: reportQuest } = useDailyQuests();
+  const { grant, grantCosmetic } = useEconomy();
+  const { markDailyActive } = useProgress();
+  const { pushReward } = useRewardToast();
   const profile = useLearnerProfile();
   const { memory, recordReview, recordMisconception } = useLearnerMemory();
 
@@ -130,7 +137,32 @@ function PracticeInner() {
     const topics = new Set(items.map((i) => i.topic).filter(Boolean));
     if (dueMode) reportQuest('spaced', Math.max(1, topics.size || items.length));
     if (topics.size >= 2) reportQuest('interleave', 1);
-  }, [phase, score, items, dueMode, reportQuest]);
+    // Streak / consistency reward: a completed practice session counts as daily
+    // activity. Grant the tiny capped streak reward once per new active day.
+    const { streakCount, isNewDay } = markDailyActive();
+    if (isNewDay) {
+      const sr = streakReward(streakCount);
+      const streakRes = grant({ key: `streak:${economyDayKey()}`, xp: sr.xp, coins: sr.coins });
+      if (streakRes.granted) {
+        pushReward({
+          amount: streakRes.xp,
+          coins: streakRes.coins,
+          behavior: `Day ${streakCount} streak`,
+          icon: '\u{1F525}',
+        });
+      }
+      // Mastery exclusive: "devoted" at a 14-day streak.
+      if (streakCount >= 14) {
+        const ex = grantCosmetic('devoted', 'cosmetic:devoted');
+        if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+      }
+      // Mastery exclusive: "iron-will" at a 30-day streak.
+      if (streakCount >= 30) {
+        const ex = grantCosmetic('iron-will', 'cosmetic:iron-will');
+        if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+      }
+    }
+  }, [phase, score, items, dueMode, reportQuest, grant, grantCosmetic, markDailyActive, pushReward]);
 
   function goNext() {
     if (index < total - 1) setIndex((i) => i + 1);
@@ -188,7 +220,7 @@ function PracticeInner() {
           ) : (
             <>
               <p>
-                AI practice generation is off in this deployment. You can still practice
+                Personalized practice generation is off in this deployment. You can still practice
                 with the course&rsquo;s built-in review set.
               </p>
               {lessons[0]?.courseId && (
@@ -226,7 +258,7 @@ function SetupForm({ topic, setTopic, count, setCount, onStart, dueTopics, onSta
     <div className={styles.setup}>
       {!aiEnabled && (
         <p className={styles.aiOff} role="note">
-          AI is off, so generated practice isn&rsquo;t available — try the course review instead.
+          Generated practice isn&rsquo;t available right now — try the course review instead.
         </p>
       )}
       {dueTopics.length > 0 && (

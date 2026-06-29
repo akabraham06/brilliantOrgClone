@@ -5,9 +5,10 @@ import { useProgress } from '../context/ProgressContext.jsx';
 import { useTutor } from '../context/TutorContext.jsx';
 import { useEconomy } from '../context/EconomyContext.jsx';
 import { useDailyQuests } from '../context/DailyQuestsContext.jsx';
+import { useRewardToast } from '../context/RewardToastContext.jsx';
 import { fetchLessonSlides } from '../firebase/content.js';
 import { getLessonAccuracy } from '../data/progress.js';
-import { REWARDS } from '../data/economy.js';
+import { REWARDS, streakReward, economyDayKey } from '../data/economy.js';
 import { useLearnerMemory } from '../ai/useLearnerMemory.js';
 import ContentGate from '../components/ContentGate.jsx';
 import SlideRenderer from '../components/lesson/SlideRenderer.jsx';
@@ -33,13 +34,17 @@ function LessonPlayerInner() {
     recordSlideComplete,
     recordCheckResult,
     completeLesson,
+    markDailyActive,
     getResumeIndex,
   } = useProgress();
   const { setGroundingSlide } = useTutor();
   const { report: reportQuest } = useDailyQuests();
+  const { pushReward } = useRewardToast();
   const { seedReviewTopics } = useLearnerMemory();
   const {
     grant,
+    grantCosmetic,
+    hasGranted,
     loading: economyLoading,
     xp: economyXp,
     coins: economyCoins,
@@ -50,6 +55,9 @@ function LessonPlayerInner() {
   // exactly what was earned during this run (checks + free-response + bonuses).
   const startStatsRef = useRef(null);
   const [confirmQuit, setConfirmQuit] = useState(false);
+  // Whether the just-finished lesson earned the no-hint "clean run" bonus, so
+  // the completion screen can show the Flawless badge.
+  const [cleanRun, setCleanRun] = useState(false);
 
   const lesson = useMemo(
     () => lessons.find((l) => l.lessonId === lessonId),
@@ -170,15 +178,24 @@ function LessonPlayerInner() {
           const reward = current.checkConfig?.lowStakes
             ? REWARDS.lowStakes
             : REWARDS.check.correct;
-          grant({
+          const res = grant({
             key: `check:${current.slideId}`,
             xp: reward.xp,
             coins: reward.coins,
           });
+          // Frame the reward by the learning behavior (retrieval), not the coins.
+          if (res.granted) {
+            pushReward({
+              amount: res.xp,
+              coins: res.coins,
+              behavior: 'Recalled from memory',
+              icon: '\u{1F9E0}',
+            });
+          }
         }
       }
     },
-    [current, lessonId, recordCheckResult, grant],
+    [current, lessonId, recordCheckResult, grant, pushReward],
   );
 
   const registerNextIntercept = useCallback((fn) => {
@@ -230,6 +247,7 @@ function LessonPlayerInner() {
         slideCount={slides.length}
         streakCount={progress.streakCount || 0}
         startStats={startStatsRef.current}
+        cleanRun={cleanRun}
       />
     );
   }
@@ -256,9 +274,82 @@ function LessonPlayerInner() {
     if (nextInterceptRef.current && nextInterceptRef.current()) return;
     nextInterceptRef.current = null;
     if (isLast) {
+      // Count today's activity BEFORE completeLesson (which also marks the day,
+      // idempotently) so we capture isNewDay and grant the streak reward once.
+      const daily = markDailyActive();
       completeLesson(lessonId);
-      // Lesson-completion reward (idempotent per lesson).
-      grant({ key: `lesson:${lessonId}`, xp: REWARDS.lesson.xp, coins: REWARDS.lesson.coins });
+      // Lesson-completion base reward (idempotent per lesson).
+      grant({
+        key: `lesson:${lessonId}`,
+        xp: REWARDS.lesson.base.xp,
+        coins: REWARDS.lesson.base.coins,
+      });
+      // No-hint "clean run" bonus: zero hints used AND every graded, non-low-stakes
+      // check first-attempt-correct. Reuses the recorded check-results + hint count
+      // (see ProgressContext). Granting the bonus keeps a clean run at the full
+      // 80 XP / 25 coins per lesson; a non-clean finish earns only the base.
+      const lp = progress.lessons?.[lessonId] || {};
+      const gradedChecks = slides.filter((s) => s.isCheck && !s.checkConfig?.lowStakes);
+      const checkResults = lp.checkResults || {};
+      const allFirstTry =
+        gradedChecks.length > 0 &&
+        gradedChecks.every((s) => checkResults[s.slideId]?.firstAttemptCorrect);
+      const isClean = (lp.hintsUsed || 0) === 0 && allFirstTry;
+      setCleanRun(isClean);
+      if (isClean) {
+        const cleanRes = grant({
+          key: `cleanrun:${lessonId}`,
+          xp: REWARDS.lesson.cleanRunBonus.xp,
+          coins: REWARDS.lesson.cleanRunBonus.coins,
+        });
+        if (cleanRes.granted) {
+          pushReward({
+            amount: cleanRes.xp,
+            coins: cleanRes.coins,
+            behavior: 'Flawless, no-hint run',
+            icon: '\u26A1',
+          });
+        }
+        // Mastery exclusive: "flawless-scholar" once EVERY lesson has a clean run.
+        const allClean = lessons.every((l) =>
+          l.lessonId === lessonId ? true : hasGranted(`cleanrun:${l.lessonId}`),
+        );
+        if (allClean) {
+          const ex = grantCosmetic('flawless-scholar', 'cosmetic:flawless-scholar');
+          if (ex.granted) {
+            pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+          }
+        }
+      }
+      // Streak / consistency reward: on a genuinely new active day grant the
+      // tiny capped streak reward (idempotent per day via the streak:<day> key).
+      const { streakCount, isNewDay } = daily;
+      if (isNewDay) {
+        const sr = streakReward(streakCount);
+        const streakRes = grant({ key: `streak:${economyDayKey()}`, xp: sr.xp, coins: sr.coins });
+        if (streakRes.granted) {
+          pushReward({
+            amount: streakRes.xp,
+            coins: streakRes.coins,
+            behavior: `Day ${streakCount} streak`,
+            icon: '\u{1F525}',
+          });
+        }
+        // Mastery exclusive: "devoted" at a 14-day streak.
+        if (streakCount >= 14) {
+          const ex = grantCosmetic('devoted', 'cosmetic:devoted');
+          if (ex.granted) {
+            pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+          }
+        }
+        // Mastery exclusive: "iron-will" at a 30-day streak.
+        if (streakCount >= 30) {
+          const ex = grantCosmetic('iron-will', 'cosmetic:iron-will');
+          if (ex.granted) {
+            pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+          }
+        }
+      }
       // Seed spaced-repetition cards for every concept this lesson taught, so the
       // existing scheduler actually tracks learned material (not just mistakes).
       // Idempotent: seedCards skips topics already tracked.
@@ -276,6 +367,11 @@ function LessonPlayerInner() {
       completedSet.add(lessonId);
       if (lessons.length > 0 && lessons.every((l) => completedSet.has(l.lessonId))) {
         grant({ key: `course:${courseId}`, xp: REWARDS.course.xp, coins: REWARDS.course.coins });
+        // Mastery exclusive: "course-master" for reaching 100% completion.
+        const ex = grantCosmetic('course-master', 'cosmetic:course-master');
+        if (ex.granted) {
+          pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+        }
       }
       setCompleted(true);
     } else {

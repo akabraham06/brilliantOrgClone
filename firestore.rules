@@ -87,5 +87,30 @@ service cloud.firestore {
       allow read, update, delete: if signedIn() && resource.data.uid == request.auth.uid;
       allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
     }
+
+    // Light shape check for a Heat Check leaderboard score doc: a non-negative
+    // numeric bestXp and a sane-length displayName. Owner-only WRITE (your own
+    // uid) is the real guard; reads are open to any signed-in learner so the
+    // global ladder can be displayed.
+    function heatScoreValid(uid) {
+      return request.auth.uid == uid
+        && request.resource.data.bestXp is number
+        && request.resource.data.bestXp >= 0
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 80;
+    }
+
+    // All-time (Section B): one lifetime-best doc per player, keyed by uid.
+    match /heatLeaderboard/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && heatScoreValid(uid);
+    }
+
+    // Weekly (Section A): each ISO week is its own `scores` subcollection so it
+    // resets automatically. Same open-read / owner-only-write guard.
+    match /heatWeekly/{weekKey}/scores/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && heatScoreValid(uid);
+    }
   }
 }

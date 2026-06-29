@@ -70,7 +70,6 @@ export default function NextStepCard({ className = '' }) {
     <section className={`${styles.card} ${className}`} aria-label="Recommended next step">
       <div className={styles.head}>
         <span className={styles.eyebrow}>{KIND_LABEL[recommendation.kind] || 'Up next'}</span>
-        {aiEnabled && <span className={styles.aiTag}>AI</span>}
       </div>
       <h2 className={styles.title}>{recommendation.title}</h2>
       <p className={styles.reason}>{rationale || recommendation.reason}</p>

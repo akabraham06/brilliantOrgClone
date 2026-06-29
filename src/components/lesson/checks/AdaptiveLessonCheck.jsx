@@ -97,6 +97,7 @@ export default function AdaptiveLessonCheck({
         savedState={savedState?.inner}
         onSaveState={onSaveState}
         helpAfterAttempts={helpAfterAttempts}
+        lessonSlides={lessonSlides}
       />
     );
   }
@@ -122,7 +123,7 @@ export default function AdaptiveLessonCheck({
       <div className={styles.bar}>
         <span className={styles.badge}>
           <span className={styles.spark} aria-hidden="true">&#10022;</span>
-          Adaptive &middot; AI
+          Adaptive
         </span>
         <button
           type="button"
@@ -140,6 +141,7 @@ export default function AdaptiveLessonCheck({
         savedState={savedState?.inner}
         onSaveState={handleInnerSave}
         helpAfterAttempts={helpAfterAttempts}
+        lessonSlides={lessonSlides}
       />
     </div>
   );

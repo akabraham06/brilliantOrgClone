@@ -33,7 +33,7 @@
  *  REWARD CALIBRATION — why daily quests can't inflate the economy
  * ────────────────────────────────────────────────────────────────────────────
  *  Anchored to economy.js. A PERFECT, one-time full-course run yields ≈2,356 XP
- *  (~level 10) and ≈1,024 coins; the full 50-item store costs 14,100 coins, and
+ *  (~level 10) and ≈1,024 coins; the full store costs 40,250 coins, and
  *  the rare/epic/legendary tiers are intentionally gated behind day-capped Heat
  *  Check farming so the collection is a multi-session grind well beyond the ~5h
  *  course. A NEW recurring income stream (daily quests) is the biggest inflation
@@ -44,7 +44,7 @@
  *     80 XP / 12 coins regardless of how many quests are finished — the 3–4 daily
  *     quests sum to ~85–100 XP / ~13–16 coins, so the cap clips the top via
  *     diminishing returns (later claims award only the remaining headroom).
- *   • 12 coins/day ≈ 360/month — about 6 commons (60 each), trivial vs 14,100,
+ *   • 12 coins/day ≈ 360/month — about 2 commons (150 each), trivial vs 40,250,
  *     and far below a single Heat Check run (~150–250 coins). It rewards the
  *     HABIT of durable-learning practice without letting anyone skip the intended
  *     cosmetic-unlock cadence.

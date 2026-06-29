@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Formula from '../../interactions/Formula.jsx';
 import { aiEnabled } from '../../../firebase/ai.js';
 import { useTutor } from '../../../context/TutorContext.jsx';
+import { buildCourseContext } from '../../../ai/courseContext.js';
 import AdaptiveFeedback from '../../tutor/AdaptiveFeedback.jsx';
 import styles from './Check.module.css';
 
@@ -24,12 +25,20 @@ export default function MultipleChoiceCheck({
   savedState,
   onSaveState,
   helpAfterAttempts,
+  lessonSlides,
 }) {
   const cfg = slide.checkConfig || {};
   const questions = cfg.questions || [];
   const [answers, setAnswers] = useState(savedState?.answers || {});
   const [submitted, setSubmitted] = useState(savedState?.submitted || false);
   const { reportCheckOutcome, resetProactive, explainAtAnchor } = useTutor();
+
+  // Compact summary of the lesson's analogies/exercises so the anchored
+  // explanation can tie back to the same metaphors the learner just saw.
+  const courseContext = useMemo(
+    () => buildCourseContext({ lessonSlides, currentSlide: slide }),
+    [lessonSlides, slide],
+  );
 
   // DOM nodes of every option button, so the tutor can fly to the chosen one.
   const optionRefs = useRef({});
@@ -99,6 +108,7 @@ export default function MultipleChoiceCheck({
           selected: sel,
           correct: anchorQ.answer,
           isCorrect: allCorrect,
+          courseContext,
         },
       });
     }

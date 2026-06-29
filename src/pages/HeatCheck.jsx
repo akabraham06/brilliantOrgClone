@@ -1,15 +1,32 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEconomy } from '../context/EconomyContext.jsx';
+import { useProgress } from '../context/ProgressContext.jsx';
 import { useDailyQuests } from '../context/DailyQuestsContext.jsx';
-import { HEAT_CHECK } from '../data/economy.js';
+import { useRewardToast } from '../context/RewardToastContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
+import {
+  HEAT_CHECK,
+  streakReward,
+  economyDayKey,
+  heatRankBonus,
+  heatWeeklySettlement,
+} from '../data/economy.js';
+import { MASTERY_COSMETICS } from '../data/storeRotation.js';
 import { buildHeatQueue } from '../data/heatCheck.js';
+import {
+  submitHeatScore,
+  fetchUserRanks,
+  fetchWeeklyTop,
+  currentWeekKey,
+} from '../firebase/leaderboard.js';
 import { generateChallengeQuestions } from '../ai/challengeQuestions.js';
 import { aiEnabled } from '../firebase/ai.js';
 import { getInteractionComponent } from '../components/lesson/interactionRegistry.js';
 import InteractionFallback from '../components/lesson/InteractionFallback.jsx';
 import Formula from '../components/interactions/Formula.jsx';
 import CoinIcon from '../components/economy/CoinIcon.jsx';
+import Leaderboard from '../components/heatcheck/Leaderboard.jsx';
 import { usePrefersReducedMotion } from '../components/interactions/lib/motion.js';
 import { useSupportsWebGL } from '../components/interactions/lib/webgl.js';
 import styles from './HeatCheck.module.css';
@@ -47,8 +64,20 @@ function speedBonus(elapsedMs) {
 }
 
 export default function HeatCheck() {
-  const { recordHeatRun, coinRunsLeft, dailyCoinRunLimit, level } = useEconomy();
+  const {
+    recordHeatRun,
+    recordHeatBonus,
+    grant,
+    grantCosmetic,
+    coinRunsLeft,
+    dailyCoinRunLimit,
+    level,
+    loading: economyLoading,
+  } = useEconomy();
+  const { markDailyActive } = useProgress();
   const { report: reportQuest } = useDailyQuests();
+  const { pushReward } = useRewardToast();
+  const { user } = useAuth();
   const reduce = usePrefersReducedMotion();
 
   const [status, setStatus] = useState('intro'); // intro | loading | playing | ended
@@ -60,6 +89,10 @@ export default function HeatCheck() {
   const [correctCount, setCorrectCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState(HEAT_CHECK.durationMs);
   const [result, setResult] = useState(null);
+  // Bumped after a score submits so the Leaderboard panel re-fetches; holds the
+  // player's current weekly rank for the intro badge.
+  const [leaderboardToken, setLeaderboardToken] = useState(0);
+  const [myWeeklyRank, setMyWeeklyRank] = useState(null);
 
   // Refs mirror the live values so timers/handlers read fresh data.
   const comboRef = useRef(1);
@@ -82,6 +115,97 @@ export default function HeatCheck() {
 
   useEffect(() => () => clearTimers(), [clearTimers]);
 
+  // Best-effort current weekly rank for the intro badge. Re-runs after a score
+  // submits (leaderboardToken). No-ops gracefully when signed out / Firebase off.
+  useEffect(() => {
+    const uid = user?.uid;
+    if (!uid) {
+      setMyWeeklyRank(null);
+      return undefined;
+    }
+    let active = true;
+    fetchUserRanks(uid).then((r) => {
+      if (active) setMyWeeklyRank(r?.weeklyRank ?? null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user, leaderboardToken]);
+
+  // Weekly placement settlement: when the player opens Heat Check in a NEW week,
+  // compute their FINAL rank in the PREVIOUS week and pay a small, idempotent
+  // top-placement reward (keyed heatweekly:<weekKey> so it can't be re-claimed).
+  // Gated on economy being hydrated so grantedKeys is loaded before we grant.
+  useEffect(() => {
+    const uid = user?.uid;
+    if (!uid || economyLoading) return undefined;
+    let active = true;
+    (async () => {
+      const prevWeekKey = currentWeekKey(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+      const top = await fetchWeeklyTop(prevWeekKey, 50);
+      if (!active) return;
+      const mine = top.find((row) => row.uid === uid);
+      if (!mine) return;
+      // Mastery exclusive: "heat-champion" for finishing #1 on the WEEKLY ladder.
+      if (mine.rank === 1) {
+        const ex = grantCosmetic('heat-champion', 'cosmetic:heat-champion');
+        if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+      }
+      const settlement = heatWeeklySettlement(mine.rank);
+      if (!settlement) return;
+      const res = grant({ key: `heatweekly:${prevWeekKey}`, xp: settlement.xp, coins: settlement.coins });
+      if (res.granted) {
+        pushReward({
+          amount: res.xp,
+          coins: res.coins,
+          behavior: settlement.label,
+          icon: '\u{1F3C6}',
+        });
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user, economyLoading, grant, grantCosmetic, pushReward]);
+
+  // Submits the finished run to both ladders, then awards the small relative-
+  // performance bonus by weekly percentile (coin half gated by the run's daily
+  // cap) and records the new weekly rank for the results screen. Best-effort:
+  // returns silently when signed out or Firebase is unavailable.
+  const submitAndRank = useCallback(
+    async ({ xp, coinsBlocked }) => {
+      const uid = user?.uid;
+      if (!uid || xp <= 0) return;
+      const displayName = user?.displayName || 'Learner';
+      const photoURL = user?.photoURL || '';
+      // Rank as it stands BEFORE this run is recorded, to frame "up N".
+      const before = await fetchUserRanks(uid);
+      await submitHeatScore({ uid, displayName, photoURL, xp });
+      const after = await fetchUserRanks(uid);
+      setLeaderboardToken((t) => t + 1);
+      if (!after) return;
+      const weeklyRank = after.weeklyRank;
+      const prevRank = before?.weeklyRank ?? null;
+      const delta = prevRank && weeklyRank ? prevRank - weeklyRank : null;
+      const bonus = heatRankBonus(weeklyRank, after.weeklyTotal);
+      let relBonus = null;
+      if (bonus.xp > 0 || bonus.coins > 0) {
+        const relCoins = coinsBlocked ? 0 : bonus.coins;
+        relBonus = recordHeatBonus({ xp: bonus.xp, coins: relCoins });
+        pushReward({
+          amount: relBonus.xp,
+          coins: relBonus.coins,
+          behavior: bonus.label,
+          icon: '\u{1F4C8}',
+        });
+      }
+      setResult((cur) =>
+        cur ? { ...cur, weeklyRank, weeklyDelta: delta, rankLabel: bonus.label } : cur,
+      );
+    },
+    [user, recordHeatBonus, pushReward],
+  );
+
   const endRun = useCallback(
     (reason) => {
       clearTimers();
@@ -90,10 +214,48 @@ export default function HeatCheck() {
       const award = recordHeatRun({ xp, baseCoins });
       // Daily quest: "retrieval" — every correct answer is timed active recall.
       if (correctRef.current > 0) reportQuest('retrieval', correctRef.current);
+      // Streak / consistency reward: a Heat Check run counts as daily activity.
+      const { streakCount, isNewDay } = markDailyActive();
+      if (isNewDay) {
+        const sr = streakReward(streakCount);
+        const streakRes = grant({ key: `streak:${economyDayKey()}`, xp: sr.xp, coins: sr.coins });
+        if (streakRes.granted) {
+          pushReward({
+            amount: streakRes.xp,
+            coins: streakRes.coins,
+            behavior: `Day ${streakCount} streak`,
+            icon: '\u{1F525}',
+          });
+        }
+        // Mastery exclusive: "devoted" at a 14-day streak.
+        if (streakCount >= 14) {
+          const ex = grantCosmetic('devoted', 'cosmetic:devoted');
+          if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+        }
+        // Mastery exclusive: "iron-will" at a 30-day streak.
+        if (streakCount >= 30) {
+          const ex = grantCosmetic('iron-will', 'cosmetic:iron-will');
+          if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+        }
+      }
+      // Mastery exclusive: "heat-legend" earned by maxing the heat multiplier.
+      const heatLegend = MASTERY_COSMETICS.find((c) => c.id === 'heat-legend');
+      if (heatLegend && maxComboRef.current >= HEAT_CHECK.comboMax) {
+        const ex = grantCosmetic(heatLegend.id, `cosmetic:${heatLegend.id}`);
+        if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+      }
+      // Mastery exclusive: "inferno-run" for a single run worth >= 350 XP.
+      if (xp >= 350) {
+        const ex = grantCosmetic('inferno-run', 'cosmetic:inferno-run');
+        if (ex.granted) pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+      }
       setResult({ reason, xp, correct: correctRef.current, maxCombo: maxComboRef.current, award });
       setStatus('ended');
+
+      // Global leaderboard submit + relative-performance bonus (async, best-effort).
+      void submitAndRank({ xp, coinsBlocked: award.coinsBlocked });
     },
-    [clearTimers, recordHeatRun, reportQuest],
+    [clearTimers, recordHeatRun, grant, grantCosmetic, markDailyActive, pushReward, reportQuest, submitAndRank],
   );
 
   const startRun = useCallback(async () => {
@@ -196,12 +358,23 @@ export default function HeatCheck() {
         level={level}
         onStart={startRun}
         reduce={reduce}
+        uid={user?.uid || null}
+        weeklyRank={myWeeklyRank}
+        leaderboardToken={leaderboardToken}
       />
     );
   }
 
   if (status === 'ended' && result) {
-    return <HeatResults result={result} onAgain={startRun} coinRunsLeft={coinRunsLeft} />;
+    return (
+      <HeatResults
+        result={result}
+        onAgain={startRun}
+        coinRunsLeft={coinRunsLeft}
+        uid={user?.uid || null}
+        leaderboardToken={leaderboardToken}
+      />
+    );
   }
 
   const timePct = (timeLeft / HEAT_CHECK.durationMs) * 100;
@@ -384,7 +557,7 @@ function HeatMeter({ combo, pct, reduce, correctCount }) {
   );
 }
 
-function HeatIntro({ loading, coinRunsLeft, dailyLimit, level, onStart, reduce }) {
+function HeatIntro({ loading, coinRunsLeft, dailyLimit, level, onStart, reduce, uid, weeklyRank, leaderboardToken }) {
   const noCoins = coinRunsLeft <= 0;
   const webgl = useSupportsWebGL();
   const introFallback = <div className={styles.introGlow} aria-hidden="true" />;
@@ -405,6 +578,12 @@ function HeatIntro({ loading, coinRunsLeft, dailyLimit, level, onStart, reduce }
       <div className={`${styles.introCard} ${reduce ? '' : styles.introCardLive}`}>
         <div className={styles.introFlame} aria-hidden="true">&#128293;</div>
         <h1 className={styles.introTitle}>Heat Check</h1>
+        {Number(weeklyRank) > 0 && (
+          <div className={styles.rankBadge}>
+            <span aria-hidden="true">&#127942;</span>
+            You&apos;re <strong>#{weeklyRank}</strong> this week
+          </div>
+        )}
         <p className={styles.introSub}>
           A 5-minute speed gauntlet. Answer fast, build your heat multiplier, and
           earn the <strong>highest XP &amp; coin rate</strong> in the app. One wrong
@@ -414,7 +593,7 @@ function HeatIntro({ loading, coinRunsLeft, dailyLimit, level, onStart, reduce }
         <ul className={styles.introList}>
           <li><span aria-hidden="true">&#9889;</span> Faster answers + longer streaks = more XP</li>
           <li><span aria-hidden="true">&#10060;</span> First wrong answer stops the run</li>
-          <li><span aria-hidden="true">&#10024;</span> {aiEnabled ? 'AI challenge questions worth bonus XP' : 'Curated challenge questions in the mix'}</li>
+          <li><span aria-hidden="true">&#10024;</span> {aiEnabled ? 'Challenge questions worth bonus XP' : 'Curated challenge questions in the mix'}</li>
         </ul>
 
         <div className={styles.runsBadge} data-empty={noCoins}>
@@ -433,17 +612,29 @@ function HeatIntro({ loading, coinRunsLeft, dailyLimit, level, onStart, reduce }
         </button>
         <p className={styles.introFoot}>Level {level} &middot; coin runs scale up as you level</p>
         <Link to="/app/home" className={styles.introBack}>Back to home</Link>
+
+        <div className={styles.leaderboardWrap}>
+          <Leaderboard uid={uid} refreshToken={leaderboardToken} />
+        </div>
       </div>
     </div>
   );
 }
 
-function HeatResults({ result, onAgain, coinRunsLeft }) {
-  const { reason, correct, maxCombo, award } = result;
+function HeatResults({ result, onAgain, coinRunsLeft, uid, leaderboardToken }) {
+  const { reason, correct, maxCombo, award, weeklyRank, weeklyDelta } = result;
   let headline = 'Run complete!';
   if (reason === 'wrong') headline = 'Streak broken!';
   else if (reason === 'time') headline = "Time's up!";
   else if (reason === 'cleared') headline = 'You cleared the gauntlet!';
+
+  let rankLine = null;
+  if (Number(weeklyRank) > 0) {
+    let move = '';
+    if (Number(weeklyDelta) > 0) move = ` \u2014 up ${weeklyDelta}`;
+    else if (Number(weeklyDelta) < 0) move = ` \u2014 down ${Math.abs(weeklyDelta)}`;
+    rankLine = `You're #${weeklyRank} this week${move}`;
+  }
 
   return (
     <div className={styles.intro}>
@@ -473,6 +664,11 @@ function HeatResults({ result, onAgain, coinRunsLeft }) {
           </div>
         </div>
 
+        {rankLine && (
+          <p className={styles.rankLine}>
+            <span aria-hidden="true">&#127942;</span> {rankLine}
+          </p>
+        )}
         {award.leveledUp && (
           <p className={styles.levelUp}>&#11088; Level up! You reached level {award.toLevel}.</p>
         )}
@@ -490,6 +686,10 @@ function HeatResults({ result, onAgain, coinRunsLeft }) {
             Run it again
           </button>
           <Link to="/app/store" className={styles.introBack}>Spend coins in the Store &rarr;</Link>
+        </div>
+
+        <div className={styles.leaderboardWrap}>
+          <Leaderboard uid={uid} refreshToken={leaderboardToken} />
         </div>
       </div>
     </div>

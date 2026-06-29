@@ -520,6 +520,39 @@
   color: rgba(244, 246, 250, 0.5);
 }
 
+/* Small weekly-rank badge on the intro card. */
+.rankBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 auto var(--space-2);
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(247, 201, 72, 0.14);
+  border: 1px solid rgba(247, 201, 72, 0.4);
+  color: #ffce6b;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.rankBadge strong { font-weight: 800; }
+
+/* "You're #12 this week — up 3" line on the results card. */
+.rankLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  justify-content: center;
+  margin: 0 0 var(--space-2);
+  font-weight: 700;
+  color: #ffce6b;
+}
+
+/* Wraps the Leaderboard panel embedded in the (scrollable) intro/results card. */
+.leaderboardWrap {
+  margin-top: var(--space-5);
+  text-align: left;
+}
+
 .introBack {
   display: inline-block;
   margin-top: var(--space-3);

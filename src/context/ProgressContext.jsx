@@ -56,6 +56,11 @@ export function ProgressProvider({ children }) {
   const hydratedRef = useRef(false);
   const dirtyRef = useRef(false);
   const saveTimer = useRef(null);
+  // Mirror of the latest progress so action helpers can read + return values
+  // synchronously (React state updaters run at render time, not on call), e.g.
+  // markDailyActive must return { streakCount, isNewDay } right away.
+  const progressRef = useRef(progress);
+  progressRef.current = progress;
 
   // Hydrate once user + course are known.
   useEffect(() => {
@@ -133,6 +138,7 @@ export function ProgressProvider({ children }) {
             percent: 0,
             completed: false,
             lastSlideIndex: 0,
+            hintsUsed: 0,
           };
         }
         return {
@@ -223,8 +229,57 @@ export function ProgressProvider({ children }) {
     [mutate],
   );
 
+  // Counts a genuine hint-ladder advance for a lesson (the auto 0→1 hint and
+  // each "Show another hint"). Drives the no-hint "clean run" bonus: a lesson
+  // is only "clean" if it finishes with hintsUsed === 0.
+  const recordHintUsed = useCallback(
+    (lessonId) => {
+      if (!lessonId) return;
+      mutate((prev) => {
+        const lessons = { ...prev.lessons };
+        const lp = {
+          completedSlideIds: [],
+          slideCount: 0,
+          percent: 0,
+          completed: false,
+          lastSlideIndex: 0,
+          hintsUsed: 0,
+          ...(lessons[lessonId] || {}),
+        };
+        lp.hintsUsed = (lp.hintsUsed || 0) + 1;
+        lessons[lessonId] = lp;
+        return { ...prev, lessons };
+      });
+    },
+    [mutate],
+  );
+
+  // Streak bump shared by any daily activity (lesson, Heat Check, Practice).
+  // Returns { streakCount, isNewDay } synchronously so callers can grant a
+  // (capped) streak reward exactly once per new active day. Idempotent within a
+  // tick: it updates progressRef immediately, so repeat calls before the next
+  // render (e.g. completeLesson + an explicit call) see the day already marked.
+  const markDailyActive = useCallback(() => {
+    const today = dayKey();
+    const cur = progressRef.current;
+    const isNewDay = cur.lastActiveDay !== today;
+    const streakCount = isNewDay
+      ? isYesterday(cur.lastActiveDay)
+        ? (cur.streakCount || 0) + 1
+        : 1
+      : cur.streakCount || 0;
+    if (isNewDay) {
+      progressRef.current = { ...cur, streakCount, lastActiveDay: today };
+      mutate((prev) => ({ ...prev, streakCount, lastActiveDay: today }));
+    }
+    return { streakCount, isNewDay };
+  }, [mutate]);
+
   const completeLesson = useCallback(
     (lessonId) => {
+      // Preserve the original behavior: finishing a lesson counts as daily
+      // activity (idempotent per day via markDailyActive).
+      markDailyActive();
       mutate((prev) => {
         const lessons = { ...prev.lessons };
         const lp = { ...(lessons[lessonId] || { completedSlideIds: [] }) };
@@ -236,18 +291,10 @@ export function ProgressProvider({ children }) {
           ? prev.completedLessonIds
           : [...prev.completedLessonIds, lessonId];
 
-        // Streak: bump once per new active day.
-        const today = dayKey();
-        let { streakCount, lastActiveDay } = prev;
-        if (lastActiveDay !== today) {
-          streakCount = isYesterday(lastActiveDay) ? (streakCount || 0) + 1 : 1;
-          lastActiveDay = today;
-        }
-
-        return { ...prev, lessons, completedLessonIds, streakCount, lastActiveDay };
+        return { ...prev, lessons, completedLessonIds };
       });
     },
-    [mutate],
+    [mutate, markDailyActive],
   );
 
   const getResumeIndex = useCallback(
@@ -263,10 +310,12 @@ export function ProgressProvider({ children }) {
       recordSlideViewed,
       recordSlideComplete,
       recordCheckResult,
+      recordHintUsed,
+      markDailyActive,
       completeLesson,
       getResumeIndex,
     }),
-    [progress, loading, startLesson, recordSlideViewed, recordSlideComplete, recordCheckResult, completeLesson, getResumeIndex],
+    [progress, loading, startLesson, recordSlideViewed, recordSlideComplete, recordCheckResult, recordHintUsed, markDailyActive, completeLesson, getResumeIndex],
   );
 
   return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;

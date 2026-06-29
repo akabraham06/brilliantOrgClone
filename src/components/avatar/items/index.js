@@ -123,6 +123,19 @@ export const ITEM_COMPONENTS = {
   'wristband': Wristband,
   'pin-badge': PinBadge,
   'satchel': Satchel,
+  // Mastery-earned exclusives (see data/storeRotation.js MASTERY_COSMETICS).
+  // To avoid authoring new art, each reuses an existing item component.
+  'course-master': GraduationCap,
+  'flawless-scholar': Monocle,
+  'heat-legend': Cape,
+  'devoted': VarsityJacket,
+  // Phase 6 mastery skins (harder, achievement-earned) — distinct premium art.
+  'prodigy': WizardHat,
+  'grandmaster': Crown,
+  'iron-will': MedalNecklace,
+  'heat-champion': StarShades,
+  'inferno-run': FlaskHelmet,
+  'completionist': Tuxedo,
 };
 
 /** Look up a cosmetic item component by its kebab-case id (or null). */

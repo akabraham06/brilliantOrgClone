@@ -23,7 +23,8 @@ import {
   questDayKey,
   cappedReward,
 } from '../data/dailyQuests.js';
-import { getCosmeticById } from '../data/cosmetics.js';
+import { getCosmeticById, CATALOG } from '../data/cosmetics.js';
+import { featuredPrice } from '../data/storeRotation.js';
 
 const EconomyContext = createContext(null);
 
@@ -194,6 +195,35 @@ export function EconomyProvider({ children }) {
   );
 
   /**
+   * Applies a Heat Check relative-performance bonus (leaderboard standing) on top
+   * of a run. Unlike recordHeatRun this does NOT consume a coin-run or touch
+   * bestXp — the caller has already recorded the run and pre-gated the coin half
+   * on that run's daily-cap result (passing 0 coins when the run was capped), so
+   * this just adds the small xp/coins and pays any level-up bonus. NOT idempotent
+   * (every run can earn it); kept tiny + capped by the HEAT_RANK_BONUS table.
+   * Returns { xp, coins, leveledUp, toLevel }.
+   */
+  const recordHeatBonus = useCallback(
+    ({ xp = 0, coins = 0 } = {}) => {
+      const cur = economyRef.current;
+      const safeXp = Math.max(0, Math.round(xp) || 0);
+      const safeCoins = Math.max(0, Math.round(coins) || 0);
+      if (safeXp <= 0 && safeCoins <= 0) {
+        return { xp: 0, coins: 0, leveledUp: false, toLevel: levelForXp(cur.xp) };
+      }
+      const { next, fromLevel, toLevel, levelUpCoins } = applyXpCoins(cur, safeXp, safeCoins);
+      mutate(() => next);
+      return {
+        xp: safeXp,
+        coins: safeCoins + levelUpCoins,
+        leveledUp: toLevel > fromLevel,
+        toLevel,
+      };
+    },
+    [mutate],
+  );
+
+  /**
    * Replaces today's daily-quest blob (the orchestration of generation +
    * progress lives in DailyQuestsContext; this is the persisted store). Resets
    * the per-day claim tally whenever the day key rolls over.
@@ -249,24 +279,84 @@ export function EconomyProvider({ children }) {
 
   /**
    * Buys a cosmetic: validates the item exists, the level gate is met, it isn't
-   * already owned, and the player can afford it. Returns { ok, reason }.
+   * already owned, and the player can afford it. Charges today's `featuredPrice`
+   * (the featured discount) so the UI and this always agree. Returns { ok, reason }.
    */
   const buy = useCallback(
     (itemId) => {
       const cur = economyRef.current;
       const item = getCosmeticById(itemId);
       if (!item) return { ok: false, reason: 'unknown' };
+      if (item.exclusive) return { ok: false, reason: 'exclusive' };
       if (cur.ownedCosmetics.includes(itemId)) return { ok: false, reason: 'owned' };
       if (levelForXp(cur.xp) < item.unlockLevel) return { ok: false, reason: 'locked' };
-      if (cur.coins < item.price) return { ok: false, reason: 'insufficient' };
+      const price = featuredPrice(item);
+      if (cur.coins < price) return { ok: false, reason: 'insufficient' };
+
+      // Mastery exclusive: "completionist" earned when this purchase completes
+      // the purchasable catalog (every CATALOG id owned). Granted atomically with
+      // the buy and idempotently via grantedKeys. Returned so the Store (which is
+      // inside the toast provider) can celebrate it.
+      const ownedAfter = [...cur.ownedCosmetics, itemId];
+      const completionId = 'completionist';
+      const completionKey = `cosmetic:${completionId}`;
+      const completionItem = getCosmeticById(completionId);
+      const grantCompletion =
+        !!completionItem &&
+        !cur.grantedKeys.includes(completionKey) &&
+        CATALOG.every((c) => ownedAfter.includes(c.id));
+
+      mutate((prev) => {
+        const owned = prev.ownedCosmetics.includes(itemId)
+          ? prev.ownedCosmetics
+          : [...prev.ownedCosmetics, itemId];
+        // Auto-equip the freshly bought item for instant gratification.
+        const equipped = { ...prev.equipped, [item.slot]: itemId };
+        let ownedCosmetics = owned;
+        let grantedKeys = prev.grantedKeys;
+        if (grantCompletion) {
+          ownedCosmetics = owned.includes(completionId) ? owned : [...owned, completionId];
+          equipped[completionItem.slot] = completionId;
+          grantedKeys = prev.grantedKeys.includes(completionKey)
+            ? prev.grantedKeys
+            : [...prev.grantedKeys, completionKey];
+        }
+        return {
+          ...prev,
+          coins: Math.max(0, prev.coins - price),
+          ownedCosmetics,
+          equipped,
+          grantedKeys,
+        };
+      });
+      return { ok: true, masteryGranted: grantCompletion ? completionItem : null };
+    },
+    [mutate],
+  );
+
+  /**
+   * Grants an EARNED (mastery) cosmetic with no coin cost, exactly once per
+   * `key` (idempotent via grantedKeys, key like `cosmetic:<id>`). Adds it to
+   * ownedCosmetics and auto-equips it. Returns { granted, item } so reward UIs
+   * can celebrate. A no-op (already granted / unknown id) returns granted:false.
+   */
+  const grantCosmetic = useCallback(
+    (itemId, key) => {
+      const cur = economyRef.current;
+      const k = key || `cosmetic:${itemId}`;
+      const item = getCosmeticById(itemId);
+      if (!itemId || !item || cur.grantedKeys.includes(k)) {
+        return { granted: false, item: item || null };
+      }
       mutate((prev) => ({
         ...prev,
-        coins: Math.max(0, prev.coins - item.price),
-        ownedCosmetics: [...prev.ownedCosmetics, itemId],
-        // Auto-equip the freshly bought item for instant gratification.
+        ownedCosmetics: prev.ownedCosmetics.includes(itemId)
+          ? prev.ownedCosmetics
+          : [...prev.ownedCosmetics, itemId],
         equipped: { ...prev.equipped, [item.slot]: itemId },
+        grantedKeys: prev.grantedKeys.includes(k) ? prev.grantedKeys : [...prev.grantedKeys, k],
       }));
-      return { ok: true };
+      return { granted: true, item };
     },
     [mutate],
   );
@@ -310,14 +400,16 @@ export function EconomyProvider({ children }) {
       grant,
       hasGranted,
       recordHeatRun,
+      recordHeatBonus,
       dailyQuests: economy.dailyQuests,
       setDailyQuests,
       claimQuest,
       buy,
+      grantCosmetic,
       equip,
       unequip,
     };
-  }, [economy, loading, grant, hasGranted, recordHeatRun, setDailyQuests, claimQuest, buy, equip, unequip]);
+  }, [economy, loading, grant, hasGranted, recordHeatRun, recordHeatBonus, setDailyQuests, claimQuest, buy, grantCosmetic, equip, unequip]);
 
   return <EconomyContext.Provider value={value}>{children}</EconomyContext.Provider>;
 }

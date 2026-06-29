@@ -57,17 +57,25 @@ const HEADWEAR_PLACEMENT = {
   // scaled so the brim overhangs the round head without the tip clipping.
   'top-hat': { scale: 0.9, dy: -9 },
   'graduation-cap': { scale: 0.92, dy: -7 },
+  // Mastery exclusive reusing the graduation-cap art (see storeRotation.js).
+  'course-master': { scale: 0.92, dy: -7 },
   'wizard-hat': { scale: 0.9, dy: -9 },
+  // Mastery exclusive reusing the wizard-hat art (see storeRotation.js).
+  'prodigy': { scale: 0.9, dy: -9 },
   'cowboy-hat': { scale: 0.94, dy: -8 },
   'baseball-cap': { scale: 0.95, dy: -8 },
   // Crown: a band + points — seat the band on the upper dome so points rise above.
   'crown': { scale: 0.95, dy: -7 },
+  // Mastery exclusive reusing the crown art (see storeRotation.js).
+  'grandmaster': { scale: 0.95, dy: -7 },
   // Domes / soft caps hug the crown; lift the fold/band above the eyes.
   'beanie': { scale: 0.92, dy: -8 },
   'beret': { scale: 0.94, dy: -9 },
   // Cone hats: extra downscale keeps the tall tip/pom inside the bust crop.
   'party-hat': { scale: 0.86, dy: -8 },
   'flask-helmet': { scale: 0.84, dy: -8 },
+  // Mastery exclusive reusing the flask-helmet art (see storeRotation.js).
+  'inferno-run': { scale: 0.84, dy: -8 },
   // Headband sits low on the forehead by design (authored ~y24–38); a small lift
   // keeps the band just above the eyes instead of across them.
   'headband': { scale: 0.96, dy: -3 },

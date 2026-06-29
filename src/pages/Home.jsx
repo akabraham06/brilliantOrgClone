@@ -90,8 +90,8 @@ function HomeContent() {
             )}
           </div>
           <Link to="/app/lab" className={styles.labCard}>
-            <span className={styles.labEyebrow}>AI Lab</span>
-            <p className={styles.labText}>Explore chemistry hands-on in the AI Lab.</p>
+            <span className={styles.labEyebrow}>Lab</span>
+            <p className={styles.labText}>Explore chemistry hands-on in the Lab.</p>
             <span className={styles.labCta}>Open the Lab &rarr;</span>
           </Link>
         </aside>

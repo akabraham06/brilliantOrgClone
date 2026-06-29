@@ -23,13 +23,49 @@
  *           + level-up payouts to L10 (coinsForLevelSpan(1,10)=360)
  *           ─────────────────────────────────────────────────  ≈ 1,024 coins
  *
- *  Full store cost = 14,100 coins (see cosmetics.js: common 25 / rare 16 / epic 5 /
- *  legendary 4). So a perfect course run lands ~level 10 with ~1k coins — enough
- *  for a handful of commons and the satisfaction of unlocking (but not affording)
- *  the rare tier. The remaining ~13k coins come from Heat Check: a strong ~3-4 min
- *  run nets ≈200-260 coins (runXp × coinRate), but only the first 3→5 runs/day earn
- *  coins (dailyCoinRunLimit). That cap is the real throttle — full-collection
- *  completion is intentionally a multi-session grind well beyond the 5h course.
+ *  ── Clean-run reallocation (NOT new income) ──
+ *  The per-lesson reward (80 XP / 25 coins) is split into base (60/17) + a
+ *  no-hint "clean run" bonus (20/8). A PERFECT run is by definition clean (zero
+ *  hints, every graded check first-try-correct), so it still earns the full
+ *  80/25 per lesson — the anchor above is unchanged. A non-clean finish earns
+ *  only the base (60/17), i.e. slightly LESS than before (deflationary = safe).
+ *
+ *  ── Streak stream (tiny + capped) ──
+ *  Daily activity grants a small streak reward (5 XP / 2 coins) plus one-time
+ *  milestone bumps at 3/7/14/30 days (see STREAK_REWARDS). Ongoing income is
+ *  ~2 coins/day ≈ 60/month, plus up to ~185 one-time milestone coins across the
+ *  first month — well under the daily-quest stream (≤12 coins/day) and trivial
+ *  vs the 40,250-coin store. It rewards the consistency HABIT without inflating
+ *  the course-completion economy.
+ *
+ *  ── Earned exclusives (off the purchasable total) ──
+ *  Mastery cosmetics (see data/storeRotation.js MASTERY_COSMETICS) are granted
+ *  for demonstrating mastery, never sold, and are excluded from CATALOG /
+ *  totalCatalogCost — so they don't touch the 40,250 calibration either.
+ *
+ *  ── Relative-performance stream (leaderboard, tiny + capped) ──
+ *  On top of the combo+speed run scoring, Heat Check pays a small bonus for the
+ *  player's STANDING on the global WEEKLY ladder (see HEAT_RANK_BONUS). The
+ *  per-run bonus tops out at the top-10% tier (20 XP / 6 coins) and its COIN
+ *  half is gated by the same daily coin-run cap as the run itself (it only pays
+ *  when the run earned coins), so it can never out-earn the base run. Worst-case
+ *  weekly ceiling for an elite grinder: ≤ ~5 coin-runs/day × 7 × 6 = 210 relative
+ *  coins/week, plus a single idempotent weekly-settlement payout (≤ 120 XP / 60
+ *  coins, keyed heatweekly:<weekKey> so it can't be double-claimed). That's a few
+ *  percent nudge versus a ~200-260-coin base run and the 40,250-coin store — the
+ *  ladder adds competitive flavor without disturbing the course/Heat-Check
+ *  calibration above.
+ *
+ *  Full store cost = 40,250 coins (Phase 6 re-balance; see cosmetics.js: common 25 ×
+ *  150 / rare 16 × 750 / epic 5 × 1,500 / legendary 4 × 3,000 + the pinned 5,000-coin
+ *  3D skin). Prices were raised ~2.5x on the SPEND side only — the perfect-course-run
+ *  income anchor above (≈2,356 XP / 1,024 coins) is unchanged. So a perfect course run
+ *  still lands ~level 10 with ~1k coins — now barely a handful of commons and the
+ *  satisfaction of unlocking (but nowhere near affording) the rare tier. The remaining
+ *  ~39k coins come from Heat Check: a strong ~3-4 min run nets ≈200-260 coins
+ *  (runXp × coinRate), but only the first 3→5 runs/day earn coins (dailyCoinRunLimit).
+ *  That cap is the real throttle — with the higher prices, full-collection completion
+ *  is intentionally a much longer, multi-session grind well beyond the 5h course.
  */
 
 // ── Level curve ──────────────────────────────────────────────────────────────
@@ -125,11 +161,57 @@ export const REWARDS = {
     partial: { xp: 14, coins: 2 }, // AI scored it partially right
     attempt: { xp: 8, coins: 0 },
   },
-  // Finishing a lesson (any path through it).
-  lesson: { xp: 80, coins: 25 },
+  // Finishing a lesson. Split into a base (granted on any completion) plus a
+  // no-hint "clean run" bonus (granted only when the lesson was finished with
+  // zero hints and every graded non-low-stakes check first-attempt-correct).
+  // base + cleanRunBonus = 80 / 25, so a perfect (clean) run is unchanged; a
+  // non-clean finish earns only the base. Reallocation, not new income.
+  lesson: {
+    base: { xp: 60, coins: 17 },
+    cleanRunBonus: { xp: 20, coins: 8 },
+  },
   // Reaching 100% course completion.
   course: { xp: 300, coins: 200 },
 };
+
+// ── Streak / consistency rewards (tiny + capped) ─────────────────────────────
+// Granted once per new active day (idempotent via grant key streak:<dayKey>).
+// A small daily base plus one-time milestone bumps at 3/7/14/30 days. The
+// monthly ceiling stays well below the daily-quest stream (≤12 coins/day), so
+// course mastery + Heat Check remain the dominant progression — see the
+// calibration block at the top of this file.
+export const STREAK_REWARDS = {
+  daily: { xp: 5, coins: 2 },
+  milestones: {
+    3: { xp: 15, coins: 10 },
+    7: { xp: 30, coins: 25 },
+    14: { xp: 60, coins: 50 },
+    30: { xp: 120, coins: 100 },
+  },
+};
+
+/** Ordered streak milestone day-counts (for "next milestone in N days" UI). */
+export const STREAK_MILESTONES = [3, 7, 14, 30];
+
+/**
+ * Reward for reaching `streakCount` active days: the daily base plus the
+ * milestone bonus if this exact day-count is a milestone. Pure.
+ */
+export function streakReward(streakCount) {
+  const n = Math.max(0, Math.floor(Number(streakCount) || 0));
+  const base = STREAK_REWARDS.daily;
+  const milestone = STREAK_REWARDS.milestones[n] || { xp: 0, coins: 0 };
+  return { xp: base.xp + milestone.xp, coins: base.coins + milestone.coins };
+}
+
+/**
+ * The next streak milestone strictly above `streakCount`, or null once every
+ * milestone has been reached. Used by the streak UI to show "N days to go".
+ */
+export function nextStreakMilestone(streakCount) {
+  const n = Math.max(0, Math.floor(Number(streakCount) || 0));
+  return STREAK_MILESTONES.find((m) => m > n) || null;
+}
 
 // ── Heat Check (timed farming mode) ──────────────────────────────────────────
 // Highest XP/coin RATE in the app, but coin-earning runs are capped per day. Over
@@ -180,6 +262,69 @@ export function dailyCoinRunLimit(level) {
 /** Today's day-key (local) for resetting the daily coin-run counter. */
 export function economyDayKey(date = new Date()) {
   return date.toISOString().slice(0, 10);
+}
+
+// ── Heat Check relative-performance rewards (global leaderboard) ──────────────
+// A small, CAPPED stream layered on top of the combo+speed run scoring, paid for
+// the player's STANDING among other real players on the WEEKLY ladder. Buckets
+// are by percentile (rank ÷ field size), so the reward reflects relative — not
+// absolute — performance. The COIN half is gated by the daily coin-run cap (the
+// caller only pays it when the base run earned coins, reusing recordHeatRun's
+// `coinsBlocked` result), so it can never let a player out-earn the base run.
+// See the calibration block at the top of this file for the per-week ceiling.
+export const HEAT_RANK_BONUS = {
+  top10: { maxFraction: 0.1, xp: 20, coins: 6, label: 'Top 10% this week' },
+  top25: { maxFraction: 0.25, xp: 12, coins: 4, label: 'Top 25% this week' },
+  top50: { maxFraction: 0.5, xp: 6, coins: 2, label: 'Top half this week' },
+};
+
+/** Ordered HEAT_RANK_BONUS tiers, best (smallest fraction) first. */
+const HEAT_RANK_TIERS = ['top10', 'top25', 'top50'];
+
+/**
+ * The relative-performance bonus for finishing a run at `rank` of `total` weekly
+ * entries (1 = best). Pure. Returns { bucket, xp, coins, label }; a field with
+ * no competition (total ≤ 1) or an unknown rank yields a zero, label-less bonus.
+ */
+export function heatRankBonus(rank, total) {
+  const r = Math.floor(Number(rank) || 0);
+  const n = Math.floor(Number(total) || 0);
+  const zero = { bucket: null, xp: 0, coins: 0, label: '' };
+  if (r <= 0 || n <= 1) return zero;
+  const fraction = r / n;
+  for (const tier of HEAT_RANK_TIERS) {
+    const b = HEAT_RANK_BONUS[tier];
+    if (fraction <= b.maxFraction) {
+      return { bucket: tier, xp: b.xp, coins: b.coins, label: b.label };
+    }
+  }
+  return zero;
+}
+
+// One-time, idempotent settlement paid when the player returns in a NEW week and
+// we can compute their FINAL rank in the previous week (keyed heatweekly:<weekKey>
+// so it can't be double-claimed). Small + capped — top placements only.
+export const HEAT_WEEKLY_SETTLEMENT = {
+  champion: { maxRank: 1, xp: 120, coins: 60, label: 'Weekly champion' },
+  top3: { maxRank: 3, xp: 80, coins: 40, label: 'Top 3 last week' },
+  top10: { maxRank: 10, xp: 40, coins: 20, label: 'Top 10 last week' },
+};
+
+/** Ordered settlement tiers, best (smallest rank) first. */
+const HEAT_SETTLEMENT_TIERS = ['champion', 'top3', 'top10'];
+
+/**
+ * The idempotent weekly-settlement reward for a final `rank` (1 = best), or null
+ * when the placement is outside the paid tiers (or rank is unknown). Pure.
+ */
+export function heatWeeklySettlement(rank) {
+  const r = Math.floor(Number(rank) || 0);
+  if (r <= 0) return null;
+  for (const tier of HEAT_SETTLEMENT_TIERS) {
+    const t = HEAT_WEEKLY_SETTLEMENT[tier];
+    if (r <= t.maxRank) return { tier, xp: t.xp, coins: t.coins, label: t.label };
+  }
+  return null;
 }
 
 /** The shape a fresh economy doc hydrates to. */

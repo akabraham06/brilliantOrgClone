@@ -20,6 +20,7 @@ export default function LessonComplete({
   slideCount = 0,
   streakCount = 0,
   startStats = null,
+  cleanRun = false,
 }) {
   const { economy, level, coins, levelInfo } = useEconomy();
   const earnedXp = startStats ? Math.max(0, economy.xp - startStats.xp) : 0;
@@ -38,6 +39,12 @@ export default function LessonComplete({
         You finished <strong>{lesson.title}</strong>. Great work building your
         intuition.
       </p>
+
+      {cleanRun && (
+        <div className={styles.flawlessBadge}>
+          <span aria-hidden="true">&#9889;</span> Flawless &mdash; no hints
+        </div>
+      )}
 
       {showReward && (
         <div className={styles.rewardCard}>

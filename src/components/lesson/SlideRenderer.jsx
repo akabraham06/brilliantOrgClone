@@ -80,7 +80,13 @@ export default function SlideRenderer({
     return (
       <SlideShell slide={slide}>
         <Suspense fallback={<InteractionFallback />}>
-          <Check slide={slide} onResult={onResult} savedState={savedState} onSaveState={onSaveState} />
+          <Check
+            slide={slide}
+            onResult={onResult}
+            savedState={savedState}
+            onSaveState={onSaveState}
+            lessonSlides={lessonSlides}
+          />
         </Suspense>
       </SlideShell>
     );

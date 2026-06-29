@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEconomy } from '../context/EconomyContext.jsx';
+import { useRewardToast } from '../context/RewardToastContext.jsx';
 import { usePrefersReducedMotion } from '../components/interactions/lib/motion.js';
 import {
   CATALOG,
@@ -8,9 +9,25 @@ import {
   RARITY_META,
   getCosmeticById,
 } from '../data/cosmetics.js';
+import {
+  featuredToday,
+  featuredPrice,
+  getSeason,
+  SEASON_META,
+  MASTERY_COSMETICS,
+} from '../data/storeRotation.js';
+import { msUntilReset } from '../data/dailyQuests.js';
 import Avatar from '../components/avatar/Avatar.jsx';
 import CoinIcon from '../components/economy/CoinIcon.jsx';
 import styles from './Store.module.css';
+
+/** "Hh Mm" until local-midnight reset (gentle on re-renders — no live seconds). */
+function formatCountdown(ms) {
+  const totalMin = Math.max(0, Math.ceil(ms / 60000));
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
 
 /**
  * Cosmetics Store: preview your avatar, browse the 50-item catalog by slot, and
@@ -20,6 +37,7 @@ import styles from './Store.module.css';
  */
 export default function Store() {
   const { economy, coins, level, buy, equip, unequip } = useEconomy();
+  const { pushReward } = useRewardToast();
   const [filter, setFilter] = useState('all');
   const [flash, setFlash] = useState(null); // { id, kind } for a brief buy/equip pulse
   const [hoverId, setHoverId] = useState(null); // item being previewed on hover
@@ -33,6 +51,17 @@ export default function Store() {
     () => (filter === 'all' ? CATALOG : CATALOG.filter((c) => c.slot === filter)),
     [filter],
   );
+
+  const featured = useMemo(() => featuredToday(), []);
+  const season = useMemo(() => getSeason(), []);
+  const seasonMeta = SEASON_META[season];
+
+  // Countdown to the next local-midnight rotation (refresh every 30s, gentle).
+  const [countdown, setCountdown] = useState(() => msUntilReset());
+  useEffect(() => {
+    const id = window.setInterval(() => setCountdown(msUntilReset()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // While hovering an item, preview it on the avatar by overriding its slot.
   const previewEquipped = useMemo(() => {
@@ -66,6 +95,10 @@ export default function Store() {
     if (res.ok) {
       setFlash({ id: item.id, kind: 'bought' });
       window.setTimeout(() => setFlash(null), 900);
+      // Completing the catalog with this purchase earns a mastery exclusive.
+      if (res.masteryGranted) {
+        pushReward({ behavior: 'Mastery reward unlocked', icon: '\u{1F3C5}' });
+      }
     }
   }
 
@@ -78,7 +111,14 @@ export default function Store() {
     <div className={styles.page}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Cosmetics Store</h1>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>Cosmetics Store</h1>
+            {seasonMeta && (
+              <span className={styles.seasonBadge} style={{ '--season-accent': seasonMeta.accent }}>
+                <span aria-hidden="true">{seasonMeta.icon}</span> {seasonMeta.label} season
+              </span>
+            )}
+          </div>
           <p className={styles.subtitle}>
             Spend coins on bespoke gear and style your avatar. Higher tiers unlock
             as you level up.
@@ -91,6 +131,39 @@ export default function Store() {
           <span className={styles.walletLevel}>Level {level}</span>
         </div>
       </header>
+
+      {featured.length > 0 && (
+        <section className={styles.featured} aria-label="Featured today">
+          <div className={styles.featuredHead}>
+            <div>
+              <span className={styles.featuredEyebrow}>Featured today</span>
+              <p className={styles.featuredBlurb}>
+                A rotating pick at <strong>15% off</strong> &mdash; new set every day.
+              </p>
+            </div>
+            <span className={styles.featuredCountdown} title="Featured items rotate at midnight">
+              <span aria-hidden="true">&#9201;</span> Rotates in {formatCountdown(countdown)}
+            </span>
+          </div>
+          <ul className={styles.featuredGrid}>
+            {featured.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                owned={owned.includes(item.id)}
+                equipped={economy.equipped[item.slot] === item.id}
+                level={level}
+                coins={coins}
+                flash={flash?.id === item.id ? flash.kind : null}
+                onBuy={() => handleBuy(item)}
+                onToggleEquip={() => toggleEquip(item)}
+                onPreview={() => setHoverId(item.id)}
+                onPreviewEnd={() => setHoverId((cur) => (cur === item.id ? null : cur))}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className={styles.layout}>
         <aside className={styles.previewPanel}>
@@ -137,7 +210,74 @@ export default function Store() {
           </ul>
         </section>
       </div>
+
+      <section className={styles.exclusives} aria-label="Mastery exclusives">
+        <div className={styles.exclusivesHead}>
+          <span className={styles.featuredEyebrow}>Mastery exclusives</span>
+          <p className={styles.featuredBlurb}>
+            Earned by mastery, never sold. They don&rsquo;t count toward the
+            collection total.
+          </p>
+        </div>
+        <ul className={styles.exclusivesGrid}>
+          {MASTERY_COSMETICS.map((item) => (
+            <ExclusiveCard
+              key={item.id}
+              item={item}
+              owned={owned.includes(item.id)}
+              equipped={economy.equipped[item.slot] === item.id}
+              onToggleEquip={() => toggleEquip(item)}
+            />
+          ))}
+        </ul>
+      </section>
     </div>
+  );
+}
+
+function ExclusiveCard({ item, owned, equipped, onToggleEquip }) {
+  const rarity = RARITY_META[item.rarity] || RARITY_META.legendary;
+  return (
+    <li
+      className={`${styles.exclusiveCard} ${owned ? '' : styles.exclusiveLocked}`}
+      style={{ '--rarity-color': rarity.color }}
+    >
+      <div className={styles.cardPreview}>
+        <Avatar
+          equipped={{ [item.slot]: item.id }}
+          size={120}
+          idle={owned}
+          crop={item.slot === 'headwear' || item.slot === 'eyewear' ? 'bust' : undefined}
+        />
+        {!owned && (
+          <span className={styles.exclusiveLockIcon} aria-hidden="true">
+            &#128274;
+          </span>
+        )}
+        <span className={styles.rarityTag} style={{ color: rarity.color }}>
+          {owned ? 'Earned' : 'Locked'}
+        </span>
+      </div>
+      <div className={styles.cardBody}>
+        <span className={styles.cardName}>{item.name}</span>
+        <span className={styles.exclusiveUnlock}>{item.condition || item.unlock}</span>
+      </div>
+      <div className={styles.cardAction}>
+        {owned ? (
+          <button
+            type="button"
+            className={`${styles.actionBtn} ${equipped ? styles.equippedBtn : styles.equipBtn}`}
+            onClick={onToggleEquip}
+          >
+            {equipped ? 'Equipped \u2713' : 'Equip'}
+          </button>
+        ) : (
+          <span className={styles.lockBadge}>
+            <span aria-hidden="true">&#127942;</span> Earn it
+          </span>
+        )}
+      </div>
+    </li>
   );
 }
 
@@ -196,7 +336,9 @@ function ItemCard({
   onPreviewEnd,
 }) {
   const unlocked = level >= item.unlockLevel;
-  const affordable = coins >= item.price;
+  const price = featuredPrice(item);
+  const discounted = price < item.price;
+  const affordable = coins >= price;
   const rarity = RARITY_META[item.rarity] || RARITY_META.common;
 
   let action;
@@ -223,9 +365,16 @@ function ItemCard({
         className={`${styles.actionBtn} ${styles.buyBtn}`}
         onClick={onBuy}
         disabled={!affordable}
-        title={affordable ? undefined : `You need ${item.price} coins`}
+        title={affordable ? undefined : `You need ${price} coins`}
       >
-        <CoinIcon size={15} /> {item.price}
+        <CoinIcon size={15} />{' '}
+        {discounted ? (
+          <>
+            <span className={styles.priceWas}>{item.price}</span> {price}
+          </>
+        ) : (
+          price
+        )}
       </button>
     );
   }
@@ -252,6 +401,7 @@ function ItemCard({
         <span className={styles.rarityTag} style={{ color: rarity.color }}>
           {rarity.label}
         </span>
+        {discounted && <span className={styles.featuredTag}>&minus;15%</span>}
       </div>
       <div className={styles.cardBody}>
         <span className={styles.cardName}>{item.name}</span>

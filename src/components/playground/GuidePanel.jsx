@@ -276,7 +276,7 @@ export default function GuidePanel({ currentKey, onLoadInteractive, interactionE
   }
 
   return (
-    <section className={styles.panel} aria-label="AI lab guide">
+    <section className={styles.panel} aria-label="Lab guide">
       <header className={styles.header}>
         <span className={`${styles.avatar} ${busy ? styles.avatarBusy : ''}`} aria-hidden="true" />
         <div className={styles.headerText}>

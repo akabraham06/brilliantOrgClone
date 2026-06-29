@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { aiEnabled } from '../firebase/ai.js';
 import { HINT_MAX_LEVEL } from '../ai/tutorPrompt.js';
+import { useProgress } from './ProgressContext.jsx';
 
 const TutorContext = createContext(null);
 
@@ -28,7 +29,17 @@ const DEFAULT_STRUGGLE_SEED =
  * self-gates on `aiEnabled`, so this has no visible effect when AI is disabled.
  */
 export function TutorProvider({ children }) {
+  // TutorProvider is mounted under ProgressProvider (see AppLayout), so it can
+  // record genuine hint-ladder advances against the active slide's lesson —
+  // which drives the no-hint "clean run" bonus.
+  const { recordHintUsed } = useProgress();
   const [groundingSlide, setGroundingSlide] = useState(null);
+  // Mirror of the active grounding slide so the stable `advanceHint` callback
+  // can read its lessonId without being recreated on every slide change.
+  const groundingSlideRef = useRef(null);
+  groundingSlideRef.current = groundingSlide;
+  const recordHintUsedRef = useRef(recordHintUsed);
+  recordHintUsedRef.current = recordHintUsed;
   const [wrongEvent, setWrongEvent] = useState(null);
   const [open, setOpen] = useState(false);
   // Mirror of `open` so callbacks can read the live value without re-creating
@@ -106,6 +117,12 @@ export function TutorProvider({ children }) {
     const next = Math.min(cur + 1, HINT_MAX_LEVEL);
     hintLevelRef.current.set(id || '__none__', next);
     setHintLevel(next);
+    // Count this genuine hint use against the active slide's lesson (only when
+    // the level actually advanced — capping at the max doesn't re-count).
+    if (next > cur) {
+      const lessonId = groundingSlideRef.current?.lessonId;
+      if (lessonId) recordHintUsedRef.current?.(lessonId);
+    }
     return next;
   }, []);
 

@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { aiEnabled, streamText } from '../../firebase/ai.js';
+import { aiEnabled, generateJSON } from '../../firebase/ai.js';
 import { useTutor } from '../../context/TutorContext.jsx';
 import { usePreferences } from '../../context/PreferencesContext.jsx';
 import { useLearnerProfile } from '../../ai/useLearnerProfile.js';
 import { formatProfileForPrompt } from '../../ai/learnerProfile.js';
-import { buildAnchoredExplainRequest } from '../../ai/anchoredExplain.js';
+import {
+  buildAnchoredExplainRequest,
+  CONCISE_EXPLAIN_SCHEMA,
+  DEEPER_EXPLAIN_SCHEMA,
+} from '../../ai/anchoredExplain.js';
 import { usePrefersReducedMotion } from '../interactions/lib/motion.js';
 import TutorFeedback from './TutorFeedback.jsx';
 import reading from './readingStyle.module.css';
@@ -72,8 +76,9 @@ function samePos(a, b) {
 /**
  * Global mount (next to TutorDot). When an assessment reports a fully-completed
  * attempt, this renders the tutor's anchored explanation card flying from the
- * launcher orb to beside the chosen answer, then streaming a tailored deeper
- * explanation. Self-gates on aiEnabled and honors prefers-reduced-motion.
+ * launcher orb to beside the chosen answer, then showing a concise, stepped
+ * explanation with an on-demand "Go deeper" breakdown. Self-gates on aiEnabled
+ * and honors prefers-reduced-motion.
  */
 export default function TutorAnchoredExplain() {
   const { anchoredExplain, dismissAnchoredExplain, openTutor } = useTutor();
@@ -103,9 +108,15 @@ function AnchoredCard({ data, reduce, onDismiss, openTutor }) {
   const { prefs } = usePreferences();
 
   const [pos, setPos] = useState(() => computePosition(anchorEl));
-  const [text, setText] = useState('');
+  // The concise, stepped explanation: { headline, steps[], analogyRef? }.
+  const [concise, setConcise] = useState(null);
   const [failed, setFailed] = useState(false);
   const [simplified, setSimplified] = useState(false);
+  // On-demand "Go deeper" breakdown, cached so re-toggling never refetches.
+  const [deeper, setDeeper] = useState(null);
+  const [deeperOpen, setDeeperOpen] = useState(false);
+  const [deeperLoading, setDeeperLoading] = useState(false);
+  const [deeperFailed, setDeeperFailed] = useState(false);
   const startedRef = useRef(false);
 
   const measure = useCallback(() => {
@@ -137,36 +148,42 @@ function AnchoredCard({ data, reduce, onDismiss, openTutor }) {
     };
   }, [measure]);
 
-  // Stream the tailored explanation. `forceSimple` re-runs it with the simpler-
-  // language instruction on for the "Rephrase simpler" action.
+  // Re-clamp the card position when its height changes (concise arrives, or the
+  // deeper section expands/collapses) so it never drifts off-screen.
+  useEffect(() => {
+    measure();
+  }, [concise, deeperOpen, deeper, measure]);
+
   const activeRef = useRef(true);
-  const runStream = useCallback(
+
+  // Fetch the concise stepped explanation. `forceSimple` re-requests it with the
+  // simpler-language instruction on, powering the "Rephrase simpler" action.
+  const runConcise = useCallback(
     (forceSimple) => {
       setFailed(false);
-      setText('');
+      setConcise(null);
       const { system, prompt } = buildAnchoredExplainRequest({
         slide: context.slide,
         profileText: formatProfileForPrompt(profile),
         context,
         prefs: forceSimple ? { ...prefs, simpleLanguage: true } : prefs,
       });
-      // Cap output: the prompt asks for 3-5 short sentences, so a small token
-      // budget lets the completion finish (and the card settle) promptly.
-      streamText(prompt, { system, maxTokens: 220 }, (_d, full) => {
-        if (activeRef.current) setText(full);
-      }).then((full) => {
-        if (activeRef.current && full == null) setFailed(true);
+      // Small budget: a short headline + 2-4 one-line steps keeps latency low.
+      generateJSON(prompt, CONCISE_EXPLAIN_SCHEMA, { system, maxTokens: 320 }).then((res) => {
+        if (!activeRef.current) return;
+        if (res && Array.isArray(res.steps) && res.steps.length) setConcise(res);
+        else setFailed(true);
       });
     },
     [context, profile, prefs],
   );
 
-  // Stream the tailored explanation once on open.
+  // Fetch the concise explanation once on open.
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
     activeRef.current = true;
-    runStream(false);
+    runConcise(false);
     return () => {
       activeRef.current = false;
     };
@@ -175,8 +192,41 @@ function AnchoredCard({ data, reduce, onDismiss, openTutor }) {
 
   const onRephrase = useCallback(() => {
     setSimplified(true);
-    runStream(true);
-  }, [runStream]);
+    // A simpler rephrase invalidates the cached deeper breakdown.
+    setDeeper(null);
+    setDeeperOpen(false);
+    setDeeperFailed(false);
+    runConcise(true);
+  }, [runConcise]);
+
+  // "Go deeper": collapse if already open; otherwise reveal the cached deeper
+  // breakdown, or fetch it on first request (richer steps + larger budget).
+  const onToggleDeeper = useCallback(() => {
+    if (deeperOpen) {
+      setDeeperOpen(false);
+      return;
+    }
+    if (deeper || deeperLoading) {
+      setDeeperOpen(true);
+      return;
+    }
+    setDeeperOpen(true);
+    setDeeperLoading(true);
+    setDeeperFailed(false);
+    const { system, prompt } = buildAnchoredExplainRequest({
+      slide: context.slide,
+      profileText: formatProfileForPrompt(profile),
+      context,
+      prefs: simplified ? { ...prefs, simpleLanguage: true } : prefs,
+      deeper: true,
+    });
+    generateJSON(prompt, DEEPER_EXPLAIN_SCHEMA, { system, maxTokens: 640 }).then((res) => {
+      if (!activeRef.current) return;
+      setDeeperLoading(false);
+      if (res && Array.isArray(res.steps) && res.steps.length) setDeeper(res);
+      else setDeeperFailed(true);
+    });
+  }, [deeperOpen, deeper, deeperLoading, context, profile, prefs, simplified]);
 
   const { initial, animate, exit } = useMemo(() => {
     if (reduce) {
@@ -236,11 +286,28 @@ function AnchoredCard({ data, reduce, onDismiss, openTutor }) {
       <div className={styles.body}>
         {failed ? (
           <p className={styles.text}>
-            I couldn&rsquo;t load a deeper explanation just now. Re-read the on-screen feedback, or
-            open the tutor to ask.
+            I couldn&rsquo;t load an explanation just now. Re-read the on-screen feedback, or open
+            the tutor to ask.
           </p>
-        ) : text ? (
-          <p className={`${styles.text} ${reading.readingText}`}>{text}</p>
+        ) : concise ? (
+          <div className={`${styles.explain} ${reading.readingText}`}>
+            <p className={styles.explainHead}>{concise.headline}</p>
+            <ol className={styles.steps}>
+              {concise.steps.map((step, i) => (
+                <li key={i} className={styles.step}>
+                  <span className={styles.stepNum} aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <span className={styles.stepText}>{step}</span>
+                </li>
+              ))}
+            </ol>
+            {concise.analogyRef && (
+              <p className={styles.analogyRef}>
+                <span aria-hidden="true">&#8617;</span> {concise.analogyRef}
+              </p>
+            )}
+          </div>
         ) : (
           <span className={styles.thinking} aria-live="polite">
             <span className={styles.dots} aria-hidden="true">
@@ -253,10 +320,76 @@ function AnchoredCard({ data, reduce, onDismiss, openTutor }) {
         )}
       </div>
 
-      {text && !failed && <TutorFeedback surface="anchored" slideId={context.slide?.slideId} />}
+      {concise && !failed && (
+        <AnimatePresence initial={false}>
+          {deeperOpen && (
+            <motion.div
+              key="deeper"
+              className={styles.deeper}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+              animate={reduce ? { opacity: 1 } : { opacity: 1, height: 'auto' }}
+              exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0 }}
+              transition={reduce ? { duration: 0.12 } : { duration: 0.24, ease: 'easeOut' }}
+            >
+              {deeperLoading ? (
+                <span className={styles.thinking} aria-live="polite">
+                  <span className={styles.dots} aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                  Going deeper&hellip;
+                </span>
+              ) : deeperFailed ? (
+                <p className={styles.text}>
+                  I couldn&rsquo;t load the full breakdown. Try again, or open the tutor to ask.
+                </p>
+              ) : deeper ? (
+                <div className={`${styles.explain} ${reading.readingText}`}>
+                  <p className={styles.deeperLabel}>Full breakdown</p>
+                  <p className={styles.explainHead}>{deeper.headline}</p>
+                  <ol className={styles.steps}>
+                    {deeper.steps.map((step, i) => (
+                      <li key={i} className={styles.step}>
+                        <span className={styles.stepNum} aria-hidden="true">
+                          {i + 1}
+                        </span>
+                        <span className={styles.stepText}>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                  {deeper.misconception && (
+                    <p className={styles.misconception}>
+                      <span className={styles.misconceptionTag}>Watch out</span>
+                      {deeper.misconception}
+                    </p>
+                  )}
+                  {deeper.analogyRef && (
+                    <p className={styles.analogyRef}>
+                      <span aria-hidden="true">&#8617;</span> {deeper.analogyRef}
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+
+      {concise && !failed && <TutorFeedback surface="anchored" slideId={context.slide?.slideId} />}
 
       <div className={styles.actions}>
-        {text && !failed && !simplified && (
+        {concise && !failed && (
+          <button
+            type="button"
+            className={styles.secondary}
+            onClick={onToggleDeeper}
+            aria-expanded={deeperOpen}
+          >
+            {deeperOpen ? 'Hide breakdown' : 'Go deeper'}
+          </button>
+        )}
+        {concise && !failed && !simplified && (
           <button type="button" className={styles.secondary} onClick={onRephrase}>
             Rephrase simpler
           </button>

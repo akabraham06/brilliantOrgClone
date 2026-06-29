@@ -1,8 +1,11 @@
+import { nextStreakMilestone } from '../data/economy.js';
 import styles from './StreakWidget.module.css';
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export default function StreakWidget({ streakCount = 0, completedLessons = 0 }) {
+  const nextMilestone = nextStreakMilestone(streakCount);
+  const daysToMilestone = nextMilestone ? nextMilestone - streakCount : 0;
   // Anchor the week row to the real calendar week and light up the streak days
   // ending on TODAY, so today's dot is the one that glows. JS getDay() is
   // Sun=0..Sat=6; shift to Mon=0..Sun=6 to match the labels above.
@@ -44,6 +47,12 @@ export default function StreakWidget({ streakCount = 0, completedLessons = 0 }) 
           );
         })}
       </div>
+
+      <p className={styles.milestone}>
+        {nextMilestone
+          ? `Next reward in ${daysToMilestone} ${daysToMilestone === 1 ? 'day' : 'days'} (${nextMilestone}-day streak)`
+          : 'All streak milestones reached — keep it alive!'}
+      </p>
     </section>
   );
 }

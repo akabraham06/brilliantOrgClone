@@ -57,11 +57,11 @@ function PlaygroundContent() {
   return (
     <div className={styles.page}>
       <header className={styles.intro}>
-        <span className={styles.eyebrow}>AI Lab</span>
+        <span className={styles.eyebrow}>Lab</span>
         <h1 className={styles.heading}>Exploratory Playground</h1>
         <p className={styles.subhead}>
           A hands-on sandbox for introductory chemistry. Tinker with a real interactive
-          {aiEnabled ? ' while your AI guide suggests experiments and answers questions.' : '.'}
+          {aiEnabled ? ' while your guide suggests experiments and answers questions.' : '.'}
         </p>
       </header>
 
@@ -81,7 +81,7 @@ function PlaygroundContent() {
           </aside>
         ) : (
           <p className={styles.aiOff} role="note">
-            The AI guide is off. You can still freely explore any interactive using the picker above.
+            The guide is off. You can still freely explore any interactive using the picker above.
           </p>
         )}
       </div>
